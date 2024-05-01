@@ -16,7 +16,7 @@ use crate::screen::{GuiScreen, Screen};
 const WIDTH: u32 = 1920/2;
 const HEIGHT: u32 = 1080/2;
 const TITLE: &str = "Test";
-const FPS: f32 = 144f32;
+const FPS: f32 = 60f32;
 
 // extern crate gl_generator;
 
@@ -70,6 +70,9 @@ fn main() {
                     WindowEvent::CursorPos(x, y) => {
                         current_screen.screen.mouse_x = x as f32;
                         current_screen.screen.mouse_y = y as f32;
+                    }
+                    WindowEvent::Key(key, code, action, mods) => {
+                        current_screen.key_press(key, code, action, mods)
                     }
                     _ => {}
                 }

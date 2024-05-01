@@ -4,6 +4,8 @@ use crate::screen::Screen;
 
 pub enum AnimationType {
     Linear,
+    CubicIn,
+    CubicOut,
 }
 
 impl AnimationType {
@@ -11,6 +13,12 @@ impl AnimationType {
         match self {
             AnimationType::Linear => {
                 state
+            }
+            AnimationType::CubicIn => {
+                state * state * state
+            }
+            AnimationType::CubicOut => {
+                1.0 - (state * state * state)
             }
         }
     }
@@ -21,7 +29,7 @@ pub struct Animation {
     starting: f64,
     value: f64,
     state: f64,
-    animation_type: AnimationType,
+    start_state: f64,
 }
 
 impl Animation {
@@ -31,62 +39,32 @@ impl Animation {
             starting: 0.0,
             value: 0.0,
             state: 0.0,
-            animation_type: AnimationType::Linear,
+            start_state: 0.0,
         }
     }
 
-    pub fn animate(&mut self, target: f64, speed: f64, screen: Screen) -> f64 {
+    pub fn animate(&mut self, target: f64, mut speed: f64, animation_type: AnimationType, screen: &Screen) -> f64 {
         if self.target != target {
             self.target = target;
-            self.starting = self.state;
+            self.starting = self.value;
+            self.start_state = self.state;
         }
 
-        if self.target < self.state {
+        println!("{}, {}, {}, {}", (self.value - self.starting).abs(), (self.target - self.starting).abs(), (self.target - self.starting), self.starting);
+        self.value = animation_type.get_value((self.value - self.starting).abs() / (self.target - self.starting).abs()) * (self.target - self.starting) + self.starting;
+
+        if self.target < self.value {
             self.state -= speed*screen.frame_delta;
-            if self.state < self.target {self.state = self.target;}
-        } else if self.target > self.state {
+            if self.value < self.target {self.value = self.target;}
+        } else if self.target > self.value {
             self.state += speed*screen.frame_delta;
-            if self.state > self.target {self.state = self.target;}
+            if self.value > self.target {self.value = self.target;}
         }
 
-        self.animation_type.
-    }
-}
-
-pub struct FixedAnimation {
-    value: f64,
-    pub target: f64,
-    duration: Duration,
-    init_time: Instant,
-    anim_type: AnimationType,
-}
-
-impl FixedAnimation {
-    pub fn new(value: f64, target: f64, duration: Duration, anim_type: AnimationType) -> Self { // Maybe add a list of targets that are animated to one by one, like keyframes
-        FixedAnimation {
-            value,
-            target,
-            duration,
-            init_time: Instant::now(),
-            anim_type,
-        }
-    }
-
-    /***
-    Returns the state of the animation, a number between 0 and 1
-     */
-    pub fn get_state(&self) -> f64 {
-        let state = self.init_time.elapsed().as_secs_f64() / self.duration.as_secs_f64();
-        if state < 0.0 {
-            0.0
-        } else if state > 1.0 {
-            1.0
-        } else {
-            state
-        }
+        self.value
     }
 
     pub fn get_value(&self) -> f64 {
-        self.anim_type.get_value(self)animation.value + (animation.target-animation.value)*animation.get_state()
+        self.value
     }
 }

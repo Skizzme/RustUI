@@ -1,5 +1,6 @@
-use std::time::Duration;
-use crate::animation::{FixedAnimation, AnimationType};
+use std::time::{Duration, Instant};
+use glfw::{Action, Key, Modifiers, Scancode};
+use crate::animation::{AnimationType, Animation};
 use crate::renderer::Renderer;
 
 pub trait GuiScreen {
@@ -7,7 +8,7 @@ pub trait GuiScreen {
 
     unsafe fn draw(&mut self);
 
-    fn key_press(&self);
+    fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers);
 
     fn metrics(&self) -> &Screen;
 }
@@ -23,16 +24,20 @@ pub struct Screen {
 
 pub struct MainScreen {
     pub(crate) screen: Screen,
-    move_x: FixedAnimation,
-    move_y: FixedAnimation,
+    move_x: Animation,
+    move_y: Animation,
+    init_time: Instant,
+    target: f64,
 }
 
 impl GuiScreen for MainScreen {
     fn new(screen_metrics: Screen) -> Self {
         MainScreen {
             screen: screen_metrics,
-            move_x: FixedAnimation::new(0.0, 0.0, Duration::from_millis(10000), AnimationType::Linear),
-            move_y: FixedAnimation::new(0.0, 0.0, Duration::from_millis(10000), AnimationType::Linear),
+            move_x: Animation::new(),
+            move_y: Animation::new(),
+            init_time: Instant::now(),
+            target: 0.1f64,
         }
     }
 
@@ -40,13 +45,22 @@ impl GuiScreen for MainScreen {
         let s = &self.screen;
         s.renderer.draw_rect(0.0, 0.0, 2.0, 2.0, 0xffff1213);
         s.renderer.draw_rounded_rect(10.0, 10.0, 100.0, 100.0, 15.0, 0xff909090);
-        self.move_x.target = s.mouse_x as f64;
-        self.move_y.target = s.mouse_y as f64;
-        s.renderer.draw_rounded_rect(self.move_x.get_value() as f32, self.move_y.get_value() as f32, self.move_x.get_value() as f32 + 200.0, self.move_y.get_value() as f32 + 200.0, 25.0, 0xff909090);
+        self.move_x.animate(self.target, 10f64, AnimationType::Linear, s);
+        s.renderer.draw_rounded_rect(self.move_x.get_value() as f32, self.move_y.get_value() as f32, self.move_x.get_value() as f32 + 200.0, self.move_y.get_value() as f32 + 200.0, 100.0, 0xff909090);
     }
 
-    fn key_press(&self) {
-
+    fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {
+        match action {
+            Action::Release => {}
+            Action::Press => {
+                println!("press");
+                if self.target == 0.1f64 {
+                    self.target = 400f64;
+                } else {
+                    self.target = 0.1f64;
+                }}
+            Action::Repeat => {}
+        }
     }
 
     fn metrics(&self) -> &Screen {
