@@ -1,11 +1,17 @@
 use std::cmp::{max, min};
+use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 use crate::screen::Screen;
 
 pub enum AnimationType {
     Linear,
+    Log,
     CubicIn,
     CubicOut,
+    QuarticIn,
+    QuarticOut,
+    Progressive(f64),
+    Sin,
 }
 
 impl AnimationType {
@@ -14,13 +20,28 @@ impl AnimationType {
             AnimationType::Linear => {
                 state
             }
+            AnimationType::Log => {
+                ((state + 0.01).log10()+2.0)/2.0
+            }
             AnimationType::CubicIn => {
-                state * state * state
+                (state - 1.0).powf(3.0) + 1.0
             }
             AnimationType::CubicOut => {
-                1.0 - (state * state * state)
+                state.powf(3.0)
             }
-        }
+            AnimationType::QuarticOut => {
+                state.powf(4.0)
+            }
+            AnimationType::QuarticIn => {
+                (state - 1.0).powf(4.0)
+            }
+            AnimationType::Sin => {
+                (state * PI/2.0).sin()
+            }
+            AnimationType::Progressive(speed) => {
+                2.0/(1.0+20f64.powf(-(20.0/speed)*state))-1.0
+            }
+        }.clamp(0.0, 1.0)
     }
 }
 
@@ -47,19 +68,13 @@ impl Animation {
         if self.target != target {
             self.target = target;
             self.starting = self.value;
-            self.start_state = self.state;
+            self.state = 0f64;
         }
 
-        println!("{}, {}, {}, {}", (self.value - self.starting).abs(), (self.target - self.starting).abs(), (self.target - self.starting), self.starting);
-        self.value = animation_type.get_value((self.value - self.starting).abs() / (self.target - self.starting).abs()) * (self.target - self.starting) + self.starting;
+        self.state += speed*screen.frame_delta;
+        if self.state > 1.0 {self.state = 1.0}
 
-        if self.target < self.value {
-            self.state -= speed*screen.frame_delta;
-            if self.value < self.target {self.value = self.target;}
-        } else if self.target > self.value {
-            self.state += speed*screen.frame_delta;
-            if self.value > self.target {self.value = self.target;}
-        }
+        self.value = animation_type.get_value(self.state)*(self.target-self.starting)+self.starting;
 
         self.value
     }

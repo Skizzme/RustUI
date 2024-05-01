@@ -1,6 +1,6 @@
 mod renderer;
 mod shader;
-mod gl20;
+// mod gl20;
 mod screen;
 mod animation;
 
@@ -11,6 +11,7 @@ use glfw;
 use glfw::{Context, fail_on_errors, PWindow, WindowEvent, WindowHint};
 use gl11::*;
 use gl11::types::*;
+use gl;
 use crate::screen::{GuiScreen, Screen};
 
 const WIDTH: u32 = 1920/2;
@@ -36,7 +37,7 @@ const FPS: f32 = 60f32;
 
 fn main() {
     let mut glfw = glfw::init(fail_on_errors!()).unwrap();
-    glfw.window_hint(WindowHint::ContextVersion(2, 0));
+    glfw.window_hint(WindowHint::ContextVersion(4, 6));
     glfw.window_hint(WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Any));
 
     let (mut window, events) = glfw.create_window(WIDTH, HEIGHT, TITLE, glfw::WindowMode::Windowed).expect("Failed to make window");
@@ -45,8 +46,14 @@ fn main() {
     window.set_all_polling(true);
 
     unsafe {
-        gl11::load_with(|f_name| glfw.get_proc_address_raw(f_name));
-        gl20::load_with(|f_name| glfw.get_proc_address_raw(f_name));
+        gl11::load_with(|f_name| {
+            // println!("loaded method with gl11: {}", f_name);
+            glfw.get_proc_address_raw(f_name)
+        });
+        gl::load_with(|f_name| {
+            // println!("loaded method with gl20: {}", f_name);
+            glfw.get_proc_address_raw(f_name)
+        });
 
         let renderer = renderer::Renderer::new();
 
@@ -108,10 +115,13 @@ unsafe fn pre_render(window: &mut PWindow) {
 }
 
 unsafe fn post_render(window: &mut PWindow) {
+    check_error();
+    window.swap_buffers();
+}
+
+unsafe fn check_error() {
     let err = GetError();
     if err != 0 {
         println!("OpenGL: {:?}", err);
-
     }
-    window.swap_buffers();
 }

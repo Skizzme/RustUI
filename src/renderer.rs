@@ -21,7 +21,7 @@ impl Renderer {
         Enable(TEXTURE_2D);
         self.rounded_rect_shader.bind();
         self.rounded_rect_shader.put_float("u_size", vec![right-left, bottom-top]);
-        self.rounded_rect_shader.put_float("uradius", vec![radius]);
+        self.rounded_rect_shader.put_float("u_radius", vec![radius]);
         self.rounded_rect_shader.put_float("u_color", self.get_rgb(color));
 
         self.draw_texture_rect(left, top, right, bottom, 0xffffffff);

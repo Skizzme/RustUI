@@ -1,9 +1,10 @@
 use gl11::*;
-use crate::gl20::*;
-use crate::gl20::types::*;
-// use gl;
-// use gl::*;
-// use gl::types::{GLfloat, GLint};
+use crate::check_error;
+// use crate::gl20::*;
+// use crate::gl::types::*;
+use gl;
+use gl::*;
+use gl::types::{GLchar, GLfloat, GLint};
 
 #[derive(Default)]
 pub struct Shader {
@@ -74,16 +75,18 @@ impl Shader {
     }
 
     pub unsafe fn bind(&self) {
+        check_error();
         UseProgram(self.program);
     }
 
     pub unsafe fn unbind(&self) {
+        check_error();
         UseProgram(0);
     }
 
     pub unsafe fn put_int(&self, name: &str, data: Vec<u32>) {
-        // println!("{:?}, {:?}", name, data);
-        let loc = GetUniformLocation(self.program, name.as_bytes().as_ptr().cast());
+        let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
+        let loc = GetUniformLocation(self.program, cname.as_ptr());
         match data.len() {
             1 => {
                 Uniform1i(loc, *data.get(0).unwrap() as GLint);
@@ -102,8 +105,8 @@ impl Shader {
     }
 
     pub unsafe fn put_float(&self, name: &str, data: Vec<f32>) {
-        // println!("{:?}, {:?}", name, data);
-        let loc = GetUniformLocation(self.program, name.as_bytes().as_ptr().cast());
+        let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
+        let loc = GetUniformLocation(self.program, cname.as_ptr());
         match data.len() {
             1 => {
                 Uniform1f(loc, *data.get(0).unwrap() as GLfloat);
