@@ -67,6 +67,7 @@ impl Shader {
         DeleteShader(shader.vertex_shader);
         DeleteShader(shader.fragment_shader);
 
+        println!("Successfully created shader");
         shader.created = true;
 
         return shader;
@@ -81,6 +82,7 @@ impl Shader {
     }
 
     pub unsafe fn put_int(&self, name: &str, data: Vec<u32>) {
+        // println!("{:?}, {:?}", name, data);
         let loc = GetUniformLocation(self.program, name.as_bytes().as_ptr().cast());
         match data.len() {
             1 => {
@@ -100,6 +102,7 @@ impl Shader {
     }
 
     pub unsafe fn put_float(&self, name: &str, data: Vec<f32>) {
+        // println!("{:?}, {:?}", name, data);
         let loc = GetUniformLocation(self.program, name.as_bytes().as_ptr().cast());
         match data.len() {
             1 => {

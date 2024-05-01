@@ -1,6 +1,8 @@
 mod renderer;
 mod shader;
 mod gl20;
+mod screen;
+mod animation;
 
 
 use std::thread;
@@ -9,6 +11,7 @@ use glfw;
 use glfw::{Context, fail_on_errors, PWindow, WindowEvent, WindowHint};
 use gl11::*;
 use gl11::types::*;
+use crate::screen::{GuiScreen, Screen};
 
 const WIDTH: u32 = 1920/2;
 const HEIGHT: u32 = 1080/2;
@@ -41,22 +44,32 @@ fn main() {
     window.make_current();
     window.set_all_polling(true);
 
-    let (mut mouseX, mut mouseY) = (0f32, 0f32);
     unsafe {
         gl11::load_with(|f_name| glfw.get_proc_address_raw(f_name));
-        // gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         gl20::load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
         let renderer = renderer::Renderer::new();
 
+        let mut current_screen = screen::MainScreen::new(
+            Screen {
+                screen_width: WIDTH,
+                screen_height: HEIGHT,
+                mouse_x: 0.0,
+                mouse_y: 0.0,
+                frame_delta: 0.0,
+                renderer,
+            }
+        );
+
+        let mut last_frame = Instant::now();
         while !window.should_close() {
 
             glfw.poll_events();
             for (_, event) in glfw::flush_messages(&events) {
                 match event {
                     WindowEvent::CursorPos(x, y) => {
-                        mouseX = x as f32;
-                        mouseY = y as f32;
+                        current_screen.screen.mouse_x = x as f32;
+                        current_screen.screen.mouse_y = y as f32;
                     }
                     _ => {}
                 }
@@ -64,8 +77,10 @@ fn main() {
 
             pre_render(&mut window);
 
-            renderer.draw_rounded_rect(10.0, 10.0, 100.0, 100.0, 15.0, 0xff909090);
-            renderer.draw_rounded_rect(mouseX, mouseY, mouseX+200.0, mouseY+200.0, 25.0, 0xff909090);
+            current_screen.screen.frame_delta = last_frame.elapsed().as_secs_f64();
+            last_frame = Instant::now();
+
+            current_screen.draw();
 
             post_render(&mut window);
 
