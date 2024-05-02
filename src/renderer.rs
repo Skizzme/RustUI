@@ -11,8 +11,8 @@ impl Renderer {
 
     pub unsafe fn new() -> Self {
         Renderer {
-            rounded_rect_shader: Shader::new(read_to_string("C:\\Users\\farre\\Desktop\\Coding\\Rust\\RustUI\\src\\resources\\shaders\\rounded_rect\\vertex_shader.glsl").unwrap(),
-                                             read_to_string("C:\\Users\\farre\\Desktop\\Coding\\Rust\\RustUI\\src\\resources\\shaders\\rounded_rect\\fragment_shader.glsl").unwrap())
+            rounded_rect_shader: Shader::new(read_to_string("src\\resources\\shaders\\rounded_rect\\vertex_shader.glsl").unwrap(),
+                                             read_to_string("src\\resources\\shaders\\rounded_rect\\fragment_shader.glsl").unwrap())
         }
     }
 

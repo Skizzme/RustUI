@@ -68,7 +68,6 @@ impl Shader {
         DeleteShader(shader.vertex_shader);
         DeleteShader(shader.fragment_shader);
 
-        println!("Successfully created shader");
         shader.created = true;
 
         return shader;

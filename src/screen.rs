@@ -2,28 +2,17 @@ use std::time::{Duration, Instant};
 use glfw::{Action, Key, Modifiers, Scancode};
 use crate::animation::{AnimationType, Animation};
 use crate::renderer::Renderer;
+use crate::WindowM;
 
 pub trait GuiScreen {
-    fn new(screen_metrics: Screen) -> impl GuiScreen;
+    fn new() -> impl GuiScreen;
 
-    unsafe fn draw(&mut self);
+    unsafe fn draw(&mut self, metrics: &WindowM);
 
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers);
-
-    fn metrics(&self) -> &Screen;
-}
-
-pub struct Screen {
-    pub(crate) screen_width: u32,
-    pub(crate) screen_height: u32,
-    pub(crate) mouse_x: f32,
-    pub(crate) mouse_y: f32,
-    pub(crate) frame_delta: f64,
-    pub(crate) renderer: Renderer,
 }
 
 pub struct MainScreen {
-    pub(crate) screen: Screen,
     move_progressive: Animation,
     move_log: Animation,
     move_cubic: Animation,
@@ -31,9 +20,8 @@ pub struct MainScreen {
 }
 
 impl GuiScreen for MainScreen {
-    fn new(screen_metrics: Screen) -> Self {
+    fn new() -> Self {
         MainScreen {
-            screen: screen_metrics,
             move_progressive: Animation::new(),
             move_log: Animation::new(),
             move_cubic: Animation::new(),
@@ -41,18 +29,11 @@ impl GuiScreen for MainScreen {
         }
     }
 
-    unsafe fn draw(&mut self) {
-        let s = &self.screen;
-        s.renderer.draw_rect(0.0, 0.0, 2.0, 2.0, 0xffff1213);
-        s.renderer.draw_rounded_rect(10.0, 10.0, 100.0, 100.0, 15.0, 0xff909090);
-        // self.move_x.animate(s.mouse_x as f64 - 100.0, 1f64, AnimationType::CubicOut, s);
-        // self.move_y.animate(s.mouse_y as f64 - 100.0, 1f64, AnimationType::CubicOut, s);
-        self.move_progressive.animate(s.mouse_x as f64, 0.1f64, AnimationType::Progressive(1f64), s);
-        self.move_log.animate(s.mouse_x as f64, 0.1f64, AnimationType::QuarticIn, s);
-        self.move_cubic.animate(s.mouse_x as f64, 1f64, AnimationType::CubicIn, s);
-        s.renderer.draw_rounded_rect(self.move_progressive.get_value() as f32, 10.0, self.move_progressive.get_value() as f32 + 200.0, 10.0 + 100.0, 10.0, 0xff909090);
-        s.renderer.draw_rounded_rect(self.move_log.get_value() as f32, 120.0, self.move_log.get_value() as f32 + 200.0, 220.0, 10.0, 0xff909090);
-        s.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
+    unsafe fn draw(&mut self, m: &WindowM) {
+        self.move_progressive.animate(m.mouse_x as f64, 0.1f64, AnimationType::Progressive(1f64), m);
+        self.move_cubic.animate(m.mouse_x as f64, 1f64, AnimationType::CubicIn, m);
+        // m.renderer.draw_rounded_rect(self.move_progressive.get_value() as f32, 10.0, self.move_progressive.get_value() as f32 + 200.0, 10.0 + 100.0, 10.0, 0xff909090);
+        // m.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
     }
 
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {
@@ -67,9 +48,5 @@ impl GuiScreen for MainScreen {
                 }}
             Action::Repeat => {}
         }
-    }
-
-    fn metrics(&self) -> &Screen {
-        &self.screen
     }
 }
