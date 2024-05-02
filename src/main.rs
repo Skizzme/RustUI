@@ -7,6 +7,7 @@ mod font;
 mod gl20;
 
 use std::cmp::max;
+use std::path::Path;
 use std::thread;
 use std::time::{Duration, Instant};
 use glfw;
@@ -91,9 +92,16 @@ fn main() {
         let mut current_screen = screen::MainScreen::new();
 
         let mut last_frame = Instant::now();
-        let b = Instant::now();
-        let ft = font::Font::new("src\\resources\\fonts\\ProductSans.ttf", 32f32, &window_m.renderer);
+        let mut b = Instant::now();
+        let font_name = "Comfortaa-Light";
+        if !Path::new(format!("{}.cache", font_name).as_str()).exists() {
+            font::Font::cache(format!("src\\resources\\fonts\\{}.ttf", font_name).as_str(), format!("{}.cache", font_name).as_str());
+            println!("Font took {:?} to cache...", b.elapsed());
+        }
+        b = Instant::now();
+        let ft = font::Font::load(format!("{}.cache", font_name).as_str(), &window_m.renderer);
         println!("Font took {:?} to load...", b.elapsed());
+
         while !window.should_close() {
 
             glfw.poll_events();
@@ -112,17 +120,23 @@ fn main() {
 
             pre_render(&mut window);
 
-            if !window.is_focused() {
-                glfw.set_swap_interval(SwapInterval::Sync(0));
-                let target_delta = (1.0/BACKGROUND_FPS);
-                thread::sleep(Duration::from_secs_f32(target_delta));
-            } else {
-                glfw.set_swap_interval(SwapInterval::Sync(1));
-            }
+            // if !window.is_focused() {
+            //     glfw.set_swap_interval(SwapInterval::Sync(0));
+            //     let target_delta = (1.0/BACKGROUND_FPS);
+            //     thread::sleep(Duration::from_secs_f32(target_delta));
+            // } else {
+            //     glfw.set_swap_interval(SwapInterval::Sync(1));
+            // }
             window_m.frame_delta = last_frame.elapsed().as_secs_f64();
             last_frame = Instant::now();
 
-            ft.draw_string("Comfortaa-Light", 10.0, 10.0, 0xffffffff);
+            let mut y_t = 0f32;
+            for i in 4..6 {
+                let size = i as f32 * 2.0;
+                ft.draw_string(size, font_name, 10.0, y_t, 0xffffffff);
+                y_t += ft.get_height(size);
+            }
+
             current_screen.draw(&window_m);
 
             post_render(&mut window);
