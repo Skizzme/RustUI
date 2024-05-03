@@ -1,18 +1,20 @@
 use std::fs::{File, read, read_to_string};
+use std::rc::Rc;
 use gl11::*;
 use gl11::types::*;
+use crate::font::{Font, FontManager};
 use crate::shader::Shader;
 
 pub struct Renderer {
-    rounded_rect_shader: Shader
+    rounded_rect_shader: Shader,
 }
 
 impl Renderer {
 
     pub unsafe fn new() -> Self {
         Renderer {
-            rounded_rect_shader: Shader::new(read_to_string("src\\resources\\shaders\\rounded_rect\\vertex_shader.glsl").unwrap(),
-                                             read_to_string("src\\resources\\shaders\\rounded_rect\\fragment_shader.glsl").unwrap())
+            rounded_rect_shader: Shader::new(read_to_string("src\\resources\\shaders\\rounded_rect\\vertex.glsl").unwrap(),
+                                             read_to_string("src\\resources\\shaders\\rounded_rect\\fragment.glsl").unwrap()),
         }
     }
 

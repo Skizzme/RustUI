@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
-use crate::WindowM;
+use crate::Window;
 
 pub enum AnimationType {
     Linear,
@@ -62,7 +62,7 @@ impl Animation {
         }
     }
 
-    pub fn animate(&mut self, target: f64, mut speed: f64, animation_type: AnimationType, screen: &WindowM) -> f64 {
+    pub fn animate(&mut self, target: f64, mut speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
         if self.target != target {
             self.target = target;
             self.starting = self.value;

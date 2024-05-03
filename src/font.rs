@@ -1,31 +1,64 @@
 
 extern crate freetype;
 
+use std::collections::HashMap;
 use std::fmt::Pointer;
 use std::fs::read_to_string;
 use std::io::Write;
 use std::path::Path;
-use std::thread::JoinHandle;
-use std::time::Instant;
+use std::rc::Rc;
+use std::time::{Instant};
 use freetype::face::LoadFlag;
-use freetype::{GlyphSlot, RenderMode, Vector};
+use freetype::{RenderMode};
 use gl::*;
-use gl11::{MODELVIEW_MATRIX, PopMatrix, PushMatrix, Scaled};
+use gl11::{PopMatrix, PushMatrix, Scaled, Translatef};
 use gl11::types::GLdouble;
-use gl::types::{GLfloat, GLint, GLuint};
+use gl::types::{GLint, GLuint};
 use crate::renderer::Renderer;
 use crate::shader::Shader;
-use crate::WindowM;
 
 const FONT_RES: u32 = 64u32;
 
-pub struct Font<'a> {
+pub struct FontManager {
+    fonts: HashMap<String, Rc<Font>>,
+    renderer: Rc<Renderer>,
+}
+
+impl FontManager {
+    pub fn new(renderer: Rc<Renderer>) -> Self {
+        FontManager {
+            fonts: HashMap::new(),
+            renderer: renderer.clone(),
+        }
+    }
+
+    pub unsafe fn get_font(&mut self, name: &str) -> Rc<Font> {
+        if !self.fonts.contains_key(name) {
+            let mut b = Instant::now();
+            if !Path::new(format!("{}_{}.cache", name, FONT_RES).as_str()).exists() {
+                Font::cache(format!("src\\resources\\fonts\\{}.ttf", name).as_str(), format!("{}_{}.cache", name, FONT_RES).as_str());
+                println!("Font took {:?} to cache...", b.elapsed());
+            }
+
+            b = Instant::now();
+            let ft = Font::load(format!("{}_{}.cache", name, FONT_RES).as_str(), self.renderer.clone());
+            println!("Font took {:?} to load...", b.elapsed());
+
+            self.fonts.insert(name.to_string(), Rc::new(ft));
+        }
+        self.fonts.get(name).unwrap().clone()
+    }
+
+
+}
+
+pub struct Font {
     glyphs: Vec<Glyph>,
-    renderer: &'a Renderer,
+    renderer: Rc<Renderer>,
     shader: Shader,
 }
 
-impl<'a> Font<'a> {
+impl Font {
     pub unsafe fn cache(font_path: &str, cache_path: &str) {
         let lib = freetype::Library::init().unwrap();
         let face = lib.new_face(font_path, 0).unwrap();
@@ -59,7 +92,7 @@ impl<'a> Font<'a> {
         std::fs::write(cache_path, all_bytes).unwrap();
     }
 
-    pub unsafe fn load(cached_path: &str, renderer: &'a Renderer) -> Self {
+    pub unsafe fn load(cached_path: &str, renderer: Rc<Renderer>) -> Self {
         let mut font = Font {
             glyphs: Vec::new(),
             renderer,
@@ -137,10 +170,10 @@ impl<'a> Font<'a> {
     }
 
 
-    pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled: f32, color: u32) {
+    pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled_factor: f32, color: u32) -> (f32, f32) {
 
         let scale = size/FONT_RES as f32;
-        let i_scale = 1.0/(size/FONT_RES as f32);
+        let i_scale = 1.0/scale;
 
         gl11::Enable(gl11::BLEND);
         x = x*i_scale;
@@ -151,18 +184,27 @@ impl<'a> Font<'a> {
 
         self.shader.bind();
         self.shader.put_float("u_color", self.renderer.get_rgb(color));
-        self.shader.put_float("u_smoothing", vec![0.3 / (size/10.0*scaled)]);
+        self.shader.put_float("u_smoothing", vec![0.25 / (size/10.0 * scaled_factor)]);
 
         let str_height = self.glyphs.get('H' as usize).unwrap().top as f32;
+
+        let mut width = 0f32;
+        let mut height = 0f32;
 
         for char in string.chars() {
             let glyph: &Glyph = self.glyphs.get(char as usize).unwrap();
 
-            BindTexture(TEXTURE_2D, glyph.texture_id);
+            PushMatrix();
             let pos_y = y + str_height - glyph.top as f32;
-            self.renderer.draw_texture_rect(x, pos_y, x+glyph.width as f32, pos_y+glyph.height as f32, color);
+            Translatef(x+width, pos_y, 0.0);
+            BindTexture(TEXTURE_2D, glyph.texture_id);
+            self.renderer.draw_texture_rect(0.0, 0.0, glyph.width as f32, glyph.height as f32, color);
 
-            x += (glyph.advance - glyph.bearing_x) as f32;
+            width += (glyph.advance - glyph.bearing_x) as f32;
+            if height < glyph.height as f32 {
+                height = glyph.height as f32;
+            }
+            PopMatrix();
         }
 
         self.shader.unbind();
@@ -170,6 +212,8 @@ impl<'a> Font<'a> {
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();
         gl11::Disable(gl11::BLEND);
+
+        (width*scale, height*scale)
     }
 
     pub unsafe fn get_width(&self, size: f32, string: String) -> f32 {
@@ -191,8 +235,8 @@ impl<'a> Font<'a> {
         self.glyphs.get('H' as usize).unwrap().top as f32 * scale
     }
 
-    pub unsafe fn draw_string(&self, size: f32, string: &str, mut x: f32, mut y: f32, color: u32) {
-        self.draw_string_s(size, string, x, y, 1.0, color);
+    pub unsafe fn draw_string(&self, size: f32, string: &str, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
+        self.draw_string_s(size, string, x, y, 1.0, color)
     }
 }
 
