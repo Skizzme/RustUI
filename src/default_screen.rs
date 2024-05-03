@@ -1,6 +1,5 @@
 use std::fs::read_to_string;
 use std::time::Instant;
-use gl11::{BLEND, Enable, TEXTURE_2D};
 use glfw::{Action, Key, Modifiers, Scancode};
 use crate::animation::{Animation, AnimationType};
 use crate::screen::GuiScreen;

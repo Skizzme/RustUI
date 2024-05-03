@@ -1,8 +1,6 @@
-use std::fs::{File, read, read_to_string};
-use std::rc::Rc;
+use std::fs::{read_to_string};
 use gl11::*;
 use gl11::types::*;
-use crate::font::{Font, FontManager};
 use crate::shader::Shader;
 
 pub struct Renderer {
