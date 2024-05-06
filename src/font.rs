@@ -5,7 +5,9 @@ use std::collections::HashMap;
 use std::fmt::Pointer;
 use std::fs::read_to_string;
 use std::io::Write;
+use std::mem::{size_of, size_of_val};
 use std::path::Path;
+use std::ptr::null;
 use std::rc::Rc;
 use std::time::{Instant};
 use freetype::face::LoadFlag;
@@ -14,10 +16,11 @@ use gl::*;
 use gl11::{PopMatrix, PushMatrix, Scaled, Translatef};
 use gl11::types::GLdouble;
 use gl::types::{GLint, GLuint};
+use crate::gl20::{EnableClientState, TexCoordPointer, VertexPointer};
 use crate::renderer::Renderer;
 use crate::shader::Shader;
 
-const FONT_RES: u32 = 64u32;
+const FONT_RES: u32 = 128u32;
 
 pub struct FontManager {
     fonts: HashMap<String, Rc<Font>>,
@@ -154,10 +157,75 @@ impl Font {
             data.cast(),
         );
 
-        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE as GLint);
-        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE as GLint);
+        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, REPEAT as GLint);
+        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, REPEAT as GLint);
         TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR as GLint);
         TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR as GLint);
+
+        let mut vao = 0;
+        let mut vbo = 0;
+        let mut uvo = 0;
+        let mut ebo = 0;
+        GenVertexArrays(1, &mut vao);
+        GenBuffers(1, &mut vbo);
+        GenBuffers(1, &mut uvo);
+        GenBuffers(1, &mut ebo);
+        BindVertexArray(vao);
+
+        let vertices: [[f32; 2]; 4] =
+            [[0.0, 0.0], [width as f32, 0.0], [width as f32, height as f32], [0.0, height as f32]];
+
+        BindBuffer(ARRAY_BUFFER, vbo);
+        BufferData(
+            ARRAY_BUFFER,
+            size_of_val(&vertices) as isize,
+            vertices.as_ptr().cast(),
+            STATIC_DRAW
+        );
+
+        let uvs: [[f32; 2]; 4] =
+            [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
+
+        BindBuffer(ARRAY_BUFFER, uvo);
+        BufferData(
+            ARRAY_BUFFER,
+            size_of_val(&uvs) as isize,
+            uvs.as_ptr().cast(),
+            STATIC_DRAW
+        );
+
+        let elements = [0, 1, 2, 0, 2, 3];
+        BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
+        BufferData(
+            ELEMENT_ARRAY_BUFFER,
+            size_of_val(&elements) as isize,
+            elements.as_ptr().cast(),
+            STATIC_DRAW
+        );
+
+        EnableVertexAttribArray(0);
+        BindBuffer(ARRAY_BUFFER, vbo);
+        VertexAttribPointer(
+            0,
+            2,
+            FLOAT,
+            FALSE,
+            size_of::<[f32; 2]>().try_into().unwrap(),
+            0 as *const _,
+        );
+
+        EnableVertexAttribArray(1);
+        BindBuffer(ARRAY_BUFFER, uvo);
+        VertexAttribPointer(
+            1,
+            2,
+            FLOAT,
+            FALSE,
+            size_of::<[f32; 2]>().try_into().unwrap(),
+            0 as *const _,
+        );
+
+        // println!("{:?} {:?} {:?} {:?}", vertices, uvs, elements, size_of::<[f32; 2]>());
 
         Glyph {
             texture_id: tex_id,
@@ -166,9 +234,23 @@ impl Font {
             advance,
             bearing_x,
             top,
+            vbo,
+            vao,
+            uvo,
+            ebo,
         }
     }
 
+    unsafe fn draw_char(&self, c: char) {
+        gl11::Enable(gl11::TEXTURE_2D);
+        let glyph: &Glyph = self.glyphs.get(c as usize).unwrap();
+
+        BindVertexArray(glyph.vao);
+
+        DrawElements(TRIANGLES, 6, UNSIGNED_BYTE, null());
+
+        BindVertexArray(0);
+    }
 
     pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled_factor: f32, color: u32) -> (f32, f32) {
 
@@ -182,9 +264,6 @@ impl Font {
         PushMatrix();
         Scaled(scale as GLdouble, scale as GLdouble, 1 as GLdouble);
 
-        self.shader.bind();
-        self.shader.put_float("u_color", self.renderer.get_rgb(color));
-        self.shader.put_float("u_smoothing", vec![0.25 / (size/10.0 * scaled_factor)]);
 
         let str_height = self.glyphs.get('H' as usize).unwrap().top as f32;
 
@@ -197,8 +276,13 @@ impl Font {
             PushMatrix();
             let pos_y = y + str_height - glyph.top as f32;
             Translatef(x+width, pos_y, 0.0);
+            self.shader.bind();
+            self.shader.u_put_float("u_color", self.renderer.get_rgb(color));
+            let smoothing = (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0).clamp(0.0, 0.6);
+            self.shader.u_put_float("u_smoothing", vec![smoothing]);
             BindTexture(TEXTURE_2D, glyph.texture_id);
             self.renderer.draw_texture_rect(0.0, 0.0, glyph.width as f32, glyph.height as f32, color);
+            // self.draw_char(char);
 
             width += (glyph.advance - glyph.bearing_x) as f32;
             if height < glyph.height as f32 {
@@ -248,4 +332,8 @@ struct Glyph {
     advance: i32,
     bearing_x: i32,
     top: i32,
+    vao: GLuint,
+    vbo: GLuint,
+    uvo: GLuint,
+    ebo: GLuint,
 }

@@ -6,7 +6,10 @@ mod font;
 mod gl20;
 mod default_screen;
 mod window;
+mod texture;
 
+use std::fs::{read, read_to_string};
+use std::mem::size_of_val;
 use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -15,12 +18,15 @@ use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, W
 use gl11::*;
 use gl11::types::*;
 use gl;
-use gl::MULTISAMPLE;
+use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, GenBuffers, GenVertexArrays, MULTISAMPLE, STATIC_DRAW};
+use image::{EncodableLayout, open};
 use winapi::um::wincon::FreeConsole;
 use crate::default_screen::DefaultScreen;
 use crate::font::FontManager;
 use crate::renderer::Renderer;
 use crate::screen::{GuiScreen};
+use crate::shader::Shader;
+use crate::texture::Texture;
 use crate::window::Window;
 
 const TITLE: &str = "Test";
@@ -55,38 +61,41 @@ fn main() {
         let mut window = Window::create(1920/2, 1080/2);
         let mut current_screen = DefaultScreen::new();
         let mut last_frame = Instant::now();
+        let mut frames = 0;
+        let mut last_fps = Instant::now();
+
+        // let shader = Shader::new(read_to_string("src\\resources\\shaders\\test\\vertex.glsl").unwrap(),
+        //                                  read_to_string("src\\resources\\shaders\\test\\fragment.glsl").unwrap());
+        //
+        // let mut vao = 0;
+        // let mut vbo = 0;
+        // GenVertexArrays(1, &mut vao);
+        // BindVertexArray(vao);
+        //
+        // let vertices: [[f32; 3]; 4] =
+        //     [[0.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 10.0, 0.0], [0.0, 10.0, 0.0]];
+        //
+        // GenBuffers(1, &mut vbo);
+        // BindBuffer(ARRAY_BUFFER, vbo);
+        // BufferData(
+        //     ARRAY_BUFFER,
+        //     size_of_val(&vertices) as isize,
+        //     vertices.as_ptr().cast(),
+        //     STATIC_DRAW
+        // );
+        // let data = read("C:\\Users\\farre\\Pictures\\alpha_album_cover_high_purp.jpg").unwrap();
         while !window.p_window.should_close() {
+            // shader.bind();
+            // VertexPointer()
             let st = Instant::now();
             window.run(Box::new(&mut current_screen), last_frame);
             last_frame = st;
+            if last_fps.elapsed().as_secs_f32() > 1.0 {
+                println!("FPS {:?}", frames);
+                last_fps = Instant::now();
+                frames = 0;
+            }
+            frames += 1;
         }
-    }
-}
-
-unsafe fn pre_render(window: &Window) {
-    Viewport(0, 0, window.screen_width as GLsizei, window.screen_height as GLsizei);
-
-    Clear(DEPTH_BUFFER_BIT);
-    MatrixMode(PROJECTION);
-    LoadIdentity();
-    Ortho(0 as GLdouble, window.screen_width as GLdouble, window.screen_height as  GLdouble, 0 as GLdouble, 1000 as GLdouble, 3000 as GLdouble);
-    Translated(0 as GLdouble, 0 as GLdouble, -2000 as GLdouble);
-
-    Clear(COLOR_BUFFER_BIT);
-    Enable(TEXTURE_2D);
-    Enable(BLEND);
-    BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-    Enable(MULTISAMPLE);
-}
-
-unsafe fn post_render(window: &mut PWindow) {
-    check_error();
-    window.swap_buffers();
-}
-
-unsafe fn check_error() {
-    let err = GetError();
-    if err != 0 {
-        println!("OpenGL: {:?}", err);
     }
 }

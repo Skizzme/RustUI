@@ -1,6 +1,8 @@
 use std::fs::{read_to_string};
+use std::time::Instant;
 use gl11::*;
 use gl11::types::*;
+use crate::gl20::VertexAttribPointer;
 use crate::shader::Shader;
 
 pub struct Renderer {
@@ -20,9 +22,9 @@ impl Renderer {
         Enable(BLEND);
         Enable(TEXTURE_2D);
         self.rounded_rect_shader.bind();
-        self.rounded_rect_shader.put_float("u_size", vec![right-left, bottom-top]);
-        self.rounded_rect_shader.put_float("u_radius", vec![radius]);
-        self.rounded_rect_shader.put_float("u_color", self.get_rgb(color));
+        self.rounded_rect_shader.u_put_float("u_size", vec![right-left, bottom-top]);
+        self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
+        self.rounded_rect_shader.u_put_float("u_color", self.get_rgb(color));
 
         self.draw_texture_rect(left, top, right, bottom, 0xffffffff);
 
@@ -47,14 +49,14 @@ impl Renderer {
         Enable(TEXTURE_2D);
         Begin(QUADS);
         self.set_color(color);
-        TexCoord2d(0.0, 0.0);
-        Vertex2d(left as GLdouble, top as GLdouble);
-        TexCoord2d(1.0, 0.0);
-        Vertex2d(right as GLdouble, top as GLdouble);
-        TexCoord2d(1.0, 1.0);
-        Vertex2d(right as GLdouble, bottom as GLdouble);
         TexCoord2d(0.0, 1.0);
         Vertex2d(left as GLdouble, bottom as GLdouble);
+        TexCoord2d(1.0, 1.0);
+        Vertex2d(right as GLdouble, bottom as GLdouble);
+        TexCoord2d(1.0, 0.0);
+        Vertex2d(right as GLdouble, top as GLdouble);
+        TexCoord2d(0.0, 0.0);
+        Vertex2d(left as GLdouble, top as GLdouble);
         End();
     }
 

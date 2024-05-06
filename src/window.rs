@@ -1,10 +1,20 @@
 use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
+use gl11::types::{GLdouble, GLsizei};
+use gl11::{BLEND, BlendFunc, Clear, COLOR_BUFFER_BIT, DEPTH_BUFFER_BIT, Enable, GetError, LoadIdentity, MatrixMode, ONE_MINUS_SRC_ALPHA, Ortho, PROJECTION, SRC_ALPHA, TEXTURE_2D, Translated, Viewport};
+use gl::MULTISAMPLE;
+use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint};
+use image::open;
+use crate::{BACKGROUND_FPS, gl20, TITLE};
+use crate::font::FontManager;
+use crate::renderer::Renderer;
+use crate::screen::GuiScreen;
+use crate::texture::Texture;
 
 pub struct Window {
-    pub screen_width: u32,
-    pub screen_height: u32,
+    pub screen_width: i32,
+    pub screen_height: i32,
     pub mouse_x: f32,
     pub mouse_y: f32,
     pub frame_delta: f64,
@@ -19,14 +29,16 @@ pub struct Window {
 }
 
 impl Window {
-    pub unsafe fn create(width: u32, height: u32) -> Window {
+    pub unsafe fn create(width: i32, height: i32) -> Window {
         let mut glfw = glfw::init(fail_on_errors!()).unwrap();
         glfw.window_hint(WindowHint::ContextVersion(4, 6));
-        glfw.window_hint(WindowHint::Resizable(false));
+        // glfw.window_hint(WindowHint::Resizable(false));
+        // glfw.window_hint(WindowHint::Floating(true));
+        // glfw.window_hint(WindowHint::TransparentFramebuffer(true));
         glfw.window_hint(WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Any));
         glfw.window_hint(WindowHint::Samples(Some(8u32)));
 
-        let (mut p_window, events) = glfw.create_window(width, height, TITLE, glfw::WindowMode::Windowed).expect("Failed to make window");
+        let (mut p_window, events) = glfw.create_window(width as u32, height as u32, TITLE, glfw::WindowMode::Windowed).expect("Failed to make window");
 
         p_window.make_current();
         p_window.set_all_polling(true);
@@ -68,24 +80,58 @@ impl Window {
                     self.mouse_y = y as f32;
                 }
                 WindowEvent::Key(key, code, action, mods) => current_screen.key_press(key, code, action, mods),
-                _e => {}
+                WindowEvent::Size(width, height) => {
+                    self.screen_width = width;
+                    self.screen_height = height;
+                }
+                _e => {
+                }
             }
         }
 
         pre_render(self);
 
-        if !self.p_window.is_focused() {
-            self.glfw.set_swap_interval(SwapInterval::Sync(0));
-            let target_delta = (1.0/BACKGROUND_FPS);
-            thread::sleep(Duration::from_secs_f32(target_delta));
-        } else {
-            self.glfw.set_swap_interval(SwapInterval::Sync(1));
-        }
+        // if !self.p_window.is_focused() {
+        //     self.glfw.set_swap_interval(SwapInterval::Sync(0));
+        //     let target_delta = (1.0/BACKGROUND_FPS);
+        //     thread::sleep(Duration::from_secs_f32(target_delta));
+        // } else {
+        //     self.glfw.set_swap_interval(SwapInterval::Sync(1));
+        // }
 
         self.frame_delta = last_frame.elapsed().as_secs_f64();
 
         current_screen.draw(self);
 
         post_render(&mut self.p_window);
+    }
+}
+
+
+unsafe fn pre_render(window: &Window) {
+    Viewport(0, 0, window.screen_width as GLsizei, window.screen_height as GLsizei);
+
+    Clear(DEPTH_BUFFER_BIT);
+    MatrixMode(PROJECTION);
+    LoadIdentity();
+    Ortho(0 as GLdouble, window.screen_width as GLdouble, window.screen_height as  GLdouble, 0 as GLdouble, 1000 as GLdouble, 3000 as GLdouble);
+    Translated(0 as GLdouble, 0 as GLdouble, -2000 as GLdouble);
+
+    Clear(COLOR_BUFFER_BIT);
+    Enable(TEXTURE_2D);
+    Enable(BLEND);
+    BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+    Enable(MULTISAMPLE);
+}
+
+unsafe fn post_render(window: &mut PWindow) {
+    check_error();
+    window.swap_buffers();
+}
+
+pub unsafe fn check_error() {
+    let err = GetError();
+    if err != 0 {
+        println!("OpenGL: {:?}", err);
     }
 }
