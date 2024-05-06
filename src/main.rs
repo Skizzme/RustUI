@@ -1,0 +1,92 @@
+mod renderer;
+mod shader;
+mod screen;
+mod animation;
+mod font;
+mod gl20;
+mod default_screen;
+mod window;
+
+use std::rc::Rc;
+use std::thread;
+use std::time::{Duration, Instant};
+use glfw;
+use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint};
+use gl11::*;
+use gl11::types::*;
+use gl;
+use gl::MULTISAMPLE;
+use winapi::um::wincon::FreeConsole;
+use crate::default_screen::DefaultScreen;
+use crate::font::FontManager;
+use crate::renderer::Renderer;
+use crate::screen::{GuiScreen};
+use crate::window::Window;
+
+const TITLE: &str = "Test";
+const FPS: f32 = 144f32;
+const BACKGROUND_FPS: f32 = 30f32;
+
+// extern crate gl_generator;
+
+// GENERATE OPEN GL BINDINGS FOR ANY VERSION
+// use gl_generator::{Registry, Api, Profile, Fallbacks, GlobalGenerator};
+// use std::env;
+// use std::fs::File;
+// use std::path::Path;
+
+// fn main() {
+//     let mut file = File::create("binding\\gl20").unwrap();
+//
+//     Registry::new(Api::Gl, (2, 0), Profile::Core, Fallbacks::All, [])
+//         .write_bindings(GlobalGenerator, &mut file)
+//         .unwrap();
+// }
+
+fn main() {
+    let args : Vec<String> = std::env::args().collect();
+    if !(args.len() > 1 && args[1] == "console") {
+        unsafe {
+            FreeConsole();
+        }
+    }
+
+    unsafe {
+        let mut window = Window::create(1920/2, 1080/2);
+        let mut current_screen = DefaultScreen::new();
+        let mut last_frame = Instant::now();
+        while !window.p_window.should_close() {
+            let st = Instant::now();
+            window.run(Box::new(&mut current_screen), last_frame);
+            last_frame = st;
+        }
+    }
+}
+
+unsafe fn pre_render(window: &Window) {
+    Viewport(0, 0, window.screen_width as GLsizei, window.screen_height as GLsizei);
+
+    Clear(DEPTH_BUFFER_BIT);
+    MatrixMode(PROJECTION);
+    LoadIdentity();
+    Ortho(0 as GLdouble, window.screen_width as GLdouble, window.screen_height as  GLdouble, 0 as GLdouble, 1000 as GLdouble, 3000 as GLdouble);
+    Translated(0 as GLdouble, 0 as GLdouble, -2000 as GLdouble);
+
+    Clear(COLOR_BUFFER_BIT);
+    Enable(TEXTURE_2D);
+    Enable(BLEND);
+    BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+    Enable(MULTISAMPLE);
+}
+
+unsafe fn post_render(window: &mut PWindow) {
+    check_error();
+    window.swap_buffers();
+}
+
+unsafe fn check_error() {
+    let err = GetError();
+    if err != 0 {
+        println!("OpenGL: {:?}", err);
+    }
+}
