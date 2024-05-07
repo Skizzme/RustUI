@@ -12,17 +12,16 @@ use std::rc::Rc;
 use std::time::{Instant};
 use freetype::face::LoadFlag;
 use freetype::{RenderMode};
-use gl::*;
-use gl11::{PopMatrix, PushMatrix, Scaled, Translatef};
-use gl11::types::GLdouble;
-use gl::types::{GLint, GLuint};
+// use gl::*;
+// use gl::types::{GLint, GLuint};
 use image::{GrayAlphaImage, ImageBuffer};
-use crate::gl20::{EnableClientState, TexCoordPointer, VertexPointer};
+use crate::gl30::*;
+use crate::gl30::types::GLdouble;
 use crate::renderer::Renderer;
 use crate::shader::Shader;
 use crate::texture::Texture;
 
-const FONT_RES: u32 = 128u32;
+const FONT_RES: u32 = 32u32;
 
 #[derive(Debug)]
 struct CacheGlyph {
@@ -63,15 +62,15 @@ impl FontManager {
         }
         self.fonts.get(name).unwrap().clone()
     }
-
-
 }
 
 pub struct Font {
-    glyphs: Vec<Glyph>,
+    glyphs: [Glyph; 128],
     renderer: Rc<Renderer>,
     shader: Shader,
     atlas_tex: Option<Texture>,
+    wrap: u8,
+    line_spacing: f32,
 }
 
 impl Font {
@@ -146,11 +145,13 @@ impl Font {
 
     pub unsafe fn load(cached_path: &str, renderer: Rc<Renderer>) -> Self {
         let mut font = Font {
-            glyphs: Vec::new(),
+            glyphs: [Glyph::default(); 128],
             renderer: renderer.clone(),
             shader:
                 Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap()),
             atlas_tex: None,
+            wrap: 0,
+            line_spacing: 1.0,
         };
 
         let mut all_bytes = std::fs::read(cached_path).unwrap();
@@ -169,7 +170,7 @@ impl Font {
                 atlas_height = height;
             }
 
-            font.glyphs.push(
+            font.glyphs[i] =
                 Glyph {
                     atlas_x: atlas_width,
                     width,
@@ -177,8 +178,7 @@ impl Font {
                     advance,
                     bearing_x,
                     top,
-                }
-            );
+                };
 
             atlas_width += width;
         }
@@ -190,19 +190,12 @@ impl Font {
         font
     }
 
-    // unsafe fn create_glyph_texture(width: i32, height: i32, advance: i32, bearing_x: i32, top: i32, data: Vec<u8>, renderer: Rc<Renderer>) -> Glyph {
-    //     let tex = Texture::create(renderer, width, height, data, ALPHA);
-        // println!("{:?} {:?} {:?} {:?}", vertices, uvs, elements, size_of::<[f32; 2]>());
-
-    // }
-
     pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled_factor: f32, color: u32) -> (f32, f32) {
-
         let scale = size/FONT_RES as f32;
         let i_scale = 1.0/scale;
 
         let atlas = self.atlas_tex.as_ref().unwrap();
-        gl11::Enable(gl11::BLEND);
+        Enable(BLEND);
         x = x*i_scale;
         y = y*i_scale;
         let start_x = x;
@@ -258,7 +251,7 @@ impl Font {
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();
         atlas.unbind();
-        gl11::Disable(gl11::BLEND);
+        Disable(BLEND);
 
         (line_width *scale, line_height *scale)
     }
@@ -285,9 +278,19 @@ impl Font {
     pub unsafe fn draw_string(&self, size: f32, string: &str, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
         self.draw_string_s(size, string, x, y, 1.0, color)
     }
+
+    pub fn line_spacing(&mut self, spacing: f32) -> &mut Self {
+        self.line_spacing = spacing;
+        self
+    }
+
+    pub fn set_wrap(&mut self, wrapping: u8) -> &mut Self {
+        self.wrap = wrapping;
+        self
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone, Copy)]
 struct Glyph {
     atlas_x: i32,
     width: i32,

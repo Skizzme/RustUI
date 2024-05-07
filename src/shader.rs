@@ -1,10 +1,10 @@
-use gl11::*;
-// use crate::gl20::*;
+use crate::gl30::*;
+// use crate::gl30::*;
 // use crate::gl::types::*;
-use gl;
-use gl::*;
-use gl::types::{GLchar, GLfloat, GLint};
-use crate::gl20::types::GLdouble;
+// use gl;
+// use gl::*;
+// use gl::types::{GLchar, GLfloat, GLint};
+use crate::gl30::types::*;
 use crate::window::check_error;
 
 #[derive(Default, Debug)]
@@ -75,12 +75,10 @@ impl Shader {
     }
 
     pub unsafe fn bind(&self) {
-        check_error();
         UseProgram(self.program);
     }
 
     pub unsafe fn unbind(&self) {
-        check_error();
         UseProgram(0);
     }
 
@@ -134,25 +132,25 @@ impl Shader {
         }
     }
 
-    pub unsafe fn u_put_double(&self, name: &str, data: Vec<f64>) {
-        let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
-        let loc = GetUniformLocation(self.program, cname.as_ptr());
-        match data.len() {
-            1 => {
-                Uniform1d(loc, *data.get(0).unwrap() as GLdouble);
-            }
-            2 => {
-                Uniform2d(loc, *data.get(0).unwrap() as GLdouble, *data.get(1).unwrap() as GLdouble);
-            }
-            3 => {
-                Uniform3d(loc, *data.get(0).unwrap() as GLdouble, *data.get(1).unwrap() as GLdouble, *data.get(2).unwrap() as GLdouble);
-            }
-            4 => {
-                Uniform4d(loc, *data.get(0).unwrap() as GLdouble, *data.get(1).unwrap() as GLdouble, *data.get(2).unwrap() as GLdouble, *data.get(3).unwrap() as GLdouble);
-            }
-            _ => {}
-        }
-    }
+//     pub unsafe fn u_put_double(&self, name: &str, data: Vec<f64>) {
+//         let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
+//         let loc = GetUniformLocation(self.program, cname.as_ptr());
+//         match data.len() {
+//             1 => {
+//                 Uniform1d(loc, *data.get(0).unwrap() as GLdouble);
+//             }
+//             2 => {
+//                 Uniform2d(loc, *data.get(0).unwrap() as GLdouble, *data.get(1).unwrap() as GLdouble);
+//             }
+//             3 => {
+//                 Uniform3d(loc, *data.get(0).unwrap() as GLdouble, *data.get(1).unwrap() as GLdouble, *data.get(2).unwrap() as GLdouble);
+//             }
+//             4 => {
+//                 Uniform4d(loc, *data.get(0).unwrap() as GLdouble, *data.get(1).unwrap() as GLdouble, *data.get(2).unwrap() as GLdouble, *data.get(3).unwrap() as GLdouble);
+//             }
+//             _ => {}
+//         }
+//     }
 }
 
 unsafe fn compile(shader: u32, source: &str) -> GLint {

@@ -3,22 +3,19 @@ mod shader;
 mod screen;
 mod animation;
 mod font;
-mod gl20;
 mod default_screen;
 mod window;
 mod texture;
+mod gl30;
 
-use std::fs::{read, read_to_string};
 use std::mem::size_of_val;
 use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
 use glfw;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint};
-use gl11::*;
-use gl11::types::*;
-use gl;
-use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, GenBuffers, GenVertexArrays, MULTISAMPLE, STATIC_DRAW};
+// use gl;
+// use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, GenBuffers, GenVertexArrays, MULTISAMPLE, STATIC_DRAW};
 use image::{EncodableLayout, open};
 use winapi::um::wincon::FreeConsole;
 use crate::default_screen::DefaultScreen;
@@ -33,18 +30,17 @@ const TITLE: &str = "Test";
 const FPS: f32 = 144f32;
 const BACKGROUND_FPS: f32 = 30f32;
 
-// extern crate gl_generator;
-
 // GENERATE OPEN GL BINDINGS FOR ANY VERSION
+// extern crate gl_generator;
 // use gl_generator::{Registry, Api, Profile, Fallbacks, GlobalGenerator};
 // use std::env;
 // use std::fs::File;
 // use std::path::Path;
-
-// fn main() {
-//     let mut file = File::create("binding\\gl20").unwrap();
 //
-//     Registry::new(Api::Gl, (2, 0), Profile::Core, Fallbacks::All, [])
+// fn main() {
+//     let mut file = File::create("src\\gl30.rs").unwrap();
+//
+//     Registry::new(Api::Gl, (3, 0), Profile::Core, Fallbacks::All, [])
 //         .write_bindings(GlobalGenerator, &mut file)
 //         .unwrap();
 // }

@@ -7,8 +7,7 @@ name = "RustUI"
 version = "0.1.0"
 dependencies = [
  "freetype-rs",
- "gl",
- "gl11",
+ "gl_generator",
  "glfw",
  "image",
  "winapi",
@@ -317,24 +316,6 @@ checksum = "3fb2d69b19215e18bb912fa30f7ce15846e301408695e44e0ef719f1da9e19f2"
 dependencies = [
  "color_quant",
  "weezl",
-]
-
-[[package]]
-name = "gl"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a94edab108827d67608095e269cf862e60d920f144a5026d3dbcfd8b877fb404"
-dependencies = [
- "gl_generator",
-]
-
-[[package]]
-name = "gl11"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51c3bafa2109f402ea86f3dec184364fd4889a4e14d98247c099cf6d6d14d136"
-dependencies = [
- "gl_generator",
 ]
 
 [[package]]

@@ -1,13 +1,14 @@
 use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
-use gl11::types::{GLdouble, GLsizei};
-use gl11::{BLEND, BlendFunc, Clear, COLOR_BUFFER_BIT, DEPTH_BUFFER_BIT, Enable, GetError, LoadIdentity, MatrixMode, ONE_MINUS_SRC_ALPHA, Ortho, PROJECTION, SRC_ALPHA, TEXTURE_2D, Translated, Viewport};
-use gl::MULTISAMPLE;
-use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint};
+// use gl::*;
+// use gl::types::{GLdouble, GLsizei};
+use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, OpenGlProfileHint, PWindow, SwapInterval, WindowEvent, WindowHint};
 use image::open;
-use crate::{BACKGROUND_FPS, gl20, TITLE};
+use crate::{BACKGROUND_FPS, gl30, TITLE};
 use crate::font::FontManager;
+use crate::gl30::*;
+use crate::gl30::types::*;
 use crate::renderer::Renderer;
 use crate::screen::GuiScreen;
 use crate::texture::Texture;
@@ -31,25 +32,27 @@ pub struct Window {
 impl Window {
     pub unsafe fn create(width: i32, height: i32) -> Window {
         let mut glfw = glfw::init(fail_on_errors!()).unwrap();
-        glfw.window_hint(WindowHint::ContextVersion(4, 6));
+        // glfw.window_hint(WindowHint::ContextVersion(3, 2));
+        // glfw.window_hint(WindowHint::OpenGlProfile(OpenGlProfileHint::Compat));
+        glfw.window_hint(WindowHint::Samples(Some(8u32)));
+        // glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
+        // glfw.window_hint(WindowHint::DoubleBuffer(true)); // less tearing?
         // glfw.window_hint(WindowHint::Resizable(false));
         // glfw.window_hint(WindowHint::Floating(true));
         // glfw.window_hint(WindowHint::TransparentFramebuffer(true));
-        glfw.window_hint(WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Any));
-        glfw.window_hint(WindowHint::Samples(Some(8u32)));
 
         let (mut p_window, events) = glfw.create_window(width as u32, height as u32, TITLE, glfw::WindowMode::Windowed).expect("Failed to make window");
 
         p_window.make_current();
         p_window.set_all_polling(true);
 
-        gl11::load_with(|f_name| {
-            glfw.get_proc_address_raw(f_name)
-        });
-        gl::load_with(|f_name| {
-            glfw.get_proc_address_raw(f_name)
-        });
-        gl20::load_with(|f_name| {
+        // gl11::load_with(|f_name| {
+        //     glfw.get_proc_address_raw(f_name)
+        // });
+        // gl::load_with(|f_name| {
+        //     glfw.get_proc_address_raw(f_name)
+        // });
+        gl30::load_with(|f_name| {
             glfw.get_proc_address_raw(f_name)
         });
 
@@ -84,20 +87,21 @@ impl Window {
                     self.screen_width = width;
                     self.screen_height = height;
                 }
-                _e => {
+                e => {
+                    current_screen.event(e, self);
                 }
             }
         }
 
         pre_render(self);
 
-        // if !self.p_window.is_focused() {
-        //     self.glfw.set_swap_interval(SwapInterval::Sync(0));
-        //     let target_delta = (1.0/BACKGROUND_FPS);
-        //     thread::sleep(Duration::from_secs_f32(target_delta));
-        // } else {
-        //     self.glfw.set_swap_interval(SwapInterval::Sync(1));
-        // }
+        if !self.p_window.is_focused() {
+            self.glfw.set_swap_interval(SwapInterval::Sync(0));
+            let target_delta = (1.0/BACKGROUND_FPS);
+            thread::sleep(Duration::from_secs_f32(target_delta));
+        } else {
+            self.glfw.set_swap_interval(SwapInterval::Sync(1));
+        }
 
         self.frame_delta = last_frame.elapsed().as_secs_f64();
 
@@ -111,6 +115,7 @@ impl Window {
 unsafe fn pre_render(window: &Window) {
     Viewport(0, 0, window.screen_width as GLsizei, window.screen_height as GLsizei);
 
+    check_error("pre");
     Clear(DEPTH_BUFFER_BIT);
     MatrixMode(PROJECTION);
     LoadIdentity();
@@ -118,20 +123,19 @@ unsafe fn pre_render(window: &Window) {
     Translated(0 as GLdouble, 0 as GLdouble, -2000 as GLdouble);
 
     Clear(COLOR_BUFFER_BIT);
-    Enable(TEXTURE_2D);
-    Enable(BLEND);
     BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-    Enable(MULTISAMPLE);
+    // Enable(MULTISAMPLE);
 }
 
 unsafe fn post_render(window: &mut PWindow) {
-    check_error();
+    check_error("post");
     window.swap_buffers();
 }
 
-pub unsafe fn check_error() {
-    let err = GetError();
-    if err != 0 {
-        println!("OpenGL: {:?}", err);
+pub unsafe fn check_error(th: &str) {
+    let mut err = GetError();
+    while err != 0 {
+        println!("{} OpenGL: {:?}", th, err);
+        err = GetError();
     }
 }

@@ -3,12 +3,10 @@ use std::mem::{size_of, size_of_val};
 use std::ptr;
 use std::ptr::null;
 use std::rc::Rc;
-use gl::{ALPHA, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawElements, ELEMENT_ARRAY_BUFFER, EnableVertexAttribArray, FALSE, FLOAT, GenBuffers, GenTextures, GenVertexArrays, GetFloatv, LINEAR, REPEAT, RGB, STATIC_DRAW, TexImage2D, TexParameteri, TEXTURE_MAG_FILTER, TEXTURE_MIN_FILTER, TEXTURE_WRAP_S, TEXTURE_WRAP_T, TRIANGLES, UNSIGNED_BYTE, VertexAttribPointer};
-use gl11::{Color4d, PushMatrix, TEXTURE_2D};
-use gl11::types::GLdouble;
-use gl::types::{GLint, GLuint};
-use crate::gl20::{BindTexture, CLAMP_TO_EDGE, CULL_FACE, Disable, DrawArrays, Enable, MODELVIEW_MATRIX, PopMatrix, PROJECTION_MATRIX, RGBA, Rotated, Translated, UniformMatrix4fv, UNSIGNED_INT, VertexAttrib1f};
-use crate::gl20::types::{GLenum, GLsizeiptr};
+// use gl::{ALPHA, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawElements, ELEMENT_ARRAY_BUFFER, EnableVertexAttribArray, FALSE, FLOAT, GenBuffers, GenTextures, GenVertexArrays, GetFloatv, LINEAR, REPEAT, RGB, STATIC_DRAW, TexImage2D, TexParameteri, TEXTURE_MAG_FILTER, TEXTURE_MIN_FILTER, TEXTURE_WRAP_S, TEXTURE_WRAP_T, TRIANGLES, UNSIGNED_BYTE, VertexAttribPointer};
+// use gl::types::{GLint, GLuint};
+use crate::gl30::*;
+use crate::gl30::types::*;
 use crate::renderer::Renderer;
 use crate::shader::Shader;
 
@@ -73,7 +71,7 @@ impl Texture {
         BindTexture(TEXTURE_2D, tex_id);
 
         TexImage2D(
-            gl::TEXTURE_2D,
+            TEXTURE_2D,
             0,
             format as GLint,
             width,
