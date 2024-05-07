@@ -46,7 +46,7 @@ impl GuiScreen for DefaultScreen {
         // m.renderer.draw_rounded_rect(self.move_progressive.get_value() as f32, 10.0, self.move_progressive.get_value() as f32 + 200.0, 10.0 + 100.0, 10.0, 0xff909090);
         //(self.move_progressive.get_value() / 10.0) as f32
         m.fonts.get_font("JetBrainsMono-Medium").draw_string(20.0, read_to_string("test.js").unwrap().as_str(), 5.0, 5.0, 0xffaaaaaa);
-        self.tex.as_mut().unwrap().render();
+        // self.tex.as_mut().unwrap().render();
         // self.tex.as_mut().unwrap().bind();
         // m.renderer.draw_texture_rect(0.0, 0.0, 1200.0, 1200.0, 0xff909090);
         // self.tex.as_mut().unwrap().unbind();

@@ -24,6 +24,16 @@ use crate::texture::Texture;
 
 const FONT_RES: u32 = 128u32;
 
+#[derive(Debug)]
+struct CacheGlyph {
+    bytes: Vec<u8>,
+    width: i32,
+    height: i32,
+    advance: i32,
+    bearing_x: i32,
+    top: i32,
+}
+
 pub struct FontManager {
     fonts: HashMap<String, Rc<Font>>,
     renderer: Rc<Renderer>,
@@ -61,6 +71,7 @@ pub struct Font {
     glyphs: Vec<Glyph>,
     renderer: Rc<Renderer>,
     shader: Shader,
+    atlas_tex: Option<Texture>,
 }
 
 impl Font {
@@ -70,9 +81,10 @@ impl Font {
 
         face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
 
-        let mut all_bytes: Vec<u8> = Vec::new();
+        let mut cache_glyphs = Vec::new();
+        let mut max_height = 0;
+
         PixelStorei(UNPACK_ALIGNMENT, 1);
-        let mut pos = 0;
         for i in 0..128 {
             face.load_char(i, LoadFlag::RENDER).unwrap();
 
@@ -81,20 +93,55 @@ impl Font {
             glyph.render_glyph(RenderMode::Sdf).unwrap();
 
             let mut width = glyph.bitmap().width();
-            let mut height= glyph.bitmap().rows();
+            let mut height = glyph.bitmap().rows();
+            if max_height < height {
+                max_height = height;
+            }
+            let mut bytes = Vec::new();
+            bytes.write(glyph.bitmap().buffer()).unwrap();
 
-            let len = width*height;
-
-            all_bytes.write(&width.to_be_bytes()).unwrap();
-            all_bytes.write(&height.to_be_bytes()).unwrap();
-            all_bytes.write(&(glyph.advance().x >> 6).to_be_bytes()).unwrap();
-            all_bytes.write(&(glyph.metrics().horiBearingX >> 6).to_be_bytes()).unwrap();
-            all_bytes.write(&glyph.bitmap_top().to_be_bytes()).unwrap();
-            all_bytes.write_all(glyph.bitmap().buffer()).unwrap();
-
+            cache_glyphs.push(
+                CacheGlyph {
+                    bytes,
+                    width,
+                    height,
+                    advance: glyph.advance().x >> 6,
+                    bearing_x: glyph.metrics().horiBearingX >> 6,
+                    top: glyph.bitmap_top(),
+                }
+            )
         }
+
+        let mut meta_data: Vec<u8> = Vec::new();
+        for mut c_glyph in cache_glyphs.as_slice() {
+            meta_data.write(&c_glyph.width.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.height.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.advance.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.bearing_x.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.top.to_be_bytes()).unwrap();
+        }
+
+        // Creates the single texture atlas with all glyphs,
+        // since swapping textures for every character is slow.
+        // Is also in a single row to waste less pixel space
+        let mut atlas_bytes: Vec<u8> = Vec::new();
+        for i in 0..max_height {
+            // Will write a single row of each glyph's pixels in order
+            // so that a proper texture can be created quicker when loading
+            for mut c_glyph in cache_glyphs.as_slice() {
+                let offset = i * c_glyph.width;
+                // Checks if the current glyph is too short, and if it is it will fill the empty space
+                if c_glyph.width*c_glyph.height <= offset {
+                    for j in 0..c_glyph.width { atlas_bytes.push(0u8); }
+                } else {
+                    atlas_bytes.write(&c_glyph.bytes[offset as usize..(offset+c_glyph.width) as usize]).unwrap();
+                }
+            }
+        }
+
+        meta_data.write_all(atlas_bytes.as_slice()).unwrap();
         BindTexture(TEXTURE_2D, 0);
-        std::fs::write(cache_path, all_bytes).unwrap();
+        std::fs::write(cache_path, meta_data).unwrap();
     }
 
     pub unsafe fn load(cached_path: &str, renderer: Rc<Renderer>) -> Self {
@@ -103,65 +150,58 @@ impl Font {
             renderer: renderer.clone(),
             shader:
                 Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap()),
+            atlas_tex: None,
         };
 
         let mut all_bytes = std::fs::read(cached_path).unwrap();
+        let mut atlas_height = 0;
+        let mut atlas_width = 0;
 
         PixelStorei(UNPACK_ALIGNMENT, 1);
-        let mut pos = 0;
         for i in 0..128 {
-
             let width = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
             let height= i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
             let advance = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
             let bearing_x = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
             let top = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
 
-            let len = width*height;
-
-            let mut glyph_dat = Vec::new();
-
-            for j in all_bytes.drain(..len as usize) {
-                glyph_dat.push(j);
+            if atlas_height < height {
+                atlas_height = height;
             }
 
             font.glyphs.push(
-                Self::create_glyph_texture(
+                Glyph {
+                    atlas_x: atlas_width,
                     width,
                     height,
                     advance,
                     bearing_x,
                     top,
-                    glyph_dat,
-                    renderer.clone(),
-                )
+                }
             );
-            pos += len;
+
+            atlas_width += width;
         }
+
+        let atlas_tex = Texture::create(renderer.clone(), atlas_width, atlas_height, all_bytes, ALPHA);
+        font.atlas_tex = Some(atlas_tex);
         BindTexture(TEXTURE_2D, 0);
 
         font
     }
 
-    unsafe fn create_glyph_texture(width: i32, height: i32, advance: i32, bearing_x: i32, top: i32, data: Vec<u8>, renderer: Rc<Renderer>) -> Glyph {
-        let tex = Texture::create(renderer, width, height, data, ALPHA);
+    // unsafe fn create_glyph_texture(width: i32, height: i32, advance: i32, bearing_x: i32, top: i32, data: Vec<u8>, renderer: Rc<Renderer>) -> Glyph {
+    //     let tex = Texture::create(renderer, width, height, data, ALPHA);
         // println!("{:?} {:?} {:?} {:?}", vertices, uvs, elements, size_of::<[f32; 2]>());
 
-        Glyph {
-            texture: tex,
-            width,
-            height,
-            advance,
-            bearing_x,
-            top,
-        }
-    }
+    // }
 
     pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled_factor: f32, color: u32) -> (f32, f32) {
 
         let scale = size/FONT_RES as f32;
         let i_scale = 1.0/scale;
 
+        let atlas = self.atlas_tex.as_ref().unwrap();
         gl11::Enable(gl11::BLEND);
         x = x*i_scale;
         y = y*i_scale;
@@ -175,11 +215,11 @@ impl Font {
 
         let mut line_width = 0f32;
         let mut line_height = 0f32;
-
         self.shader.bind();
         self.shader.u_put_float("u_color", self.renderer.get_rgb(color));
         let smoothing = (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0);
         self.shader.u_put_float("u_smoothing", vec![smoothing]);
+        atlas.bind();
         for char in string.chars() {
             if char == '\n' {
                 y += line_height;
@@ -194,8 +234,17 @@ impl Font {
             let glyph: &Glyph = self.glyphs.get(char as usize).unwrap();
 
             let pos_y = y + str_height - glyph.top as f32;
-            BindTexture(TEXTURE_2D, glyph.texture.texture_id);
-            self.renderer.draw_texture_rect(x, pos_y, x+glyph.width as f32, pos_y+glyph.height as f32, color);
+
+            self.renderer.draw_texture_rect_uv(
+                x,
+                pos_y,
+                x+glyph.width as f32,
+                pos_y+glyph.height as f32,
+                glyph.atlas_x as f64 / atlas.width as f64,
+                0f64,
+                (glyph.atlas_x + glyph.width) as f64 / atlas.width as f64,
+                glyph.height as f64 / atlas.height as f64,
+                color);
 
             line_width += (glyph.advance - glyph.bearing_x) as f32;
             if line_height < glyph.height as f32 {
@@ -208,6 +257,7 @@ impl Font {
 
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();
+        atlas.unbind();
         gl11::Disable(gl11::BLEND);
 
         (line_width *scale, line_height *scale)
@@ -239,7 +289,7 @@ impl Font {
 
 #[derive(Debug)]
 struct Glyph {
-    texture: Texture,
+    atlas_x: i32,
     width: i32,
     height: i32,
     advance: i32,

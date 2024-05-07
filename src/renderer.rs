@@ -74,6 +74,21 @@ impl Renderer {
         End();
     }
 
+    pub unsafe fn draw_texture_rect_uv(&self, left: f32, top: f32, right: f32, bottom: f32, uv_left: f64, uv_top: f64, uv_right: f64, uv_bottom: f64, color: u32) {
+        Enable(TEXTURE_2D);
+        Begin(QUADS);
+        self.set_color(color);
+        TexCoord2d(uv_left, uv_bottom);
+        Vertex2d(left as GLdouble, bottom as GLdouble);
+        TexCoord2d(uv_right, uv_bottom);
+        Vertex2d(right as GLdouble, bottom as GLdouble);
+        TexCoord2d(uv_right, uv_top);
+        Vertex2d(right as GLdouble, top as GLdouble);
+        TexCoord2d(uv_left, uv_top);
+        Vertex2d(left as GLdouble, top as GLdouble);
+        End();
+    }
+
     pub unsafe fn set_color(&self, color: u32) {
         let alpha = (color >> 24 & 255) as f32 / 255f32;
         let red = (color >> 16 & 255) as f32 / 255f32;
