@@ -4,9 +4,10 @@ use std::ptr;
 use std::ptr::null;
 use std::rc::Rc;
 use gl::{ALPHA, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawElements, ELEMENT_ARRAY_BUFFER, EnableVertexAttribArray, FALSE, FLOAT, GenBuffers, GenTextures, GenVertexArrays, GetFloatv, LINEAR, REPEAT, RGB, STATIC_DRAW, TexImage2D, TexParameteri, TEXTURE_MAG_FILTER, TEXTURE_MIN_FILTER, TEXTURE_WRAP_S, TEXTURE_WRAP_T, TRIANGLES, UNSIGNED_BYTE, VertexAttribPointer};
-use gl11::{PushMatrix, TEXTURE_2D};
+use gl11::{Color4d, PushMatrix, TEXTURE_2D};
+use gl11::types::GLdouble;
 use gl::types::{GLint, GLuint};
-use crate::gl20::{BindTexture, CLAMP_TO_EDGE, Enable, MODELVIEW_MATRIX, PopMatrix, PROJECTION_MATRIX, RGBA, Rotated, Translated, UniformMatrix4fv, UNSIGNED_INT, VertexAttrib1f};
+use crate::gl20::{BindTexture, CLAMP_TO_EDGE, CULL_FACE, Disable, DrawArrays, Enable, MODELVIEW_MATRIX, PopMatrix, PROJECTION_MATRIX, RGBA, Rotated, Translated, UniformMatrix4fv, UNSIGNED_INT, VertexAttrib1f};
 use crate::gl20::types::{GLenum, GLsizeiptr};
 use crate::renderer::Renderer;
 use crate::shader::Shader;
@@ -25,7 +26,7 @@ pub struct Texture {
 
 impl Texture {
     pub unsafe fn create(renderer: Rc<Renderer>, width: i32, height: i32, bytes: Vec<u8>, format: GLenum) -> Self {
-        let shader = Shader::new(read_to_string("src\\resources\\shaders\\test\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\test\\fragment.glsl").unwrap());
+        let shader = Shader::new(read_to_string("src\\resources\\shaders\\test_n\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\test_n\\fragment.glsl").unwrap());
 
         let mut vao = 0;
         let mut vbo = 0;
@@ -39,7 +40,7 @@ impl Texture {
 
         // Make buffers
         // let vertices = [[-0.5f32, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5],];
-        let vertices = [[0.0, height as f32], [width as f32, height as f32], [width as f32, 0.0], [0.0, 0.0],];
+        let vertices = [[100.0, height as f32], [width as f32, height as f32], [width as f32, 100.0], [100.0, 100.0],];
 
         BindBuffer(ARRAY_BUFFER, vbo);
         BufferData(
@@ -58,7 +59,7 @@ impl Texture {
             STATIC_DRAW
         );
 
-        let indices = [0, 1, 2, 2, 3, 0];
+        let indices = [0, 1, 2, 0, 2, 3];
         BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
         BufferData(
             ELEMENT_ARRAY_BUFFER,
@@ -66,31 +67,6 @@ impl Texture {
             indices.as_ptr().cast(),
             STATIC_DRAW
         );
-
-        // Bind buffers
-        BindBuffer(ARRAY_BUFFER, vbo);
-        let position1 = renderer.texture_shader.get_attrib_location("position") as GLuint;
-        VertexAttribPointer(
-            position1,
-            2,
-            FLOAT,
-            FALSE,
-            size_of::<[f32; 2]>().try_into().unwrap(),
-            0 as *const _,
-        );
-        EnableVertexAttribArray(position1);
-
-        BindBuffer(ARRAY_BUFFER, uvo);
-        let position2 = renderer.texture_shader.get_attrib_location("vertexTexCoord") as GLuint;
-        VertexAttribPointer(
-            position2,
-            2,
-            FLOAT,
-            FALSE,
-            size_of::<[f32; 2]>().try_into().unwrap(),
-            0 as *const _,
-        );
-        EnableVertexAttribArray(position2);
 
         let mut tex_id = 0;
         GenTextures(1, &mut tex_id);
@@ -126,20 +102,15 @@ impl Texture {
 
     pub unsafe fn render(&self) {
         Enable(TEXTURE_2D);
-        self.bind();
         self.renderer.texture_shader.bind();
-        // let mut model_view_projection_matrix: [f32; 16] = [0.0; 16];
-        // GetFloatv(PROJECTION_MATRIX, model_view_projection_matrix.as_mut_ptr());
-        // UniformMatrix4fv(self.shader.get_uniform_location("u_projection"), 1, FALSE, model_view_projection_matrix.as_ptr().cast());
+        self.bind();
 
-        self.renderer.update();
-        // VertexAttribPointer()
-        // self.renderer.draw_texture_rect(x, y, x+width, y+height, 0xffffffff);
+        Color4d(1.0, 1.0, 1.0, 1.0);
         BindVertexArray(self.vao);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
-        self.renderer.texture_shader.unbind();
         self.unbind();
+        self.renderer.texture_shader.unbind();
     }
 
     pub unsafe fn draw(&self) {

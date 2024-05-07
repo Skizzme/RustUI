@@ -16,6 +16,7 @@ use gl::*;
 use gl11::{PopMatrix, PushMatrix, Scaled, Translatef};
 use gl11::types::GLdouble;
 use gl::types::{GLint, GLuint};
+use image::{GrayAlphaImage, ImageBuffer};
 use crate::gl20::{EnableClientState, TexCoordPointer, VertexPointer};
 use crate::renderer::Renderer;
 use crate::shader::Shader;
@@ -164,6 +165,7 @@ impl Font {
         gl11::Enable(gl11::BLEND);
         x = x*i_scale;
         y = y*i_scale;
+        let start_x = x;
 
         PushMatrix();
         Scaled(scale as GLdouble, scale as GLdouble, 1 as GLdouble);
@@ -171,31 +173,35 @@ impl Font {
 
         let str_height = self.glyphs.get('H' as usize).unwrap().top as f32;
 
-        let mut width = 0f32;
-        let mut height = 0f32;
+        let mut line_width = 0f32;
+        let mut line_height = 0f32;
 
+        self.shader.bind();
+        self.shader.u_put_float("u_color", self.renderer.get_rgb(color));
+        let smoothing = (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0);
+        self.shader.u_put_float("u_smoothing", vec![smoothing]);
         for char in string.chars() {
-            let glyph: &Glyph = self.glyphs.get(char as usize).unwrap();
-            // glyph.texture.render();
-            // println!("{} {:?}", char, glyph.texture);
-
-            PushMatrix();
-            let pos_y = y + str_height - glyph.top as f32;
-            Translatef(x+width, pos_y, 0.0);
-            self.shader.bind();
-            self.shader.u_put_float("u_color", self.renderer.get_rgb(color));
-            let smoothing = (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0).clamp(0.0, 0.6);
-            self.shader.u_put_float("u_smoothing", vec![smoothing]);
-            // BindTexture(TEXTURE_2D, glyph.texture.texture_id);
-            // self.renderer.draw_texture_rect(0.0, 0.0, glyph.width as f32, glyph.height as f32, color);
-            // self.draw_char(char);
-            glyph.texture.render();
-
-            width += (glyph.advance - glyph.bearing_x) as f32;
-            if height < glyph.height as f32 {
-                height = glyph.height as f32;
+            if char == '\n' {
+                y += line_height;
+                line_width = 0.0;
+                x = start_x;
+                continue;
             }
-            PopMatrix();
+            if char == '\t' {
+                x += self.get_width(size, " ".to_string());
+                continue;
+            }
+            let glyph: &Glyph = self.glyphs.get(char as usize).unwrap();
+
+            let pos_y = y + str_height - glyph.top as f32;
+            BindTexture(TEXTURE_2D, glyph.texture.texture_id);
+            self.renderer.draw_texture_rect(x, pos_y, x+glyph.width as f32, pos_y+glyph.height as f32, color);
+
+            line_width += (glyph.advance - glyph.bearing_x) as f32;
+            if line_height < glyph.height as f32 {
+                line_height = glyph.height as f32;
+            }
+            x += (glyph.advance - glyph.bearing_x) as f32;
         }
 
         self.shader.unbind();
@@ -204,7 +210,7 @@ impl Font {
         PopMatrix();
         gl11::Disable(gl11::BLEND);
 
-        (width*scale, height*scale)
+        (line_width *scale, line_height *scale)
     }
 
     pub unsafe fn get_width(&self, size: f32, string: String) -> f32 {

@@ -20,8 +20,8 @@ impl Renderer {
                 read_to_string("src\\resources\\shaders\\rounded_rect\\fragment.glsl").unwrap()
             ),
             texture_shader: Shader::new(
-                read_to_string("src\\resources\\shaders\\test\\vertex.glsl").unwrap(),
-                read_to_string("src\\resources\\shaders\\test\\fragment.glsl").unwrap()
+                read_to_string("src\\resources\\shaders\\test_n\\vertex.glsl").unwrap(),
+                read_to_string("src\\resources\\shaders\\test_n\\fragment.glsl").unwrap()
             ),
         }
     }
