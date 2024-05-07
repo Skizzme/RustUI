@@ -19,6 +19,7 @@ use gl::types::{GLint, GLuint};
 use crate::gl20::{EnableClientState, TexCoordPointer, VertexPointer};
 use crate::renderer::Renderer;
 use crate::shader::Shader;
+use crate::texture::Texture;
 
 const FONT_RES: u32 = 128u32;
 
@@ -98,7 +99,7 @@ impl Font {
     pub unsafe fn load(cached_path: &str, renderer: Rc<Renderer>) -> Self {
         let mut font = Font {
             glyphs: Vec::new(),
-            renderer,
+            renderer: renderer.clone(),
             shader:
                 Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap()),
         };
@@ -130,7 +131,8 @@ impl Font {
                     advance,
                     bearing_x,
                     top,
-                    glyph_dat.as_ptr()
+                    glyph_dat,
+                    renderer.clone(),
                 )
             );
             pos += len;
@@ -140,116 +142,18 @@ impl Font {
         font
     }
 
-    unsafe fn create_glyph_texture(width: i32, height: i32, advance: i32, bearing_x: i32, top: i32, data: *const u8) -> Glyph {
-        let mut tex_id = 0;
-        GenTextures(1, &mut tex_id);
-        BindTexture(TEXTURE_2D, tex_id);
-
-        TexImage2D(
-            TEXTURE_2D,
-            0,
-            ALPHA as GLint,
-            width as i32,
-            height as i32,
-            0,
-            ALPHA,
-            UNSIGNED_BYTE,
-            data.cast(),
-        );
-
-        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, REPEAT as GLint);
-        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, REPEAT as GLint);
-        TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR as GLint);
-        TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR as GLint);
-
-        let mut vao = 0;
-        let mut vbo = 0;
-        let mut uvo = 0;
-        let mut ebo = 0;
-        GenVertexArrays(1, &mut vao);
-        GenBuffers(1, &mut vbo);
-        GenBuffers(1, &mut uvo);
-        GenBuffers(1, &mut ebo);
-        BindVertexArray(vao);
-
-        let vertices: [[f32; 2]; 4] =
-            [[0.0, 0.0], [width as f32, 0.0], [width as f32, height as f32], [0.0, height as f32]];
-
-        BindBuffer(ARRAY_BUFFER, vbo);
-        BufferData(
-            ARRAY_BUFFER,
-            size_of_val(&vertices) as isize,
-            vertices.as_ptr().cast(),
-            STATIC_DRAW
-        );
-
-        let uvs: [[f32; 2]; 4] =
-            [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
-
-        BindBuffer(ARRAY_BUFFER, uvo);
-        BufferData(
-            ARRAY_BUFFER,
-            size_of_val(&uvs) as isize,
-            uvs.as_ptr().cast(),
-            STATIC_DRAW
-        );
-
-        let elements = [0, 1, 2, 0, 2, 3];
-        BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
-        BufferData(
-            ELEMENT_ARRAY_BUFFER,
-            size_of_val(&elements) as isize,
-            elements.as_ptr().cast(),
-            STATIC_DRAW
-        );
-
-        EnableVertexAttribArray(0);
-        BindBuffer(ARRAY_BUFFER, vbo);
-        VertexAttribPointer(
-            0,
-            2,
-            FLOAT,
-            FALSE,
-            size_of::<[f32; 2]>().try_into().unwrap(),
-            0 as *const _,
-        );
-
-        EnableVertexAttribArray(1);
-        BindBuffer(ARRAY_BUFFER, uvo);
-        VertexAttribPointer(
-            1,
-            2,
-            FLOAT,
-            FALSE,
-            size_of::<[f32; 2]>().try_into().unwrap(),
-            0 as *const _,
-        );
-
+    unsafe fn create_glyph_texture(width: i32, height: i32, advance: i32, bearing_x: i32, top: i32, data: Vec<u8>, renderer: Rc<Renderer>) -> Glyph {
+        let tex = Texture::create(renderer, width, height, data, ALPHA);
         // println!("{:?} {:?} {:?} {:?}", vertices, uvs, elements, size_of::<[f32; 2]>());
 
         Glyph {
-            texture_id: tex_id,
+            texture: tex,
             width,
             height,
             advance,
             bearing_x,
             top,
-            vbo,
-            vao,
-            uvo,
-            ebo,
         }
-    }
-
-    unsafe fn draw_char(&self, c: char) {
-        gl11::Enable(gl11::TEXTURE_2D);
-        let glyph: &Glyph = self.glyphs.get(c as usize).unwrap();
-
-        BindVertexArray(glyph.vao);
-
-        DrawElements(TRIANGLES, 6, UNSIGNED_BYTE, null());
-
-        BindVertexArray(0);
     }
 
     pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled_factor: f32, color: u32) -> (f32, f32) {
@@ -272,6 +176,8 @@ impl Font {
 
         for char in string.chars() {
             let glyph: &Glyph = self.glyphs.get(char as usize).unwrap();
+            // glyph.texture.render();
+            // println!("{} {:?}", char, glyph.texture);
 
             PushMatrix();
             let pos_y = y + str_height - glyph.top as f32;
@@ -280,9 +186,10 @@ impl Font {
             self.shader.u_put_float("u_color", self.renderer.get_rgb(color));
             let smoothing = (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0).clamp(0.0, 0.6);
             self.shader.u_put_float("u_smoothing", vec![smoothing]);
-            BindTexture(TEXTURE_2D, glyph.texture_id);
-            self.renderer.draw_texture_rect(0.0, 0.0, glyph.width as f32, glyph.height as f32, color);
+            // BindTexture(TEXTURE_2D, glyph.texture.texture_id);
+            // self.renderer.draw_texture_rect(0.0, 0.0, glyph.width as f32, glyph.height as f32, color);
             // self.draw_char(char);
+            glyph.texture.render();
 
             width += (glyph.advance - glyph.bearing_x) as f32;
             if height < glyph.height as f32 {
@@ -326,14 +233,10 @@ impl Font {
 
 #[derive(Debug)]
 struct Glyph {
-    texture_id: GLuint,
+    texture: Texture,
     width: i32,
     height: i32,
     advance: i32,
     bearing_x: i32,
     top: i32,
-    vao: GLuint,
-    vbo: GLuint,
-    uvo: GLuint,
-    ebo: GLuint,
 }

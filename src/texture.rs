@@ -7,24 +7,24 @@ use gl::{ALPHA, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawEleme
 use gl11::{PushMatrix, TEXTURE_2D};
 use gl::types::{GLint, GLuint};
 use crate::gl20::{BindTexture, CLAMP_TO_EDGE, Enable, MODELVIEW_MATRIX, PopMatrix, PROJECTION_MATRIX, RGBA, Rotated, Translated, UniformMatrix4fv, UNSIGNED_INT, VertexAttrib1f};
-use crate::gl20::types::GLsizeiptr;
+use crate::gl20::types::{GLenum, GLsizeiptr};
 use crate::renderer::Renderer;
 use crate::shader::Shader;
 
+#[derive(Debug)]
 pub struct Texture {
-    texture_id: GLuint,
-    renderer: Rc<Renderer>,
-    width: i32,
-    height: i32,
-    vao: GLuint,
-    vbo: GLuint,
-    uvo: GLuint,
-    ebo: GLuint,
-    shader: Shader,
+    pub texture_id: GLuint,
+    pub renderer: Rc<Renderer>,
+    pub width: i32,
+    pub height: i32,
+    pub vao: GLuint,
+    pub vbo: GLuint,
+    pub uvo: GLuint,
+    pub ebo: GLuint,
 }
 
 impl Texture {
-    pub unsafe fn create(renderer: Rc<Renderer>, width: i32, height: i32, bytes: Vec<u8>) -> Self {
+    pub unsafe fn create(renderer: Rc<Renderer>, width: i32, height: i32, bytes: Vec<u8>, format: GLenum) -> Self {
         let shader = Shader::new(read_to_string("src\\resources\\shaders\\test\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\test\\fragment.glsl").unwrap());
 
         let mut vao = 0;
@@ -58,10 +58,18 @@ impl Texture {
             STATIC_DRAW
         );
 
+        let indices = [0, 1, 2, 2, 3, 0];
+        BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
+        BufferData(
+            ELEMENT_ARRAY_BUFFER,
+            size_of_val(&indices) as isize,
+            indices.as_ptr().cast(),
+            STATIC_DRAW
+        );
 
         // Bind buffers
         BindBuffer(ARRAY_BUFFER, vbo);
-        let position1 = shader.get_attrib_location("position") as GLuint;
+        let position1 = renderer.texture_shader.get_attrib_location("position") as GLuint;
         VertexAttribPointer(
             position1,
             2,
@@ -71,9 +79,9 @@ impl Texture {
             0 as *const _,
         );
         EnableVertexAttribArray(position1);
-        //
+
         BindBuffer(ARRAY_BUFFER, uvo);
-        let position2 = shader.get_attrib_location("vertexTexCoord") as GLuint;
+        let position2 = renderer.texture_shader.get_attrib_location("vertexTexCoord") as GLuint;
         VertexAttribPointer(
             position2,
             2,
@@ -84,16 +92,6 @@ impl Texture {
         );
         EnableVertexAttribArray(position2);
 
-        let indices = [0, 1, 2, 2, 3, 0];
-        BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
-        BufferData(
-            ELEMENT_ARRAY_BUFFER,
-            size_of_val(&indices) as isize,
-            indices.as_ptr().cast(),
-            STATIC_DRAW
-        );
-
-
         let mut tex_id = 0;
         GenTextures(1, &mut tex_id);
         BindTexture(TEXTURE_2D, tex_id);
@@ -101,11 +99,11 @@ impl Texture {
         TexImage2D(
             gl::TEXTURE_2D,
             0,
-            RGBA as GLint,
+            format as GLint,
             width,
             height,
             0,
-            RGBA,
+            format,
             UNSIGNED_BYTE,
             bytes.as_slice().as_ptr().cast(),
         );
@@ -123,23 +121,33 @@ impl Texture {
             vbo,
             uvo,
             ebo,
-            shader
         }
     }
 
-    pub unsafe fn draw(&self) {
+    pub unsafe fn render(&self) {
         Enable(TEXTURE_2D);
         self.bind();
-        self.shader.bind();
-        let mut model_view_projection_matrix: [f32; 16] = [0.0; 16];
-        GetFloatv(PROJECTION_MATRIX, model_view_projection_matrix.as_mut_ptr());
-        UniformMatrix4fv(self.shader.get_uniform_location("u_projection"), 1, FALSE, model_view_projection_matrix.as_ptr().cast());
+        self.renderer.texture_shader.bind();
+        // let mut model_view_projection_matrix: [f32; 16] = [0.0; 16];
+        // GetFloatv(PROJECTION_MATRIX, model_view_projection_matrix.as_mut_ptr());
+        // UniformMatrix4fv(self.shader.get_uniform_location("u_projection"), 1, FALSE, model_view_projection_matrix.as_ptr().cast());
+
+        self.renderer.update();
         // VertexAttribPointer()
         // self.renderer.draw_texture_rect(x, y, x+width, y+height, 0xffffffff);
         BindVertexArray(self.vao);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
-        self.shader.unbind();
+        self.renderer.texture_shader.unbind();
+        self.unbind();
+    }
+
+    pub unsafe fn draw(&self) {
+        Enable(TEXTURE_2D);
+        self.bind();
+        BindVertexArray(self.vao);
+        DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
+        BindVertexArray(0);
         self.unbind();
     }
 

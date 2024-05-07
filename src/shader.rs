@@ -7,7 +7,7 @@ use gl::types::{GLchar, GLfloat, GLint};
 use crate::gl20::types::GLdouble;
 use crate::window::check_error;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Shader {
     vertex_shader: u32,
     fragment_shader: u32,

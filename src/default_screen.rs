@@ -39,24 +39,27 @@ impl GuiScreen for DefaultScreen {
     unsafe fn draw(&mut self, m: &mut Window) {
         if self.tex.is_none() {
             let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
-            self.tex = Some(Texture::create(m.renderer.clone(), img.width() as i32, img.height() as i32, img.into_raw()));
+            self.tex = Some(Texture::create(m.renderer.clone(), img.width() as i32, img.height() as i32, img.into_raw(), RGBA));
         }
         self.move_progressive.animate(m.mouse_x as f64, 0.4f64, AnimationType::Progressive(1f64), m);
         self.move_cubic.animate(m.mouse_x as f64, 1f64, AnimationType::CubicIn, m);
         // m.renderer.draw_rounded_rect(self.move_progressive.get_value() as f32, 10.0, self.move_progressive.get_value() as f32 + 200.0, 10.0 + 100.0, 10.0, 0xff909090);
         let mut y = 0.0;
-        // let scale = (self.move_progressive.get_value() as f32/80.0) as GLdouble;
-        // PushMatrix();
-        // Scaled(scale, scale, 1 as GLdouble);
-        // for i in 0..30 {
-        //     let st = format!("{}",i);
-        //     let mut x = 10.0;
-        //     x += m.fonts.get_font("Comfortaa-Light").draw_string_s(18.0, st.as_str(), x, y,  scale as f32, 0xff909090).0 + 10.0;
-        //     x += m.fonts.get_font("ProductSans").draw_string_s(18.0, st.as_str(), x, y,  scale as f32, 0xff909090).0 + 10.0;
-        //     y += m.fonts.get_font("ProductSansBold").draw_string_s(18.0, st.as_str(), x, y, scale as f32,  0xff909090).1;
-        // }
-        // PopMatrix();
-        self.tex.as_mut().unwrap().draw();
+        let scale = (self.move_progressive.get_value() as f32/80.0) as GLdouble;
+        PushMatrix();
+        Scaled(scale, scale, 1 as GLdouble);
+        for i in 0..30 {
+            let st = format!("{}",i);
+            let mut x = 10.0;
+            x += m.fonts.get_font("Comfortaa-Light").draw_string_s(18.0, st.as_str(), x, y,  scale as f32, 0xff909090).0 + 10.0;
+            x += m.fonts.get_font("ProductSans").draw_string_s(18.0, st.as_str(), x, y,  scale as f32, 0xff909090).0 + 10.0;
+            y += m.fonts.get_font("ProductSansBold").draw_string_s(18.0, st.as_str(), x, y, scale as f32,  0xff909090).1;
+        }
+        PopMatrix();
+        // self.tex.as_mut().unwrap().render();
+        // self.tex.as_mut().unwrap().bind();
+        // m.renderer.draw_texture_rect(0.0, 0.0, 1200.0, 1200.0, 0xff909090);
+        // self.tex.as_mut().unwrap().unbind();
         // m.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
 
         // Enable(BLEND);

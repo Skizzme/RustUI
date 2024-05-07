@@ -2,20 +2,34 @@ use std::fs::{read_to_string};
 use std::time::Instant;
 use gl11::*;
 use gl11::types::*;
-use crate::gl20::VertexAttribPointer;
+use crate::gl20::{UniformMatrix4fv, VertexAttribPointer};
 use crate::shader::Shader;
 
+#[derive(Debug)]
 pub struct Renderer {
     rounded_rect_shader: Shader,
+    pub texture_shader: Shader,
 }
 
 impl Renderer {
 
     pub unsafe fn new() -> Self {
         Renderer {
-            rounded_rect_shader: Shader::new(read_to_string("src\\resources\\shaders\\rounded_rect\\vertex.glsl").unwrap(),
-                                             read_to_string("src\\resources\\shaders\\rounded_rect\\fragment.glsl").unwrap()),
+            rounded_rect_shader: Shader::new(
+                read_to_string("src\\resources\\shaders\\rounded_rect\\vertex.glsl").unwrap(),
+                read_to_string("src\\resources\\shaders\\rounded_rect\\fragment.glsl").unwrap()
+            ),
+            texture_shader: Shader::new(
+                read_to_string("src\\resources\\shaders\\test\\vertex.glsl").unwrap(),
+                read_to_string("src\\resources\\shaders\\test\\fragment.glsl").unwrap()
+            ),
         }
+    }
+
+    pub unsafe fn update(&self) {
+        let mut model_view_projection_matrix: [f32; 16] = [0.0; 16];
+        gl::GetFloatv(crate::gl20::PROJECTION_MATRIX, model_view_projection_matrix.as_mut_ptr());
+        UniformMatrix4fv(self.texture_shader.get_uniform_location("u_projection"), 1, gl::FALSE, model_view_projection_matrix.as_ptr().cast());
     }
 
     pub unsafe fn draw_rounded_rect(&self, left: f32, top: f32, right: f32, bottom: f32, radius: f32, color: u32) {
