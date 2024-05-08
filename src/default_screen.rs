@@ -1,5 +1,6 @@
 use std::fs::read_to_string;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::time::Instant;
 // use gl::{GenTextures, TexImage2D, UNSIGNED_BYTE};
 // use gl::types::{GLdouble, GLint};
@@ -7,6 +8,7 @@ use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 use glfw::Action::Press;
 use image::{EncodableLayout, open};
 use crate::animation::{Animation, AnimationType};
+use crate::font::{ScaleMode, Wrapping};
 use crate::gl30::{PopMatrix, PushMatrix, RGBA, Scaled, Translated, Translatef};
 use crate::gl30::types::GLdouble;
 use crate::screen::GuiScreen;
@@ -43,7 +45,7 @@ impl DefaultScreen {
             offset_x: 0.0,
             offset_y: 0.0,
             dragging: (false, 0.0, 0.0, 0.0, 0.0),
-            scroll: 0.0,
+            scroll: 50.0,
         }
     }
 }
@@ -51,24 +53,33 @@ impl DefaultScreen {
 impl GuiScreen for DefaultScreen {
     unsafe fn draw(&mut self, m: &mut Window) {
         if self.tex.is_none() {
-            // let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
-            // self.tex = Some(Texture::create(m.renderer.clone(), img.width() as i32, img.height() as i32, img.into_raw(), RGBA));
+            let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
+            self.tex = Some(Texture::create(m.renderer.clone(), img.width() as i32, img.height() as i32, img.into_raw(), RGBA));
         }
         if self.dragging.0 {
             self.offset_x = self.dragging.3 + (m.mouse_x as f32 - self.dragging.1);
             self.offset_y = self.dragging.4 +(m.mouse_y as f32 - self.dragging.2);
         }
-        println!("{:?} {:?}", (m.mouse_x as f32 - self.dragging.1), self.dragging);
-        self.move_progressive.animate(self.scroll as f64, 0.4f64, AnimationType::Progressive(10f64), m);
-        self.move_cubic.animate(m.mouse_x as f64, 1f64, AnimationType::CubicIn, m);
+        self.move_progressive.animate(self.scroll as f64, 1.5f64, AnimationType::Progressive(10f64), m);
+        self.tex.as_ref().unwrap().render();
+        // self.move_cubic.animate(m.mouse_x as f64, 1f64, AnimationType::CubicIn, m);
+        // let font = m.fonts.get_font("JetBrainsMono-Medium").set_wrapping(Wrapping::None);
         // m.renderer.draw_rounded_rect(self.move_progressive.get_value() as f32, 10.0, self.move_progressive.get_value() as f32 + 200.0, 10.0 + 100.0, 10.0, 0xff909090);
         //(self.move_progressive.get_value() / 10.0) as f32
         PushMatrix();
-        let scale = self.move_progressive.get_value()/10.0;
+        let scale = (self.move_progressive.get_value()*self.move_progressive.get_value())/1000.0;
         Scaled(scale, scale, 1.0);
+        // Scaled(0.5, 0.5, 1.0);
+        // Translated(self.offset_x as f64*(1.0/scale), self.offset_y as f64*(1.0/scale), 0.0);
         let sin = self.test_file.as_str();
-        m.fonts.get_font("JetBrainsMono-Medium").draw_string_s(20.0, sin, 0.0, 0.0, scale as f32, 0xffaaaaaa);
+        // println!("{}", self.move_progressive.get_value());
+        let font = m.fonts.get_font("Comfortaa-Light").scale_mode(ScaleMode::Quality);
+        println!("{}", scale);
+        // let w = font.draw_string(self.move_progressive.get_value() as f32/10.0, sin, 0.0, 0.0, 0xffaaaaaa).0;
+        // let w = 0f32;
+        font.draw_string_s(10.0, sin, 0.0, 0.0, scale as f32, 0xffaaaaaa);
         PopMatrix();
+        font.draw_string(5.0, sin, 300.0, 0.0, 0xffaaaaaa);
         // self.tex.as_mut().unwrap().render();
         // self.tex.as_mut().unwrap().bind();
         // m.renderer.draw_texture_rect(0.0, 0.0, 1200.0, 1200.0, 0xff909090);

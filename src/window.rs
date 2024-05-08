@@ -39,7 +39,7 @@ impl Window {
         // glfw.window_hint(WindowHint::DoubleBuffer(true)); // less tearing?
         // glfw.window_hint(WindowHint::Resizable(false));
         // glfw.window_hint(WindowHint::Floating(true));
-        // glfw.window_hint(WindowHint::TransparentFramebuffer(true));
+        glfw.window_hint(WindowHint::TransparentFramebuffer(true));
 
         let (mut p_window, events) = glfw.create_window(width as u32, height as u32, TITLE, glfw::WindowMode::Windowed).expect("Failed to make window");
 
@@ -95,13 +95,13 @@ impl Window {
 
         pre_render(self);
 
-        if !self.p_window.is_focused() {
-            self.glfw.set_swap_interval(SwapInterval::Sync(0));
-            let target_delta = (1.0/BACKGROUND_FPS);
-            thread::sleep(Duration::from_secs_f32(target_delta));
-        } else {
-            self.glfw.set_swap_interval(SwapInterval::Sync(1));
-        }
+        // if !self.p_window.is_focused() {
+        //     self.glfw.set_swap_interval(SwapInterval::Sync(0));
+        //     let target_delta = (1.0/BACKGROUND_FPS);
+        //     thread::sleep(Duration::from_secs_f32(target_delta));
+        // } else {
+        //     self.glfw.set_swap_interval(SwapInterval::Sync(1));
+        // }
 
         self.frame_delta = last_frame.elapsed().as_secs_f64();
 

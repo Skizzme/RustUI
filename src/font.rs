@@ -7,6 +7,7 @@ use std::fs::read_to_string;
 use std::io::Write;
 use std::mem::{size_of, size_of_val};
 use std::path::Path;
+use std::ptr;
 use std::ptr::null;
 use std::rc::Rc;
 use std::time::{Instant};
@@ -16,12 +17,12 @@ use freetype::{RenderMode};
 // use gl::types::{GLint, GLuint};
 use image::{GrayAlphaImage, ImageBuffer};
 use crate::gl30::*;
-use crate::gl30::types::GLdouble;
+use crate::gl30::types::{GLdouble, GLsizeiptr};
 use crate::renderer::Renderer;
 use crate::shader::Shader;
 use crate::texture::Texture;
 
-const FONT_RES: u32 = 32u32;
+const FONT_RES: u32 = 64u32;
 
 #[derive(Debug)]
 struct CacheGlyph {
@@ -46,7 +47,7 @@ impl FontManager {
         }
     }
 
-    pub unsafe fn get_font(&mut self, name: &str) -> Rc<Font> {
+    pub unsafe fn get_font(&mut self, name: &str) -> FontRenderer {
         if !self.fonts.contains_key(name) {
             let mut b = Instant::now();
             if !Path::new(format!("{}_{}.cache", name, FONT_RES).as_str()).exists() {
@@ -60,17 +61,16 @@ impl FontManager {
 
             self.fonts.insert(name.to_string(), Rc::new(ft));
         }
-        self.fonts.get(name).unwrap().clone()
+        FontRenderer::new(self.fonts.get(name).unwrap().clone())
     }
 }
 
+// Only holds the data per font to be used by the font renderer
 pub struct Font {
     glyphs: [Glyph; 128],
     renderer: Rc<Renderer>,
     shader: Shader,
     atlas_tex: Option<Texture>,
-    wrap: u8,
-    line_spacing: f32,
 }
 
 impl Font {
@@ -150,8 +150,6 @@ impl Font {
             shader:
                 Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap()),
             atlas_tex: None,
-            wrap: 0,
-            line_spacing: 1.0,
         };
 
         let mut all_bytes = std::fs::read(cached_path).unwrap();
@@ -189,12 +187,34 @@ impl Font {
 
         font
     }
+}
+
+pub struct FontRenderer {
+    font: Rc<Font>,
+    wrapping: Wrapping,
+    scale_mode: ScaleMode,
+    tab_length: u32, // The length of tabs in spaces. Default is 4
+    line_spacing: f32,
+}
+
+impl FontRenderer {
+
+    pub unsafe fn new(font: Rc<Font>) -> Self {
+        FontRenderer {
+            font: font,
+            tab_length: 4,
+            line_spacing: 1.0,
+            wrapping: Wrapping::None,
+            scale_mode: ScaleMode::Normal,
+        }
+    }
 
     pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled_factor: f32, color: u32) -> (f32, f32) {
         let scale = size/FONT_RES as f32;
         let i_scale = 1.0/scale;
+        let i_scale_factor = 1.0/scaled_factor;
 
-        let atlas = self.atlas_tex.as_ref().unwrap();
+        let atlas = self.font.atlas_tex.as_ref().unwrap();
         Enable(BLEND);
         x = x*i_scale;
         y = y*i_scale;
@@ -203,19 +223,35 @@ impl Font {
         PushMatrix();
         Scaled(scale as GLdouble, scale as GLdouble, 1 as GLdouble);
 
-
-        let str_height = self.glyphs.get('H' as usize).unwrap().top as f32;
+        let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
 
         let mut line_width = 0f32;
         let mut line_height = 0f32;
-        self.shader.bind();
-        self.shader.u_put_float("u_color", self.renderer.get_rgb(color));
-        let smoothing = (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0);
-        self.shader.u_put_float("u_smoothing", vec![smoothing]);
+
+        self.font.shader.bind();
+
         atlas.bind();
+        self.font.shader.u_put_float("u_color", self.font.renderer.get_rgb(color));
+        self.font.shader.u_put_float("u_values",
+                                     vec![
+                                         (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0).clamp(0.0, 0.4),
+                                         atlas.width as f32,
+                                         i_scale
+                                     ]);
+        // self.font.shader.u_put_float("u_smoothing", vec![(0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0).clamp(0.0, 0.4)]);
+        // self.font.shader.u_put_float("atlas_width", vec![atlas.width as f32]);
+        // self.font.shader.u_put_float("i_scale", vec![i_scale]);
         for char in string.chars() {
             if char == '\n' {
-                y += line_height;
+                // TODO: maybe make these scale mods?
+                match self.scale_mode {
+                    ScaleMode::Normal => {
+                        y += line_height;
+                    }
+                    ScaleMode::Quality => {
+                        y += (line_height * self.line_spacing * scale).ceil() * i_scale;
+                    }
+                }
                 line_width = 0.0;
                 x = start_x;
                 continue;
@@ -224,36 +260,50 @@ impl Font {
                 x += self.get_width(size, " ".to_string());
                 continue;
             }
-            let glyph: &Glyph = self.glyphs.get(char as usize).unwrap();
 
-            let pos_y = y + str_height - glyph.top as f32;
+            let (c_w, c_h) = self.draw_char(atlas, char, x, y, str_height, color);
 
-            self.renderer.draw_texture_rect_uv(
-                x,
-                pos_y,
-                x+glyph.width as f32,
-                pos_y+glyph.height as f32,
-                glyph.atlas_x as f64 / atlas.width as f64,
-                0f64,
-                (glyph.atlas_x + glyph.width) as f64 / atlas.width as f64,
-                glyph.height as f64 / atlas.height as f64,
-                color);
-
-            line_width += (glyph.advance - glyph.bearing_x) as f32;
-            if line_height < glyph.height as f32 {
-                line_height = glyph.height as f32;
+            if line_height < c_h {
+                line_height = c_h;
             }
-            x += (glyph.advance - glyph.bearing_x) as f32;
+            line_width += c_w;
+            match self.scale_mode {
+                ScaleMode::Normal => {
+                    x += c_w;
+                }
+                ScaleMode::Quality => {
+                    x += (c_w * scale).ceil() * i_scale;
+                }
+            }
         }
 
-        self.shader.unbind();
+        self.font.shader.unbind();
 
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();
         atlas.unbind();
         Disable(BLEND);
 
-        (line_width *scale, line_height *scale)
+        (line_width*scale, line_height*scale)
+    }
+
+    pub unsafe fn draw_char(&self, atlas: &Texture, char: char, x: f32, y: f32, str_height: f32, color: u32) -> (f32, f32) {
+        let glyph: &Glyph = self.font.glyphs.get(char as usize).unwrap();
+        let pos_y = y + str_height - glyph.top as f32;
+
+        self.font.renderer.draw_texture_rect_uv(
+            x,
+            pos_y,
+            (x+glyph.width as f32).ceil(),
+            (pos_y+glyph.height as f32).ceil(),
+            glyph.atlas_x as f64 / atlas.width as f64,
+            0f64,
+            (glyph.atlas_x + glyph.width) as f64 / atlas.width as f64,
+            glyph.height as f64 / atlas.height as f64,
+            color
+        );
+
+        (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil())
     }
 
     pub unsafe fn get_width(&self, size: f32, string: String) -> f32 {
@@ -262,7 +312,7 @@ impl Font {
         let mut width = 0.0f32;
 
         for char in string.chars() {
-            let glyph =  self.glyphs.get(char as usize).unwrap();
+            let glyph =  self.font.glyphs.get(char as usize).unwrap();
             width += (glyph.advance - glyph.bearing_x) as f32;
         }
 
@@ -272,22 +322,43 @@ impl Font {
     pub unsafe fn get_height(&self, size: f32) -> f32 {
         let scale = size/FONT_RES as f32;
         let i_scale = 1.0/(size/FONT_RES as f32);
-        self.glyphs.get('H' as usize).unwrap().top as f32 * scale
+        self.font.glyphs.get('H' as usize).unwrap().top as f32 * scale
     }
 
     pub unsafe fn draw_string(&self, size: f32, string: &str, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
         self.draw_string_s(size, string, x, y, 1.0, color)
     }
 
-    pub fn line_spacing(&mut self, spacing: f32) -> &mut Self {
+    pub fn line_spacing(mut self, spacing: f32) -> Self {
         self.line_spacing = spacing;
         self
     }
 
-    pub fn set_wrap(&mut self, wrapping: u8) -> &mut Self {
-        self.wrap = wrapping;
+    pub fn wrapping(mut self, wrapping: Wrapping) -> Self {
+        self.wrapping = wrapping;
         self
     }
+
+    pub fn scale_mode(mut self, scale_mode: ScaleMode) -> Self {
+        self.scale_mode = scale_mode;
+        self
+    }
+}
+
+// Wrapping to be used for rendering
+// Will contain the length of each line
+pub enum Wrapping {
+    None,
+    Hard(f32),
+    Soft(f32),
+    SoftHard(f32), // If the word is longer than the line length, it will be hard wrapped
+}
+
+// To choose between smooth scaling (for animations)
+// or to preserve quality for small text
+pub enum ScaleMode {
+    Normal,
+    Quality,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
