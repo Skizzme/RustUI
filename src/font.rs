@@ -224,8 +224,12 @@ impl FontRenderer {
         Scaled(scale as GLdouble, scale as GLdouble, 1 as GLdouble);
 
         let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        let mut model_view_projection_matrix: [f32; 16] = [0.0; 16];
+        GetFloatv(PROJECTION_MATRIX, model_view_projection_matrix[16..].as_mut_ptr());
+        println!("{:?}", model_view_projection_matrix);
 
-        let mut line_width = 0f32;
+
+            let mut line_width = 0f32;
         let mut line_height = 0f32;
 
         self.font.shader.bind();
