@@ -1,23 +1,18 @@
-
 extern crate freetype;
 
 use std::collections::HashMap;
 use std::fmt::Pointer;
 use std::fs::read_to_string;
 use std::io::Write;
-use std::mem::{size_of, size_of_val};
 use std::path::Path;
-use std::ptr;
-use std::ptr::null;
 use std::rc::Rc;
-use std::time::{Instant};
+use std::time::Instant;
+
 use freetype::face::LoadFlag;
-use freetype::{RenderMode};
-// use gl::*;
-// use gl::types::{GLint, GLuint};
-use image::{GrayAlphaImage, ImageBuffer};
+use freetype::RenderMode;
+
 use crate::gl30::*;
-use crate::gl30::types::{GLdouble, GLsizeiptr};
+use crate::gl30::types::GLdouble;
 use crate::renderer::Renderer;
 use crate::shader::Shader;
 use crate::texture::Texture;
@@ -37,13 +32,21 @@ struct CacheGlyph {
 pub struct FontManager {
     fonts: HashMap<String, Rc<Font>>,
     renderer: Rc<Renderer>,
+    pub screen_width: i32,
+    pub screen_height: i32,
+    fonts_location: String,
+    cache_location: String,
 }
 
 impl FontManager {
-    pub fn new(renderer: Rc<Renderer>) -> Self {
+    pub fn new(screen_width: i32, screen_height: i32, renderer: Rc<Renderer>, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
         FontManager {
             fonts: HashMap::new(),
             renderer: renderer.clone(),
+            screen_width,
+            screen_height,
+            fonts_location: fonts_location.to_string(),
+            cache_location: cache_location.to_string(),
         }
     }
 
@@ -51,7 +54,7 @@ impl FontManager {
         if !self.fonts.contains_key(name) {
             let mut b = Instant::now();
             if !Path::new(format!("{}_{}.cache", name, FONT_RES).as_str()).exists() {
-                Font::cache(format!("src\\resources\\fonts\\{}.ttf", name).as_str(), format!("{}_{}.cache", name, FONT_RES).as_str());
+                Font::cache(format!("{}{}.ttf", self.fonts_location, name).as_str(), format!("{}{}_{}.cache", self.cache_location, name, FONT_RES).as_str());
                 println!("Font took {:?} to cache...", b.elapsed());
             }
 
@@ -61,7 +64,12 @@ impl FontManager {
 
             self.fonts.insert(name.to_string(), Rc::new(ft));
         }
-        FontRenderer::new(self.fonts.get(name).unwrap().clone())
+        FontRenderer::new(self, self.fonts.get(name).unwrap().clone())
+    }
+
+    pub fn updated_screen_dims(&mut self, width: i32, height: i32) {
+        self.screen_width = width;
+        self.screen_height = height;
     }
 }
 
@@ -189,30 +197,34 @@ impl Font {
     }
 }
 
-pub struct FontRenderer {
+pub struct FontRenderer<'a> {
     font: Rc<Font>,
     wrapping: Wrapping,
     scale_mode: ScaleMode,
     tab_length: u32, // The length of tabs in spaces. Default is 4
     line_spacing: f32,
+    manager: &'a FontManager,
 }
 
-impl FontRenderer {
+impl<'a> FontRenderer<'a> {
 
-    pub unsafe fn new(font: Rc<Font>) -> Self {
+    pub unsafe fn new(manager: &'a FontManager, font: Rc<Font>) -> Self {
         FontRenderer {
             font: font,
             tab_length: 4,
             line_spacing: 1.0,
             wrapping: Wrapping::None,
             scale_mode: ScaleMode::Normal,
+            manager,
         }
     }
 
-    pub unsafe fn draw_string_s(&self, size: f32, string: &str, mut x: f32, mut y: f32, scaled_factor: f32, color: u32) -> (f32, f32) {
-        let scale = size/FONT_RES as f32;
+    pub unsafe fn draw_string(&self, size: f32, string: &str, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
+        let scale = match self.scale_mode {
+            ScaleMode::Normal => {size/FONT_RES as f32}
+            ScaleMode::Quality => {size.ceil()/FONT_RES as f32}
+        };
         let i_scale = 1.0/scale;
-        let i_scale_factor = 1.0/scaled_factor;
 
         let atlas = self.font.atlas_tex.as_ref().unwrap();
         Enable(BLEND);
@@ -220,63 +232,75 @@ impl FontRenderer {
         y = y*i_scale;
         let start_x = x;
 
+        let mut model_view_projection_matrix: [f64; 16] = [0.0; 16];
+        GetDoublev(PROJECTION_MATRIX, model_view_projection_matrix.as_mut_ptr());
+        let scaled_factor_x = (model_view_projection_matrix[0]*self.manager.screen_width as f64/2.0) as f32;
+        let scaled_factor_y = (model_view_projection_matrix[5]*self.manager.screen_height as f64/-2.0) as f32;
+        let comb_scale_x = scaled_factor_x*scale;
+        let comb_scale_y = scaled_factor_y*scale;
+
         PushMatrix();
         Scaled(scale as GLdouble, scale as GLdouble, 1 as GLdouble);
 
         let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
-        let mut model_view_projection_matrix: [f32; 16] = [0.0; 16];
-        GetFloatv(PROJECTION_MATRIX, model_view_projection_matrix[16..].as_mut_ptr());
-        println!("{:?}", model_view_projection_matrix);
 
-
-            let mut line_width = 0f32;
+        let mut line_width = 0f32;
         let mut line_height = 0f32;
 
         self.font.shader.bind();
 
         atlas.bind();
         self.font.shader.u_put_float("u_color", self.font.renderer.get_rgb(color));
-        self.font.shader.u_put_float("u_values",
-                                     vec![
-                                         (0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0).clamp(0.0, 0.4),
-                                         atlas.width as f32,
-                                         i_scale
-                                     ]);
-        // self.font.shader.u_put_float("u_smoothing", vec![(0.25 / (size/10.0 * scaled_factor) * FONT_RES as f32/64.0).clamp(0.0, 0.4)]);
-        // self.font.shader.u_put_float("atlas_width", vec![atlas.width as f32]);
-        // self.font.shader.u_put_float("i_scale", vec![i_scale]);
+        // self.font.shader.u_put_float("u_values",
+        //                              vec![
+        //
+        //                                  atlas.width as f32,
+        //                                  scaled_factor_x
+        //                              ]);
+        self.font.shader.u_put_float("u_smoothing", vec![(0.25 / (size / 10.0 *scaled_factor_x.max(scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)]);
+        self.font.shader.u_put_float("atlas_width", vec![atlas.width as f32]);
+        self.font.shader.u_put_float("i_scale", vec![1.0/comb_scale_x]);
         for char in string.chars() {
             if char == '\n' {
-                // TODO: maybe make these scale mods?
                 match self.scale_mode {
                     ScaleMode::Normal => {
                         y += line_height;
                     }
                     ScaleMode::Quality => {
-                        y += (line_height * self.line_spacing * scale).ceil() * i_scale;
+                        y += (line_height * self.line_spacing * comb_scale_y).ceil() * 1.0/comb_scale_y;
                     }
                 }
                 line_width = 0.0;
                 x = start_x;
                 continue;
             }
+
             if char == '\t' {
-                x += self.get_width(size, " ".to_string());
+                x += self.get_width(size, " ".to_string())*self.tab_length as f32;
                 continue;
             }
 
-            let (c_w, c_h) = self.draw_char(atlas, char, x, y, str_height, color);
-
-            if line_height < c_h {
-                line_height = c_h;
+            if y > self.manager.screen_height as f32 *i_scale {
+                break
             }
-            line_width += c_w;
-            match self.scale_mode {
-                ScaleMode::Normal => {
-                    x += c_w;
+
+            if x <= self.manager.screen_width as f32 *i_scale {
+                let (c_w, c_h) = self.get_dimensions(char);
+                if y > -c_h {
+                    self.draw_char(comb_scale_x, comb_scale_y, atlas, char, x, y, str_height, color);
                 }
-                ScaleMode::Quality => {
-                    x += (c_w * scale).ceil() * i_scale;
+
+                if line_height < c_h {
+                    line_height = c_h;
+                }
+                line_width += c_w;
+                match self.scale_mode {
+                    ScaleMode::Normal => {
+                        x += c_w;
+                    }
+                    ScaleMode::Quality => {
+                        x += (c_w * comb_scale_x).ceil() * 1.0/comb_scale_x;
+                    }
                 }
             }
         }
@@ -291,15 +315,51 @@ impl FontRenderer {
         (line_width*scale, line_height*scale)
     }
 
-    pub unsafe fn draw_char(&self, atlas: &Texture, char: char, x: f32, y: f32, str_height: f32, color: u32) -> (f32, f32) {
-        let glyph: &Glyph = self.font.glyphs.get(char as usize).unwrap();
+    fn get_scaled_value(&self, value: f32, scale_factor: f32) -> f32 {
+        (value * scale_factor).ceil() / scale_factor
+    }
+
+    unsafe fn get_dimensions(&self, char: char) -> (f32, f32) {
+        let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
+            None => {
+                return (0.0, 0.0);
+            }
+            Some(glyph) => {
+                glyph
+            }
+        };
+
+        (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil())
+    }
+
+    pub unsafe fn draw_char(&self, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32, str_height: f32, color: u32) -> (f32, f32) {
+        let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
+            None => {
+                return (0.0, 0.0);
+            }
+            Some(glyph) => {
+                glyph
+            }
+        };
         let pos_y = y + str_height - glyph.top as f32;
+
+        // self.font.renderer.draw_texture_rect_uv(
+        //     x,
+        //     pos_y,
+        //     (x+glyph.width as f32).ceil(),
+        //     (pos_y+glyph.height as f32).ceil(),
+        //     glyph.atlas_x as f64 / atlas.width as f64,
+        //     0f64,
+        //     (glyph.atlas_x + glyph.width) as f64 / atlas.width as f64,
+        //     glyph.height as f64 / atlas.height as f64,
+        //     color
+        // );
 
         self.font.renderer.draw_texture_rect_uv(
             x,
             pos_y,
-            (x+glyph.width as f32).ceil(),
-            (pos_y+glyph.height as f32).ceil(),
+            self.get_scaled_value(x+glyph.width as f32, scaled_x),
+            self.get_scaled_value(pos_y+glyph.height as f32, scaled_y),
             glyph.atlas_x as f64 / atlas.width as f64,
             0f64,
             (glyph.atlas_x + glyph.width) as f64 / atlas.width as f64,
@@ -327,10 +387,6 @@ impl FontRenderer {
         let scale = size/FONT_RES as f32;
         let i_scale = 1.0/(size/FONT_RES as f32);
         self.font.glyphs.get('H' as usize).unwrap().top as f32 * scale
-    }
-
-    pub unsafe fn draw_string(&self, size: f32, string: &str, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
-        self.draw_string_s(size, string, x, y, 1.0, color)
     }
 
     pub fn line_spacing(mut self, spacing: f32) -> Self {

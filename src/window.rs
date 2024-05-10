@@ -3,10 +3,10 @@ use std::thread;
 use std::time::{Duration, Instant};
 // use gl::*;
 // use gl::types::{GLdouble, GLsizei};
-use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, OpenGlProfileHint, PWindow, SwapInterval, WindowEvent, WindowHint};
+use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, OpenGlProfileHint, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 use image::open;
-use crate::{BACKGROUND_FPS, gl30, TITLE};
 use crate::font::FontManager;
+use crate::gl30;
 use crate::gl30::*;
 use crate::gl30::types::*;
 use crate::renderer::Renderer;
@@ -22,26 +22,20 @@ pub struct Window {
     pub renderer: Rc<Renderer>,
     pub fonts: FontManager,
 
-    // pub current_screen: Box<dyn GuiScreen>,
-
     pub(crate) p_window: PWindow,
     glfw: Glfw,
     events: GlfwReceiver<(f64, WindowEvent)>,
+    unfocused_fps: u32
 }
 
 impl Window {
-    pub unsafe fn create(width: i32, height: i32) -> Window {
+    pub unsafe fn create(title: impl ToString, width: i32, height: i32, font_location: impl ToString, cache_location: impl ToString, glfw_hints: Vec<WindowHint>, mode: WindowMode, unfocused_fps: u32) -> Window {
         let mut glfw = glfw::init(fail_on_errors!()).unwrap();
-        // glfw.window_hint(WindowHint::ContextVersion(3, 2));
-        // glfw.window_hint(WindowHint::OpenGlProfile(OpenGlProfileHint::Compat));
-        glfw.window_hint(WindowHint::Samples(Some(8u32)));
-        // glfw.window_hint(WindowHint::OpenGlForwardCompat(true));
-        // glfw.window_hint(WindowHint::DoubleBuffer(true)); // less tearing?
-        // glfw.window_hint(WindowHint::Resizable(false));
-        // glfw.window_hint(WindowHint::Floating(true));
-        glfw.window_hint(WindowHint::TransparentFramebuffer(true));
+        for glfw_hint in glfw_hints {
+            glfw.window_hint(glfw_hint);
+        }
 
-        let (mut p_window, events) = glfw.create_window(width as u32, height as u32, TITLE, glfw::WindowMode::Windowed).expect("Failed to make window");
+        let (mut p_window, events) = glfw.create_window(width as u32, height as u32, title.to_string().as_str(), mode).expect("Failed to make window");
 
         p_window.make_current();
         p_window.set_all_polling(true);
@@ -65,16 +59,15 @@ impl Window {
             mouse_y: 0.0,
             frame_delta: 0.0,
             renderer: renderer.clone(),
-            fonts: FontManager::new(renderer.clone()),
-            // current_screen: Box::new(default_screen::DefaultScreen::new()),
+            fonts: FontManager::new(width, height, renderer.clone(), font_location, cache_location),
             p_window,
             glfw,
             events,
+            unfocused_fps
         }
     }
 
     pub unsafe fn run(&mut self, mut current_screen: Box<&mut dyn GuiScreen>, last_frame: Instant) {
-
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
@@ -86,6 +79,8 @@ impl Window {
                 WindowEvent::Size(width, height) => {
                     self.screen_width = width;
                     self.screen_height = height;
+                    self.fonts.screen_width = width;
+                    self.fonts.screen_height = height;
                 }
                 e => {
                     current_screen.event(e, self);
@@ -95,13 +90,13 @@ impl Window {
 
         pre_render(self);
 
-        // if !self.p_window.is_focused() {
-        //     self.glfw.set_swap_interval(SwapInterval::Sync(0));
-        //     let target_delta = (1.0/BACKGROUND_FPS);
-        //     thread::sleep(Duration::from_secs_f32(target_delta));
-        // } else {
-        //     self.glfw.set_swap_interval(SwapInterval::Sync(1));
-        // }
+        if !self.p_window.is_focused() {
+            self.glfw.set_swap_interval(SwapInterval::Sync(0));
+            let target_delta = (1.0/self.unfocused_fps as f32);
+            thread::sleep(Duration::from_secs_f32(target_delta));
+        } else {
+            self.glfw.set_swap_interval(SwapInterval::Sync(1));
+        }
 
         self.frame_delta = last_frame.elapsed().as_secs_f64();
 

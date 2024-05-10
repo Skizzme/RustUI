@@ -13,7 +13,7 @@ use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
 use glfw;
-use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint};
+use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 // use gl;
 // use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, GenBuffers, GenVertexArrays, MULTISAMPLE, STATIC_DRAW};
 use image::{EncodableLayout, open};
@@ -26,9 +26,6 @@ use crate::shader::Shader;
 use crate::texture::Texture;
 use crate::window::Window;
 
-const TITLE: &str = "Test";
-const FPS: f32 = 144f32;
-const BACKGROUND_FPS: f32 = 30f32;
 
 // GENERATE OPEN GL BINDINGS FOR ANY VERSION
 // extern crate gl_generator;
@@ -54,7 +51,7 @@ fn main() {
     }
 
     unsafe {
-        let mut window = Window::create(1920/2, 1080/2);
+        let mut window = Window::create("Test", 1920/2, 1080/2, "src\\resources\\fonts\\", "", Vec::new(), WindowMode::Windowed, 30);
         let mut current_screen = DefaultScreen::new();
         let mut last_frame = Instant::now();
         let mut frames = 0;

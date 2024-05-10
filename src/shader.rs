@@ -18,14 +18,14 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub unsafe fn new(vertex_source: String, fragment_source: String) -> Self {
+    pub unsafe fn new(vertex_source: impl ToString, fragment_source: impl ToString) -> Self {
         let mut shader = Shader {
             vertex_shader: CreateShader(VERTEX_SHADER),
             fragment_shader: CreateShader(FRAGMENT_SHADER),
             program: CreateProgram(),
             created: false,
-            vertex_source,
-            fragment_source,
+            vertex_source: vertex_source.to_string(),
+            fragment_source: fragment_source.to_string(),
         };
 
         let v_res = compile(shader.vertex_shader, shader.vertex_source.as_str());
