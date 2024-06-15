@@ -1,17 +1,18 @@
 use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
+
 // use gl::*;
 // use gl::types::{GLdouble, GLsizei};
-use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, OpenGlProfileHint, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
-use image::open;
+use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
+
 use crate::font::FontManager;
-use crate::gl30;
-use crate::gl30::*;
-use crate::gl30::types::*;
+use crate::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
+use crate::{gl30};
+use gl::*;
+use gl::types::*;
 use crate::renderer::Renderer;
 use crate::screen::GuiScreen;
-use crate::texture::Texture;
 
 pub struct Window {
     pub screen_width: i32,
@@ -22,13 +23,14 @@ pub struct Window {
     pub renderer: Rc<Renderer>,
     pub fonts: FontManager,
 
-    pub(crate) p_window: PWindow,
+    pub p_window: PWindow,
     glfw: Glfw,
     events: GlfwReceiver<(f64, WindowEvent)>,
     unfocused_fps: u32
 }
 
 impl Window {
+    /// Creates a new window with the specified options
     pub unsafe fn create(title: impl ToString, width: i32, height: i32, font_location: impl ToString, cache_location: impl ToString, glfw_hints: Vec<WindowHint>, mode: WindowMode, unfocused_fps: u32) -> Window {
         let mut glfw = glfw::init(fail_on_errors!()).unwrap();
         for glfw_hint in glfw_hints {
@@ -40,15 +42,8 @@ impl Window {
         p_window.make_current();
         p_window.set_all_polling(true);
 
-        // gl11::load_with(|f_name| {
-        //     glfw.get_proc_address_raw(f_name)
-        // });
-        // gl::load_with(|f_name| {
-        //     glfw.get_proc_address_raw(f_name)
-        // });
-        gl30::load_with(|f_name| {
-            glfw.get_proc_address_raw(f_name)
-        });
+        gl30::load_with(|f_name| glfw.get_proc_address_raw(f_name));
+        gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
         let renderer = Rc::new(Renderer::new());
 
@@ -67,6 +62,9 @@ impl Window {
         }
     }
 
+    /// The method that should be called every frame.
+    ///
+    /// Polls events, tracks frame_delta, and calls `draw` on `current_screen`
     pub unsafe fn run(&mut self, mut current_screen: Box<&mut dyn GuiScreen>, last_frame: Instant) {
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
@@ -105,7 +103,6 @@ impl Window {
         post_render(&mut self.p_window);
     }
 }
-
 
 unsafe fn pre_render(window: &Window) {
     Viewport(0, 0, window.screen_width as GLsizei, window.screen_height as GLsizei);

@@ -2299,9 +2299,11 @@ pub type GLvdpauSurfaceNV = GLintptr;
 mod storage {
             #![allow(non_snake_case)]
             #![allow(non_upper_case_globals)]
-            use super::__gl_imports::raw;
-            use super::FnPtr;
-pub static mut Accum: FnPtr = FnPtr {
+
+    use super::__gl_imports::raw;
+    use super::FnPtr;
+
+    pub static mut Accum: FnPtr = FnPtr {
                 f: super::missing_fn_panic as *const raw::c_void,
                 is_loaded: false
             };
@@ -4485,7 +4487,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Accum {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4506,7 +4508,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ActiveTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4527,7 +4529,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod AlphaFunc {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4548,7 +4550,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod AreTexturesResident {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4569,7 +4571,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ArrayElement {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4590,7 +4592,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod AttachShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4611,7 +4613,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Begin {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4632,7 +4634,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BeginQuery {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4653,7 +4655,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindAttribLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4674,7 +4676,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4695,7 +4697,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4716,7 +4718,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Bitmap {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4737,7 +4739,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendColor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4758,7 +4760,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendEquation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4779,7 +4781,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendEquationSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4800,7 +4802,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendFunc {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4821,7 +4823,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendFuncSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4842,7 +4844,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BufferData {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4863,7 +4865,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BufferSubData {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4884,7 +4886,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CallList {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4905,7 +4907,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CallLists {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4926,7 +4928,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Clear {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4947,7 +4949,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearAccum {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4968,7 +4970,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearColor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4989,7 +4991,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearDepth {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5010,7 +5012,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearIndex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5031,7 +5033,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearStencil {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5052,7 +5054,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClientActiveTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5073,7 +5075,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClipPlane {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5094,7 +5096,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3b {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5115,7 +5117,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3bv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5136,7 +5138,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5157,7 +5159,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5178,7 +5180,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5199,7 +5201,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5220,7 +5222,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5241,7 +5243,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5262,7 +5264,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5283,7 +5285,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5304,7 +5306,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3ub {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5325,7 +5327,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3ubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5346,7 +5348,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5367,7 +5369,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5388,7 +5390,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3us {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5409,7 +5411,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color3usv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5430,7 +5432,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4b {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5451,7 +5453,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4bv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5472,7 +5474,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5493,7 +5495,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5514,7 +5516,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5535,7 +5537,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5556,7 +5558,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5577,7 +5579,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5598,7 +5600,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5619,7 +5621,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5640,7 +5642,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4ub {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5661,7 +5663,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4ubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5682,7 +5684,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5703,7 +5705,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5724,7 +5726,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4us {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5745,7 +5747,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Color4usv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5766,7 +5768,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorMask {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5787,7 +5789,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorMaterial {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5808,7 +5810,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5829,7 +5831,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompileShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5850,7 +5852,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5871,7 +5873,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5892,7 +5894,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5913,7 +5915,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexSubImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5934,7 +5936,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexSubImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5955,7 +5957,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexSubImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5976,7 +5978,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyPixels {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5997,7 +5999,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6018,7 +6020,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6039,7 +6041,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexSubImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6060,7 +6062,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexSubImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6081,7 +6083,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexSubImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6102,7 +6104,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CreateProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6123,7 +6125,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CreateShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6144,7 +6146,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CullFace {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6165,7 +6167,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteBuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6186,7 +6188,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteLists {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6207,7 +6209,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6228,7 +6230,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteQueries {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6249,7 +6251,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6270,7 +6272,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteTextures {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6291,7 +6293,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthFunc {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6312,7 +6314,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthMask {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6333,7 +6335,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthRange {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6354,7 +6356,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DetachShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6375,7 +6377,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Disable {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6396,7 +6398,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DisableClientState {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6417,7 +6419,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DisableVertexAttribArray {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6438,7 +6440,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawArrays {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6459,7 +6461,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6480,7 +6482,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawBuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6501,7 +6503,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawElements {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6522,7 +6524,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawPixels {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6543,7 +6545,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawRangeElements {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6564,7 +6566,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EdgeFlag {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6585,7 +6587,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EdgeFlagPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6606,7 +6608,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EdgeFlagv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6627,7 +6629,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Enable {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6648,7 +6650,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EnableClientState {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6669,7 +6671,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EnableVertexAttribArray {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6690,7 +6692,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod End {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6711,7 +6713,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EndList {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6732,7 +6734,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EndQuery {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6753,7 +6755,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6774,7 +6776,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6795,7 +6797,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6816,7 +6818,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6837,7 +6839,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6858,7 +6860,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6879,7 +6881,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6900,7 +6902,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalCoord2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6921,7 +6923,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalMesh1 {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6942,7 +6944,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalMesh2 {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6963,7 +6965,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalPoint1 {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6984,7 +6986,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EvalPoint2 {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7005,7 +7007,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FeedbackBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7026,7 +7028,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Finish {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7047,7 +7049,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Flush {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7068,7 +7070,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FogCoordPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7089,7 +7091,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FogCoordd {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7110,7 +7112,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FogCoorddv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7131,7 +7133,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FogCoordf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7152,7 +7154,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FogCoordfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7173,7 +7175,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Fogf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7194,7 +7196,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Fogfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7215,7 +7217,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Fogi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7236,7 +7238,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Fogiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7257,7 +7259,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FrontFace {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7278,7 +7280,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Frustum {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7299,7 +7301,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenBuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7320,7 +7322,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenLists {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7341,7 +7343,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenQueries {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7362,7 +7364,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenTextures {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7383,7 +7385,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveAttrib {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7404,7 +7406,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveUniform {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7425,7 +7427,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetAttachedShaders {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7446,7 +7448,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetAttribLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7467,7 +7469,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBooleanv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7488,7 +7490,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBufferParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7509,7 +7511,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBufferPointerv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7530,7 +7532,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBufferSubData {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7551,7 +7553,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetClipPlane {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7572,7 +7574,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetCompressedTexImage {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7593,7 +7595,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetDoublev {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7614,7 +7616,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetError {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7635,7 +7637,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetFloatv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7656,7 +7658,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetIntegerv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7677,7 +7679,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetLightfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7698,7 +7700,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetLightiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7719,7 +7721,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetMapdv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7740,7 +7742,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetMapfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7761,7 +7763,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetMapiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7782,7 +7784,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetMaterialfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7803,7 +7805,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetMaterialiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7824,7 +7826,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetPixelMapfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7845,7 +7847,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetPixelMapuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7866,7 +7868,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetPixelMapusv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7887,7 +7889,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetPointerv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7908,7 +7910,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetPolygonStipple {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7929,7 +7931,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramInfoLog {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7950,7 +7952,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7971,7 +7973,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryObjectiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7992,7 +7994,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryObjectuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8013,7 +8015,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8034,7 +8036,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetShaderInfoLog {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8055,7 +8057,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetShaderSource {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8076,7 +8078,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetShaderiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8097,7 +8099,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetString {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8118,7 +8120,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexEnvfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8139,7 +8141,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexEnviv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8160,7 +8162,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexGendv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8181,7 +8183,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexGenfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8202,7 +8204,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexGeniv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8223,7 +8225,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexImage {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8244,7 +8246,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexLevelParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8265,7 +8267,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexLevelParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8286,7 +8288,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8307,7 +8309,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8328,7 +8330,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8349,7 +8351,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8370,7 +8372,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8391,7 +8393,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribPointerv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8412,7 +8414,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribdv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8433,7 +8435,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8454,7 +8456,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8475,7 +8477,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Hint {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8496,7 +8498,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IndexMask {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8517,7 +8519,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IndexPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8538,7 +8540,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexd {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8559,7 +8561,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexdv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8580,7 +8582,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8601,7 +8603,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8622,7 +8624,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8643,7 +8645,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8664,7 +8666,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexs {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8685,7 +8687,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexsv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8706,7 +8708,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexub {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8727,7 +8729,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Indexubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8748,7 +8750,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod InitNames {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8769,7 +8771,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod InterleavedArrays {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8790,7 +8792,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8811,7 +8813,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsEnabled {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8832,7 +8834,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsList {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8853,7 +8855,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8874,7 +8876,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsQuery {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8895,7 +8897,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8916,7 +8918,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8937,7 +8939,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LightModelf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8958,7 +8960,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LightModelfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8979,7 +8981,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LightModeli {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9000,7 +9002,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LightModeliv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9021,7 +9023,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Lightf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9042,7 +9044,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Lightfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9063,7 +9065,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Lighti {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9084,7 +9086,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Lightiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9105,7 +9107,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LineStipple {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9126,7 +9128,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LineWidth {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9147,7 +9149,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LinkProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9168,7 +9170,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ListBase {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9189,7 +9191,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LoadIdentity {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9210,7 +9212,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LoadMatrixd {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9231,7 +9233,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LoadMatrixf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9252,7 +9254,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LoadName {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9273,7 +9275,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LoadTransposeMatrixd {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9294,7 +9296,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LoadTransposeMatrixf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9315,7 +9317,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LogicOp {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9336,7 +9338,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Map1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9357,7 +9359,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Map1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9378,7 +9380,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Map2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9399,7 +9401,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Map2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9420,7 +9422,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MapBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9441,7 +9443,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MapGrid1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9462,7 +9464,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MapGrid1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9483,7 +9485,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MapGrid2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9504,7 +9506,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MapGrid2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9525,7 +9527,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Materialf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9546,7 +9548,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Materialfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9567,7 +9569,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Materiali {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9588,7 +9590,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Materialiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9609,7 +9611,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MatrixMode {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9630,7 +9632,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultMatrixd {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9651,7 +9653,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultMatrixf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9672,7 +9674,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultTransposeMatrixd {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9693,7 +9695,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultTransposeMatrixf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9714,7 +9716,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiDrawArrays {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9735,7 +9737,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiDrawElements {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9756,7 +9758,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9777,7 +9779,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9798,7 +9800,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9819,7 +9821,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9840,7 +9842,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9861,7 +9863,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9882,7 +9884,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9903,7 +9905,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord1sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9924,7 +9926,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9945,7 +9947,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9966,7 +9968,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9987,7 +9989,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10008,7 +10010,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10029,7 +10031,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10050,7 +10052,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10071,7 +10073,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord2sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10092,7 +10094,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10113,7 +10115,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10134,7 +10136,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10155,7 +10157,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10176,7 +10178,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10197,7 +10199,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10218,7 +10220,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10239,7 +10241,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10260,7 +10262,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10281,7 +10283,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10302,7 +10304,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10323,7 +10325,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10344,7 +10346,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10365,7 +10367,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10386,7 +10388,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10407,7 +10409,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoord4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10428,7 +10430,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod NewList {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10449,7 +10451,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3b {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10470,7 +10472,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3bv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10491,7 +10493,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10512,7 +10514,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10533,7 +10535,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10554,7 +10556,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10575,7 +10577,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10596,7 +10598,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10617,7 +10619,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10638,7 +10640,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Normal3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10659,7 +10661,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod NormalPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10680,7 +10682,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Ortho {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10701,7 +10703,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PassThrough {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10722,7 +10724,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelMapfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10743,7 +10745,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelMapuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10764,7 +10766,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelMapusv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10785,7 +10787,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelStoref {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10806,7 +10808,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelStorei {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10827,7 +10829,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelTransferf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10848,7 +10850,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelTransferi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10869,7 +10871,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelZoom {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10890,7 +10892,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameterf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10911,7 +10913,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10932,7 +10934,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameteri {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10953,7 +10955,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10974,7 +10976,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointSize {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10995,7 +10997,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PolygonMode {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11016,7 +11018,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PolygonOffset {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11037,7 +11039,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PolygonStipple {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11058,7 +11060,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PopAttrib {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11079,7 +11081,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PopClientAttrib {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11100,7 +11102,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PopMatrix {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11121,7 +11123,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PopName {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11142,7 +11144,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PrioritizeTextures {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11163,7 +11165,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PushAttrib {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11184,7 +11186,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PushClientAttrib {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11205,7 +11207,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PushMatrix {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11226,7 +11228,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PushName {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11247,7 +11249,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11268,7 +11270,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11289,7 +11291,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11310,7 +11312,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11331,7 +11333,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11352,7 +11354,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11373,7 +11375,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11394,7 +11396,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos2sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11415,7 +11417,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11436,7 +11438,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11457,7 +11459,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11478,7 +11480,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11499,7 +11501,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11520,7 +11522,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11541,7 +11543,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11562,7 +11564,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11583,7 +11585,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11604,7 +11606,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11625,7 +11627,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11646,7 +11648,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11667,7 +11669,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11688,7 +11690,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11709,7 +11711,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11730,7 +11732,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RasterPos4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11751,7 +11753,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ReadBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11772,7 +11774,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ReadPixels {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11793,7 +11795,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rectd {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11814,7 +11816,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rectdv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11835,7 +11837,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rectf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11856,7 +11858,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rectfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11877,7 +11879,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Recti {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11898,7 +11900,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rectiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11919,7 +11921,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rects {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11940,7 +11942,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rectsv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11961,7 +11963,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RenderMode {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11982,7 +11984,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rotated {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12003,7 +12005,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Rotatef {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12024,7 +12026,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SampleCoverage {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12045,7 +12047,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Scaled {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12066,7 +12068,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Scalef {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12087,7 +12089,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Scissor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12108,7 +12110,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3b {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12129,7 +12131,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3bv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12150,7 +12152,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12171,7 +12173,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12192,7 +12194,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12213,7 +12215,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12234,7 +12236,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12255,7 +12257,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12276,7 +12278,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12297,7 +12299,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12318,7 +12320,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3ub {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12339,7 +12341,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3ubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12360,7 +12362,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12381,7 +12383,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12402,7 +12404,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3us {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12423,7 +12425,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColor3usv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12444,7 +12446,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColorPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12465,7 +12467,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SelectBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12486,7 +12488,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ShadeModel {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12507,7 +12509,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ShaderSource {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12528,7 +12530,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilFunc {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12549,7 +12551,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilFuncSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12570,7 +12572,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilMask {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12591,7 +12593,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilMaskSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12612,7 +12614,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilOp {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12633,7 +12635,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilOpSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12654,7 +12656,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12675,7 +12677,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12696,7 +12698,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12717,7 +12719,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12738,7 +12740,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12759,7 +12761,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12780,7 +12782,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12801,7 +12803,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord1sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12822,7 +12824,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12843,7 +12845,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12864,7 +12866,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12885,7 +12887,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12906,7 +12908,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12927,7 +12929,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12948,7 +12950,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12969,7 +12971,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord2sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12990,7 +12992,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13011,7 +13013,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13032,7 +13034,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13053,7 +13055,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13074,7 +13076,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13095,7 +13097,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13116,7 +13118,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13137,7 +13139,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13158,7 +13160,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13179,7 +13181,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13200,7 +13202,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13221,7 +13223,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13242,7 +13244,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13263,7 +13265,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13284,7 +13286,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13305,7 +13307,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoord4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13326,7 +13328,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13347,7 +13349,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexEnvf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13368,7 +13370,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexEnvfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13389,7 +13391,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexEnvi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13410,7 +13412,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexEnviv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13431,7 +13433,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexGend {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13452,7 +13454,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexGendv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13473,7 +13475,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexGenf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13494,7 +13496,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexGenfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13515,7 +13517,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexGeni {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13536,7 +13538,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexGeniv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13557,7 +13559,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13578,7 +13580,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13599,7 +13601,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13620,7 +13622,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameterf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13641,7 +13643,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13662,7 +13664,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameteri {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13683,7 +13685,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13704,7 +13706,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexSubImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13725,7 +13727,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexSubImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13746,7 +13748,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexSubImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13767,7 +13769,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Translated {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13788,7 +13790,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Translatef {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13809,7 +13811,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13830,7 +13832,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13851,7 +13853,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13872,7 +13874,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13893,7 +13895,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13914,7 +13916,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13935,7 +13937,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13956,7 +13958,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13977,7 +13979,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13998,7 +14000,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14019,7 +14021,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14040,7 +14042,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14061,7 +14063,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14082,7 +14084,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14103,7 +14105,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14124,7 +14126,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14145,7 +14147,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14166,7 +14168,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14187,7 +14189,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14208,7 +14210,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UnmapBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14229,7 +14231,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UseProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14250,7 +14252,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ValidateProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14271,7 +14273,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14292,7 +14294,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14313,7 +14315,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14334,7 +14336,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14355,7 +14357,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14376,7 +14378,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14397,7 +14399,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14418,7 +14420,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex2sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14439,7 +14441,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14460,7 +14462,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14481,7 +14483,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14502,7 +14504,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14523,7 +14525,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14544,7 +14546,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14565,7 +14567,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14586,7 +14588,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14607,7 +14609,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14628,7 +14630,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14649,7 +14651,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14670,7 +14672,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14691,7 +14693,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14712,7 +14714,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14733,7 +14735,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14754,7 +14756,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Vertex4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14775,7 +14777,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14796,7 +14798,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14817,7 +14819,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14838,7 +14840,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14859,7 +14861,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14880,7 +14882,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14901,7 +14903,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14922,7 +14924,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14943,7 +14945,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14964,7 +14966,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14985,7 +14987,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15006,7 +15008,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15027,7 +15029,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15048,7 +15050,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15069,7 +15071,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15090,7 +15092,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15111,7 +15113,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15132,7 +15134,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15153,7 +15155,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nbv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15174,7 +15176,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Niv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15195,7 +15197,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nsv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15216,7 +15218,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nub {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15237,7 +15239,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15258,7 +15260,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15279,7 +15281,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nusv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15300,7 +15302,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4bv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15321,7 +15323,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15342,7 +15344,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15363,7 +15365,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15384,7 +15386,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15405,7 +15407,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15426,7 +15428,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15447,7 +15449,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15468,7 +15470,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4ubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15489,7 +15491,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15510,7 +15512,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4usv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15531,7 +15533,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15552,7 +15554,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15573,7 +15575,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Viewport {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15594,7 +15596,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15615,7 +15617,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15636,7 +15638,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15657,7 +15659,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15678,7 +15680,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15699,7 +15701,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15720,7 +15722,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15741,7 +15743,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos2sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15762,7 +15764,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15783,7 +15785,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15804,7 +15806,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15825,7 +15827,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15846,7 +15848,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15867,7 +15869,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15888,7 +15890,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15909,7 +15911,7 @@ pub static mut WindowPos3sv: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WindowPos3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 

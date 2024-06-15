@@ -1,7 +1,5 @@
-use std::time::{Duration, Instant};
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
-use crate::animation::{AnimationType, Animation};
-use crate::renderer::Renderer;
+
 use crate::Window;
 
 pub trait GuiScreen {

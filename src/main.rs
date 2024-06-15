@@ -1,32 +1,3 @@
-mod renderer;
-mod shader;
-mod screen;
-mod animation;
-mod font;
-mod default_screen;
-mod window;
-mod texture;
-mod gl30;
-
-use std::mem::size_of_val;
-use std::rc::Rc;
-use std::thread;
-use std::time::{Duration, Instant};
-use glfw;
-use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
-// use gl;
-// use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, GenBuffers, GenVertexArrays, MULTISAMPLE, STATIC_DRAW};
-use image::{EncodableLayout, open};
-use winapi::um::wincon::FreeConsole;
-use crate::default_screen::DefaultScreen;
-use crate::font::FontManager;
-use crate::renderer::Renderer;
-use crate::screen::{GuiScreen};
-use crate::shader::Shader;
-use crate::texture::Texture;
-use crate::window::Window;
-
-
 // GENERATE OPEN GL BINDINGS FOR ANY VERSION
 // extern crate gl_generator;
 // use gl_generator::{Registry, Api, Profile, Fallbacks, GlobalGenerator};
@@ -35,12 +6,18 @@ use crate::window::Window;
 // use std::path::Path;
 //
 // fn main() {
-//     let mut file = File::create("src\\gl30.rs").unwrap();
+//     let mut file = File::create("src\\gl.rs").unwrap();
 //
 //     Registry::new(Api::Gl, (3, 0), Profile::Core, Fallbacks::All, [])
 //         .write_bindings(GlobalGenerator, &mut file)
 //         .unwrap();
 // }
+
+use std::time::Instant;
+use glfw::WindowMode;
+use winapi::um::wincon::FreeConsole;
+use RustUI::default_screen::DefaultScreen;
+use RustUI::Window;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();

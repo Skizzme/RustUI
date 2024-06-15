@@ -1,12 +1,7 @@
-use crate::gl30::*;
-// use crate::gl30::*;
-// use crate::gl::types::*;
-// use gl;
-// use gl::*;
-// use gl::types::{GLchar, GLfloat, GLint};
-use crate::gl30::types::*;
-use crate::window::check_error;
+use gl::*;
+use gl::types::*;
 
+/// A wrapper for a GL program containing a vertex and fragment shaders
 #[derive(Default, Debug)]
 pub struct Shader {
     vertex_shader: u32,
@@ -18,6 +13,7 @@ pub struct Shader {
 }
 
 impl Shader {
+    /// Creates a shader program from the vertex and fragment sources.
     pub unsafe fn new(vertex_source: impl ToString, fragment_source: impl ToString) -> Self {
         let mut shader = Shader {
             vertex_shader: CreateShader(VERTEX_SHADER),
@@ -66,6 +62,7 @@ impl Shader {
             panic!("Program Link Error: {}", String::from_utf8_lossy(&v));
 
         }
+
         DeleteShader(shader.vertex_shader);
         DeleteShader(shader.fragment_shader);
 
@@ -74,24 +71,33 @@ impl Shader {
         return shader;
     }
 
+    /// Binds this program id
     pub unsafe fn bind(&self) {
         UseProgram(self.program);
     }
 
+    /// Unbinds this program
+    ///
+    /// In other words, binds program ID 0
     pub unsafe fn unbind(&self) {
         UseProgram(0);
     }
 
+    /// Gets the location of an attribute variable of the program
     pub unsafe fn get_attrib_location(&self, name: &str) -> GLint {
         let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
         GetAttribLocation(self.program, cname.as_ptr())
     }
 
+    /// Gets the location of a uniform variable of the program
     pub unsafe fn get_uniform_location(&self, name: &str) -> GLint {
         let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
         GetUniformLocation(self.program, cname.as_ptr())
     }
 
+    /// Sets the integer uniform of this program specified by the name
+    ///
+    /// `data` is the values of the uniform. 1 value is a int, 2 is a vec2 etc
     pub unsafe fn u_put_int(&self, name: &str, data: Vec<u32>) {
         let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
         let loc = GetUniformLocation(self.program, cname.as_ptr());
@@ -112,6 +118,9 @@ impl Shader {
         }
     }
 
+    /// Sets the float uniform of this program specified by the name
+    ///
+    /// `data` is the values of the uniform. 1 value is a float, 2 is a vec2 etc
     pub unsafe fn u_put_float(&self, name: &str, data: Vec<f32>) {
         let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
         let loc = GetUniformLocation(self.program, cname.as_ptr());

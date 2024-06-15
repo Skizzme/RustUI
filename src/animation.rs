@@ -1,8 +1,8 @@
-use std::cmp::{max, min};
 use std::f64::consts::PI;
-use std::time::{Duration, Instant};
+
 use crate::Window;
 
+/// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
 pub enum AnimationType {
     Linear,
     Log,
@@ -45,6 +45,7 @@ impl AnimationType {
     }
 }
 
+/// An easy-to-use object to animate objects over time
 pub struct Animation {
     target: f64,
     starting: f64,
@@ -62,6 +63,9 @@ impl Animation {
         }
     }
 
+    /// Updates the animation value for 1 call
+    ///
+    /// Should generally be called every frame
     pub fn animate(&mut self, target: f64, mut speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
         if self.target != target {
             self.target = target;

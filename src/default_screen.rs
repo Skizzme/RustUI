@@ -1,16 +1,15 @@
 use std::fs::read_to_string;
-use std::rc::Rc;
-use std::sync::Arc;
 use std::time::Instant;
+
 // use gl::{GenTextures, TexImage2D, UNSIGNED_BYTE};
 // use gl::types::{GLdouble, GLint};
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 use glfw::Action::Press;
-use image::{EncodableLayout, open};
+use image::open;
+
 use crate::animation::{Animation, AnimationType};
-use crate::font::{ScaleMode, Wrapping};
-use crate::gl30::{GetDoublev, GetFloatv, PopMatrix, PROJECTION_MATRIX, PushMatrix, RGBA, Scaled, Translated, Translatef};
-use crate::gl30::types::GLdouble;
+use crate::font::ScaleMode;
+use gl::RGBA;
 use crate::screen::GuiScreen;
 use crate::shader::Shader;
 use crate::texture::Texture;
@@ -24,7 +23,6 @@ pub struct DefaultScreen {
     circ_shader: Shader,
     init: Instant,
     tex: Option<Texture>,
-    test_file: String,
     offset_x: f32,
     offset_y: f32,
     dragging: (bool, f32, f32, f32, f32),
@@ -41,7 +39,6 @@ impl DefaultScreen {
             circ_shader: Shader::new(read_to_string("src\\resources\\shaders\\spin_circle\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\spin_circle\\fragment.glsl").unwrap()),
             init: Instant::now(),
             tex: None,
-            test_file: read_to_string("test.js").unwrap(),
             offset_x: 0.0,
             offset_y: 0.0,
             dragging: (false, 0.0, 0.0, 0.0, 0.0),
@@ -54,13 +51,14 @@ impl GuiScreen for DefaultScreen {
     unsafe fn draw(&mut self, m: &mut Window) {
         if self.tex.is_none() {
             let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
-            self.tex = Some(Texture::create(m.renderer.clone(), img.width() as i32, img.height() as i32, img.into_raw(), RGBA));
+            self.tex = Some(Texture::create(m.renderer.clone(), img.width() as i32, img.height() as i32, &img.into_raw(), RGBA));
         }
         if self.dragging.0 {
             self.offset_x = self.dragging.3 + (m.mouse_x as f32 - self.dragging.1);
             self.offset_y = self.dragging.4 +(m.mouse_y as f32 - self.dragging.2);
         }
-        self.move_progressive.animate(self.scroll as f64, 1.5f64, AnimationType::Progressive(10f64), m);
+        // self.move_progressive.animate(self.scroll as f64, 1.5f64, AnimationType::Progressive(10f64), m);
+        // self.tex.as_mut().unwrap().draw();
         // self.tex.as_ref().unwrap().render();
         // self.move_cubic.animate(m.mouse_x as f64, 1f64, AnimationType::CubicIn, m);
         // let font = m.fonts.get_font("JetBrainsMono-Medium").set_wrapping(Wrapping::None);
@@ -71,7 +69,8 @@ impl GuiScreen for DefaultScreen {
         // m.renderer.draw_texture_rect(0.0, 0.0, 1200.0, 1200.0, 0xff909090);
         // self.tex.as_mut().unwrap().unbind();
         // m.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
-        m.fonts.get_font("JetBrainsMono-Medium").scale_mode(ScaleMode::Quality).draw_string(self.scroll, self.test_file.as_str(), self.offset_x, self.offset_y, 0xffffffff);
+        // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
+        m.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(self.scroll, "test", self.offset_x, self.offset_y, 0xff00ff90);
         // Enable(BLEND);
         // Enable(TEXTURE_2D);
         // self.circ_shader.bind();

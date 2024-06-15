@@ -1,12 +1,11 @@
 use std::fs::read_to_string;
-use std::mem::{size_of, size_of_val};
+use std::mem::size_of_val;
 use std::ptr;
-use std::ptr::null;
 use std::rc::Rc;
-// use gl::{ALPHA, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawElements, ELEMENT_ARRAY_BUFFER, EnableVertexAttribArray, FALSE, FLOAT, GenBuffers, GenTextures, GenVertexArrays, GetFloatv, LINEAR, REPEAT, RGB, STATIC_DRAW, TexImage2D, TexParameteri, TEXTURE_MAG_FILTER, TEXTURE_MIN_FILTER, TEXTURE_WRAP_S, TEXTURE_WRAP_T, TRIANGLES, UNSIGNED_BYTE, VertexAttribPointer};
-// use gl::types::{GLint, GLuint};
-use crate::gl30::*;
-use crate::gl30::types::*;
+use crate::gl30::Color4d;
+
+use gl::*;
+use gl::types::*;
 use crate::renderer::Renderer;
 use crate::shader::Shader;
 
@@ -23,7 +22,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub unsafe fn create(renderer: Rc<Renderer>, width: i32, height: i32, bytes: Vec<u8>, format: GLenum) -> Self {
+    pub unsafe fn create(renderer: Rc<Renderer>, width: i32, height: i32, bytes: &Vec<u8>, format: GLenum) -> Self {
         let shader = Shader::new(read_to_string("src\\resources\\shaders\\test_n\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\test_n\\fragment.glsl").unwrap());
 
         let mut vao = 0;
