@@ -30,38 +30,15 @@ fn main() {
     }
 
     unsafe {
-        let mut window = Window::create("Test", 1920/2, 1080/2, "src\\resources\\fonts\\", "", Vec::new(), WindowMode::Windowed, 30);
-        let mut current_screen = DefaultScreen::new();
+        let mut window = Window::create("Test", 1920/2, 1080/2, "src\\resources\\fonts\\", "", Vec::new(), WindowMode::Windowed, 60);
+        let mut current_screen = DefaultScreen::new(&mut window);
         let mut last_frame = Instant::now();
         let mut frames = 0;
         let mut last_fps = Instant::now();
 
-        // let shader = Shader::new(read_to_string("src\\resources\\shaders\\test_ui\\vertex.glsl").unwrap(),
-        //                                  read_to_string("src\\resources\\shaders\\test_ui\\fragment.glsl").unwrap());
-        //
-        // let mut vao = 0;
-        // let mut vbo = 0;
-        // GenVertexArrays(1, &mut vao);
-        // BindVertexArray(vao);
-        //
-        // let vertices: [[f32; 3]; 4] =
-        //     [[0.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 10.0, 0.0], [0.0, 10.0, 0.0]];
-        //
-        // GenBuffers(1, &mut vbo);
-        // BindBuffer(ARRAY_BUFFER, vbo);
-        // BufferData(
-        //     ARRAY_BUFFER,
-        //     size_of_val(&vertices) as isize,
-        //     vertices.as_ptr().cast(),
-        //     STATIC_DRAW
-        // );
-        // let data = read("C:\\Users\\farre\\Pictures\\alpha_album_cover_high_purp.jpg").unwrap();
         while !window.p_window.should_close() {
-            // shader.bind();
-            // VertexPointer()
-            let st = Instant::now();
             window.frame(Box::new(&mut current_screen), last_frame);
-            last_frame = st;
+            last_frame = Instant::now();
             if last_fps.elapsed().as_secs_f32() > 1.0 {
                 println!("FPS {:?}", frames);
                 last_fps = Instant::now();

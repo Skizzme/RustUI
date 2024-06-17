@@ -1,11 +1,8 @@
-use glfw::WindowEvent;
-
 use crate::components::events::{KeyboardEvent, MouseEvent};
 use crate::components::render::bounds::Bounds;
 use crate::components::window::Window;
 
 pub trait Drawable {
-    /// Returns the updated object, if it has been, with the newest position and dimensions.
     unsafe fn draw<'a>(&mut self, window: &mut Window);
 
     fn bounds(&self) -> &Bounds;
@@ -32,6 +29,7 @@ pub trait KeyboardInput {
     fn bounds(&mut self) -> &Bounds;
 }
 
-pub trait Parent<F> {
+/// A trait for anything to implement that might have multiple elements
+pub trait Container<F> {
     fn children() -> Vec<F>;
 }

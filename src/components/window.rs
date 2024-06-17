@@ -1,25 +1,27 @@
 use std::rc::Rc;
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use gl::*;
 use gl::types::*;
 // use gl::*;
 // use gl::types::{GLdouble, GLsizei};
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
+use crate::components::render::bounds::Bounds;
 
 use crate::components::render::font::FontManager;
+use crate::components::render::framebuffer::Framebuffer;
 use crate::components::render::renderer::Renderer;
 use crate::components::screen::GuiScreen;
 use crate::gl_binds::gl30;
-use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
+use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Rotated, Scaled, Translated};
 
 /// A wrapper for the GLFW window
 ///
 /// Contains all necessary variables, and should be the global window object of the program
 pub struct Window {
-    pub screen_width: i32,
-    pub screen_height: i32,
+    pub width: i32,
+    pub height: i32,
     pub mouse_x: f32,
     pub mouse_y: f32,
     pub frame_delta: f64,
@@ -29,6 +31,7 @@ pub struct Window {
     pub p_window: PWindow,
     glfw: Glfw,
     events: GlfwReceiver<(f64, WindowEvent)>,
+    framebuffer: Framebuffer,
     unfocused_fps: u32
 }
 
@@ -51,8 +54,8 @@ impl Window {
         let renderer = Rc::new(Renderer::new());
 
         Window {
-            screen_width: width,
-            screen_height: height,
+            width,
+            height,
             mouse_x: 0.0,
             mouse_y: 0.0,
             frame_delta: 0.0,
@@ -61,7 +64,8 @@ impl Window {
             p_window,
             glfw,
             events,
-            unfocused_fps
+            unfocused_fps,
+            framebuffer: Framebuffer::new(RGBA, width, height, 0).expect("Failed to create main framebuffer"),
         }
     }
 
@@ -78,8 +82,8 @@ impl Window {
                 }
                 WindowEvent::Key(key, code, action, mods) => current_screen.key_press(key, code, action, mods),
                 WindowEvent::Size(width, height) => {
-                    self.screen_width = width;
-                    self.screen_height = height;
+                    self.width = width;
+                    self.height = height;
                     self.fonts.screen_width = width;
                     self.fonts.screen_height = height;
                 }
@@ -89,7 +93,7 @@ impl Window {
             }
         }
 
-        pre_render(self);
+        self.pre_render();
 
         if !self.p_window.is_focused() {
             self.glfw.set_swap_interval(SwapInterval::Sync(0));
@@ -99,32 +103,41 @@ impl Window {
             self.glfw.set_swap_interval(SwapInterval::Sync(1));
         }
 
-        self.frame_delta = last_frame.elapsed().as_secs_f64();
-
         current_screen.draw(self);
 
-        post_render(&mut self.p_window);
+        self.post_render();
+        self.frame_delta = last_frame.elapsed().as_secs_f64();
     }
-}
 
-unsafe fn pre_render(window: &Window) {
-    Viewport(0, 0, window.screen_width as GLsizei, window.screen_height as GLsizei);
+    unsafe fn pre_render(&self) {
+        Viewport(0, 0, self.width as GLsizei, self.height as GLsizei);
 
-    check_error("pre");
-    Clear(DEPTH_BUFFER_BIT);
-    MatrixMode(PROJECTION);
-    LoadIdentity();
-    Ortho(0 as GLdouble, window.screen_width as GLdouble, window.screen_height as  GLdouble, 0 as GLdouble, 1000 as GLdouble, 3000 as GLdouble);
-    Translated(0 as GLdouble, 0 as GLdouble, -2000 as GLdouble);
+        self.framebuffer.bind();
+        self.framebuffer.clear();
+        check_error("pre");
+        Clear(DEPTH_BUFFER_BIT);
+        MatrixMode(PROJECTION);
+        LoadIdentity();
+        Ortho(0 as GLdouble, self.width as GLdouble, self.height as  GLdouble, 0 as GLdouble, 1000 as GLdouble, 3000 as GLdouble);
+        Translated(0 as GLdouble, 0 as GLdouble, -2000 as GLdouble);
 
-    Clear(COLOR_BUFFER_BIT);
-    BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-    // Enable(MULTISAMPLE);
-}
+        Clear(COLOR_BUFFER_BIT);
+        BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+    }
 
-unsafe fn post_render(window: &mut PWindow) {
-    check_error("post");
-    window.swap_buffers();
+    unsafe fn post_render(&mut self) {
+        check_error("post");
+        self.framebuffer.unbind();
+        self.framebuffer.bind_texture();
+        self.renderer.draw_texture_rect_uv(&Bounds::from_xywh(0.0, 0.0, self.width as f32, self.height as f32), &Bounds::from_ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        self.framebuffer.unbind();
+
+        self.p_window.swap_buffers();
+    }
+
+    pub fn framebuffer(&self) -> &Framebuffer {
+        &self.framebuffer
+    }
 }
 
 pub unsafe fn check_error(th: &str) {

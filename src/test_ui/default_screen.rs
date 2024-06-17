@@ -1,7 +1,7 @@
 use std::fs::read_to_string;
 use std::time::Instant;
 
-use gl::RGBA;
+use gl::{Disable, RGBA, TEXTURE_2D};
 // use gl::{GenTextures, TexImage2D, UNSIGNED_BYTE};
 // use gl::types::{GLdouble, GLint};
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
@@ -16,6 +16,7 @@ use crate::components::screen::GuiScreen;
 use crate::components::elements::Drawable;
 use crate::components::render::bounds::Bounds;
 use crate::components::window::Window;
+use crate::gl_binds::gl30::Enable;
 use crate::test_ui::test_object::DrawThing;
 
 pub struct DefaultScreen {
@@ -34,7 +35,7 @@ pub struct DefaultScreen {
 }
 
 impl DefaultScreen {
-    pub unsafe fn new() -> Self {
+    pub unsafe fn new(window: &mut Window) -> Self {
         DefaultScreen {
             move_progressive: Animation::new(),
             move_log: Animation::new(),
@@ -47,7 +48,7 @@ impl DefaultScreen {
             offset_y: 0.0,
             dragging: (false, 0.0, 0.0, 0.0, 0.0),
             scroll: 50.0,
-            test_draw: DrawThing::new(Bounds::from_xywh(10.0, 10.0, 1000.0, 100.0)),
+            test_draw: DrawThing::new(Bounds::from_xywh(10.0, 10.0, 200.0, 100.0), window),
         }
     }
 }
@@ -63,6 +64,10 @@ impl GuiScreen for DefaultScreen {
             self.offset_y = self.dragging.4 +(m.mouse_y as f32 - self.dragging.2);
         }
 
+        // m.renderer.draw_rounded_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 15.0, 0xff909090);
+        // m.renderer.draw_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 0xff909090);
+        // m.renderer.draw_rect_outline(&Bounds::from_ltrb(20.0, 20.0, 100.0, 100.0), 2.0, 0xffffffff);
+        // m.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(30.0, "Test", m.mouse_x, 20.0, 0xffff20ff);
         // self.move_progressive.animate(self.scroll as f64, 1.5f64, AnimationType::Progressive(10f64), m);
         // self.tex.as_mut().unwrap().draw();
         // self.tex.as_ref().unwrap().render();
@@ -76,7 +81,6 @@ impl GuiScreen for DefaultScreen {
         // self.tex.as_mut().unwrap().unbind();
         // m.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
         // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
-        m.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(self.scroll, "test_ui", self.offset_x, self.offset_y, 0xff00ff90);
         self.test_draw.draw(m);
         // Enable(BLEND);
         // Enable(TEXTURE_2D);

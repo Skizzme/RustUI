@@ -38,10 +38,14 @@ pub struct FontManager {
     fonts_location: String,
     cache_location: String,
     mem_atlas_cache: HashMap<String, Vec<u8>>,
+    sdf_shader: Shader,
 }
 
 impl FontManager {
-    pub fn new(screen_width: i32, screen_height: i32, renderer: Rc<Renderer>, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
+    pub unsafe fn new(screen_width: i32, screen_height: i32, renderer: Rc<Renderer>, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
+        let st = Instant::now();
+        let s = Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap());
+        println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
             renderer: renderer.clone(),
@@ -50,6 +54,7 @@ impl FontManager {
             fonts_location: fonts_location.to_string(),
             cache_location: cache_location.to_string(),
             mem_atlas_cache: HashMap::new(),
+            sdf_shader: s,
         }
     }
 
@@ -95,7 +100,6 @@ impl FontManager {
 pub struct Font {
     pub glyphs: [Glyph; 128],
     renderer: Rc<Renderer>,
-    shader: Shader,
     pub atlas_tex: Option<Texture>,
 }
 
@@ -192,8 +196,6 @@ impl Font {
         let mut font = Font {
             glyphs: [Glyph::default(); 128],
             renderer: renderer.clone(),
-            shader:
-                Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap()),
             atlas_tex: None,
         };
 
@@ -261,7 +263,7 @@ pub struct FontRenderer<'a> {
 impl<'a> FontRenderer<'a> {
     pub unsafe fn new(manager: &'a FontManager, font: Rc<Font>) -> Self {
         FontRenderer {
-            font: font,
+            font,
             tab_length: 4,
             line_spacing: 1.0,
             wrapping: Wrapping::None,
@@ -281,7 +283,7 @@ impl<'a> FontRenderer<'a> {
     }
 
     pub unsafe fn set_color(&mut self, color: u32) {
-        self.font.shader.u_put_float("u_color", self.font.renderer.get_rgb(color));
+        self.manager.sdf_shader.u_put_float("u_color", self.font.renderer.get_rgb(color));
     }
 
     /// Renders a string using immediate GL
@@ -295,9 +297,9 @@ impl<'a> FontRenderer<'a> {
 
     /// The method to be called to a render a string using immediate GL
     pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
+        let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
         self.begin(size, x, y);
         self.set_color(color);
-        let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
         for char in string.to_string().chars() {
             if char == '\n' {
                 match self.scale_mode {
@@ -377,7 +379,7 @@ impl<'a> FontRenderer<'a> {
             }
         };
 
-        let (c_w, c_h) = (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil());
+        let (c_w, c_h) = (((glyph.advance - glyph.bearing_x) as f32).floor(), (glyph.height as f32).floor());
         let mut should_render = 0u32;
         if self.y > self.manager.screen_height as f32 * self.i_scale {
             should_render = 2;
@@ -414,19 +416,19 @@ impl<'a> FontRenderer<'a> {
             }
         };
         self.font.renderer.draw_texture_rect_uv(
-            Bounds::from_ltrb(x, pos_y, right, bottom),
-            Bounds::from_ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
+            &Bounds::from_ltrb(x, pos_y, right, bottom),
+            &Bounds::from_ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
             0xffffff,
         );
 
-        (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil())
+        (((glyph.advance - glyph.bearing_x) as f32).floor(), (glyph.height as f32).floor())
     }
 
     /// Sets this FontRenderer up for immediate GL drawing, setting shader uniforms, x and y offsets, scaling etc
     pub unsafe fn begin(&mut self, size: f32, mut x: f32, mut y: f32) {
         self.scale = match self.scale_mode {
             ScaleMode::Normal => {size/FONT_RES as f32}
-            ScaleMode::Quality => {size.ceil()/FONT_RES as f32}
+            ScaleMode::Quality => {size.floor()/FONT_RES as f32}
         };
         self.i_scale = 1.0/self.scale;
 
@@ -448,16 +450,16 @@ impl<'a> FontRenderer<'a> {
 
         self.line_width = 0f32;
 
-        self.font.shader.bind();
+        self.manager.sdf_shader.bind();
 
         atlas.bind();
-        self.font.shader.u_put_float("u_smoothing", vec![(0.25 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)]);
-        self.font.shader.u_put_float("atlas_width", vec![atlas.width as f32]);
-        self.font.shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
+        self.manager.sdf_shader.u_put_float("u_smoothing", vec![(0.25 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)]);
+        self.manager.sdf_shader.u_put_float("atlas_width", vec![atlas.width as f32]);
+        self.manager.sdf_shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
     }
 
     pub unsafe fn end(&self) {
-        self.font.shader.unbind();
+        self.manager.sdf_shader.unbind();
 
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();

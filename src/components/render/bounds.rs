@@ -1,7 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 use crate::components::window::Window;
 
-
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Bounds {
     x: f32,
@@ -31,6 +30,14 @@ impl Mul for Bounds {
 
     fn mul(self, other: Self) -> Self::Output {
         Bounds { x: self.x * other.x, y: self.y * other.y, width: self.width * other.width, height: self.height * other.height, }
+    }
+}
+
+impl Mul<f32> for Bounds {
+    type Output = Self;
+
+    fn mul(self, other: f32) -> Self::Output {
+        Bounds { x: self.x * other, y: self.y * other, width: self.width * other, height: self.height * other, }
     }
 }
 

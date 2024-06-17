@@ -14,6 +14,7 @@ use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, 
 pub struct Renderer {
     rounded_rect_shader: Shader,
     pub texture_shader: Shader,
+    pub(crate) color_mult_shader: Shader,
 }
 
 impl Renderer {
@@ -27,6 +28,10 @@ impl Renderer {
             texture_shader: Shader::new(
                 read_to_string("src\\resources\\shaders\\test_n\\vertex.glsl").unwrap(),
                 read_to_string("src\\resources\\shaders\\test_n\\fragment.glsl").unwrap()
+            ),
+            color_mult_shader: Shader::new(
+                read_to_string("src\\resources\\shaders\\color_mult\\vertex.glsl").unwrap(),
+                read_to_string("src\\resources\\shaders\\color_mult\\fragment.glsl").unwrap()
             ),
         }
     }
@@ -56,6 +61,7 @@ impl Renderer {
 
     /// The most boring rectangle
     pub unsafe fn draw_rect(&self, bounds: &Bounds, color: u32) {
+        Disable(TEXTURE_2D);
         Enable(BLEND);
         self.set_color(color);
         Begin(QUADS);
@@ -67,8 +73,27 @@ impl Renderer {
         Disable(BLEND);
     }
 
+    /// A rectangle where each corner's color can be different
+    ///
+    /// Colors are in order of: bottom-left, bottom-right, top-right, top-left
+    pub unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (u32, u32, u32, u32)) {
+        Enable(BLEND);
+        Begin(QUADS);
+        self.set_color(color.0);
+        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
+        self.set_color(color.1);
+        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
+        self.set_color(color.2);
+        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
+        self.set_color(color.3);
+        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
+        End();
+        Disable(BLEND);
+    }
+
     /// Draws only the outline of a rectangle
     pub unsafe fn draw_rect_outline(&self, bounds: &Bounds, width: f32, color: u32) {
+        Disable(TEXTURE_2D);
         Enable(BLEND);
         self.set_color(color);
         LineWidth(width);
@@ -79,14 +104,14 @@ impl Renderer {
         Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
         Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
         End();
-        Disable(BLEND);
     }
 
     /// Draws a texture rectangle using normal UV coordinates
     ///
     /// The texture should be bound before calling this
     pub unsafe fn draw_texture_rect(&self, bounds: &Bounds, color: u32) {
-        Enable(TEXTURE_2D);
+        Disable(TEXTURE_2D);
+        Enable(BLEND);
         Begin(QUADS);
         self.set_color(color);
         TexCoord2d(0.0, 1.0);
@@ -103,7 +128,7 @@ impl Renderer {
     /// Draws a texture rectangle using specified UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect_uv(&self, bounds: Bounds, uv_bounds: Bounds, color: u32) {
+    pub unsafe fn draw_texture_rect_uv(&self, bounds: &Bounds, uv_bounds: &Bounds, color: u32) {
         Enable(TEXTURE_2D);
         Begin(QUADS);
         self.set_color(color);
