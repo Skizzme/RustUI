@@ -10,13 +10,12 @@ use std::time::Instant;
 
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
-use crate::gl30::{PopMatrix, PROJECTION_MATRIX, PushMatrix, Scaled};
-
 use gl::*;
 use gl::types::GLdouble;
-use crate::renderer::Renderer;
-use crate::shader::Shader;
-use crate::texture::Texture;
+use crate::components::render::renderer::Renderer;
+use crate::components::render::shader::Shader;
+use crate::components::render::texture::Texture;
+use crate::gl_binds::gl30::{PopMatrix, PROJECTION_MATRIX, PushMatrix, Scaled};
 
 const FONT_RES: u32 = 64u32;
 

@@ -1,9 +1,10 @@
 use std::fs::read_to_string;
+
 use gl::*;
 use gl::types::*;
-use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, Vertex2d};
+use crate::components::render::shader::Shader;
 
-use crate::shader::Shader;
+use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, Vertex2d};
 
 /// The global renderer to render basically everything non-text related
 ///

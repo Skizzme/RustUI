@@ -1,6 +1,5 @@
 use std::f64::consts::PI;
-
-use crate::Window;
+use crate::components::window::Window;
 
 /// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
 pub enum AnimationType {

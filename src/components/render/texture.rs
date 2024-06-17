@@ -2,12 +2,12 @@ use std::fs::read_to_string;
 use std::mem::size_of_val;
 use std::ptr;
 use std::rc::Rc;
-use crate::gl30::Color4d;
 
 use gl::*;
 use gl::types::*;
-use crate::renderer::Renderer;
-use crate::shader::Shader;
+use crate::components::render::renderer::Renderer;
+use crate::components::render::shader::Shader;
+use crate::gl_binds::gl30::Color4d;
 
 #[derive(Debug)]
 pub struct Texture {

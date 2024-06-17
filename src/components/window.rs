@@ -2,17 +2,17 @@ use std::rc::Rc;
 use std::thread;
 use std::time::{Duration, Instant};
 
+use gl::*;
+use gl::types::*;
 // use gl::*;
 // use gl::types::{GLdouble, GLsizei};
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 
-use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
-use crate::gl_binds::gl30;
-use gl::*;
-use gl::types::*;
 use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::screen::GuiScreen;
+use crate::gl_binds::gl30;
+use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
 
 /// A wrapper for the GLFW window
 ///
@@ -68,7 +68,7 @@ impl Window {
     /// The method that should be called every frame.
     ///
     /// Polls events, tracks frame_delta, and calls `draw` on `current_screen`
-    pub unsafe fn run(&mut self, mut current_screen: Box<&mut dyn GuiScreen>, last_frame: Instant) {
+    pub unsafe fn frame(&mut self, mut current_screen: Box<&mut dyn GuiScreen>, last_frame: Instant) {
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {

@@ -1,13 +1,13 @@
 use std::fs::read_to_string;
 use std::time::Instant;
 
+use gl::RGBA;
 // use gl::{GenTextures, TexImage2D, UNSIGNED_BYTE};
 // use gl::types::{GLdouble, GLint};
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 use glfw::Action::Press;
 use image::open;
 
-use gl::RGBA;
 use crate::components::render::animation::Animation;
 use crate::components::render::font::ScaleMode;
 use crate::components::render::shader::Shader;

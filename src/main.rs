@@ -14,8 +14,10 @@
 // }
 
 use std::time::Instant;
+
 use glfw::WindowMode;
 use winapi::um::wincon::FreeConsole;
+
 use RustUI::components::window::Window;
 use RustUI::test_ui::default_screen::DefaultScreen;
 
@@ -58,7 +60,7 @@ fn main() {
             // shader.bind();
             // VertexPointer()
             let st = Instant::now();
-            window.run(Box::new(&mut current_screen), last_frame);
+            window.frame(Box::new(&mut current_screen), last_frame);
             last_frame = st;
             if last_fps.elapsed().as_secs_f32() > 1.0 {
                 println!("FPS {:?}", frames);
