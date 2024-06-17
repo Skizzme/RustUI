@@ -2,9 +2,10 @@ use std::fs::read_to_string;
 
 use gl::*;
 use gl::types::*;
+use crate::components::render::bounds::Bounds;
 use crate::components::render::shader::Shader;
 
-use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, Vertex2d};
+use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2d};
 
 /// The global renderer to render basically everything non-text related
 ///
@@ -38,15 +39,15 @@ impl Renderer {
     }
 
     /// Draws a nice rounded rectangle using texture shaders
-    pub unsafe fn draw_rounded_rect(&self, left: f32, top: f32, right: f32, bottom: f32, radius: f32, color: u32) {
+    pub unsafe fn draw_rounded_rect(&self, bounds: &Bounds, radius: f32, color: u32) {
         Enable(BLEND);
         Enable(TEXTURE_2D);
         self.rounded_rect_shader.bind();
-        self.rounded_rect_shader.u_put_float("u_size", vec![right-left, bottom-top]);
+        self.rounded_rect_shader.u_put_float("u_size", vec![bounds.width(), bounds.height()]);
         self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
         self.rounded_rect_shader.u_put_float("u_color", self.get_rgb(color));
 
-        self.draw_texture_rect(left, top, right, bottom, 0xffffffff);
+        self.draw_texture_rect(bounds, 0xffffffff);
 
         self.rounded_rect_shader.unbind();
         Disable(TEXTURE_2D);
@@ -54,14 +55,29 @@ impl Renderer {
     }
 
     /// The most boring rectangle
-    pub unsafe fn draw_rect(&self, left: f32, top: f32, right: f32, bottom: f32, color: u32) {
+    pub unsafe fn draw_rect(&self, bounds: &Bounds, color: u32) {
         Enable(BLEND);
         self.set_color(color);
         Begin(QUADS);
-        Vertex2d(left as GLdouble, bottom as GLdouble);
-        Vertex2d(right as GLdouble, bottom as GLdouble);
-        Vertex2d(right as GLdouble, top as GLdouble);
-        Vertex2d(left as GLdouble, top as GLdouble);
+        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
+        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
+        End();
+        Disable(BLEND);
+    }
+
+    /// Draws only the outline of a rectangle
+    pub unsafe fn draw_rect_outline(&self, bounds: &Bounds, width: f32, color: u32) {
+        Enable(BLEND);
+        self.set_color(color);
+        LineWidth(width);
+        Begin(LINE_STRIP);
+        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
+        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
+        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
         End();
         Disable(BLEND);
     }
@@ -69,36 +85,36 @@ impl Renderer {
     /// Draws a texture rectangle using normal UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect(&self, left: f32, top: f32, right: f32, bottom: f32, color: u32) {
+    pub unsafe fn draw_texture_rect(&self, bounds: &Bounds, color: u32) {
         Enable(TEXTURE_2D);
         Begin(QUADS);
         self.set_color(color);
         TexCoord2d(0.0, 1.0);
-        Vertex2d(left as GLdouble, bottom as GLdouble);
+        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
         TexCoord2d(1.0, 1.0);
-        Vertex2d(right as GLdouble, bottom as GLdouble);
+        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
         TexCoord2d(1.0, 0.0);
-        Vertex2d(right as GLdouble, top as GLdouble);
+        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
         TexCoord2d(0.0, 0.0);
-        Vertex2d(left as GLdouble, top as GLdouble);
+        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
         End();
     }
 
     /// Draws a texture rectangle using specified UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect_uv(&self, left: f32, top: f32, right: f32, bottom: f32, uv_left: f64, uv_top: f64, uv_right: f64, uv_bottom: f64, color: u32) {
+    pub unsafe fn draw_texture_rect_uv(&self, bounds: Bounds, uv_bounds: Bounds, color: u32) {
         Enable(TEXTURE_2D);
         Begin(QUADS);
         self.set_color(color);
-        TexCoord2d(uv_left, uv_bottom);
-        Vertex2d(left as GLdouble, bottom as GLdouble);
-        TexCoord2d(uv_right, uv_bottom);
-        Vertex2d(right as GLdouble, bottom as GLdouble);
-        TexCoord2d(uv_right, uv_top);
-        Vertex2d(right as GLdouble, top as GLdouble);
-        TexCoord2d(uv_left, uv_top);
-        Vertex2d(left as GLdouble, top as GLdouble);
+        TexCoord2f(uv_bounds.left(), uv_bounds.bottom());
+        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
+        TexCoord2f(uv_bounds.right(), uv_bounds.bottom());
+        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
+        TexCoord2f(uv_bounds.right(), uv_bounds.top());
+        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
+        TexCoord2f(uv_bounds.left(), uv_bounds.top());
+        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
         End();
     }
 

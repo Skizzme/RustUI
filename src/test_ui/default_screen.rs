@@ -13,7 +13,10 @@ use crate::components::render::font::ScaleMode;
 use crate::components::render::shader::Shader;
 use crate::components::render::texture::Texture;
 use crate::components::screen::GuiScreen;
+use crate::components::elements::Drawable;
+use crate::components::render::bounds::Bounds;
 use crate::components::window::Window;
+use crate::test_ui::test_object::DrawThing;
 
 pub struct DefaultScreen {
     move_progressive: Animation,
@@ -27,6 +30,7 @@ pub struct DefaultScreen {
     offset_y: f32,
     dragging: (bool, f32, f32, f32, f32),
     scroll: f32,
+    test_draw: DrawThing,
 }
 
 impl DefaultScreen {
@@ -43,6 +47,7 @@ impl DefaultScreen {
             offset_y: 0.0,
             dragging: (false, 0.0, 0.0, 0.0, 0.0),
             scroll: 50.0,
+            test_draw: DrawThing::new(Bounds::from_xywh(10.0, 10.0, 1000.0, 100.0)),
         }
     }
 }
@@ -72,6 +77,7 @@ impl GuiScreen for DefaultScreen {
         // m.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
         // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
         m.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(self.scroll, "test_ui", self.offset_x, self.offset_y, 0xff00ff90);
+        self.test_draw.draw(m);
         // Enable(BLEND);
         // Enable(TEXTURE_2D);
         // self.circ_shader.bind();

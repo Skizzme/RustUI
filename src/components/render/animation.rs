@@ -45,6 +45,7 @@ impl AnimationType {
 }
 
 /// An easy-to-use object to animate objects over time
+#[derive(Debug, Clone, Copy)]
 pub struct Animation {
     target: f64,
     starting: f64,

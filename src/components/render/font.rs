@@ -12,6 +12,7 @@ use freetype::face::LoadFlag;
 use freetype::RenderMode;
 use gl::*;
 use gl::types::GLdouble;
+use crate::components::render::bounds::Bounds;
 use crate::components::render::renderer::Renderer;
 use crate::components::render::shader::Shader;
 use crate::components::render::texture::Texture;
@@ -413,14 +414,8 @@ impl<'a> FontRenderer<'a> {
             }
         };
         self.font.renderer.draw_texture_rect_uv(
-            x,
-            pos_y,
-            right,
-            bottom,
-            glyph.atlas_x as f64 / atlas.width as f64,
-            0f64,
-            (glyph.atlas_x + glyph.width) as f64 / atlas.width as f64,
-            glyph.height as f64 / atlas.height as f64,
+            Bounds::from_ltrb(x, pos_y, right, bottom),
+            Bounds::from_ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
             0xffffff,
         );
 
