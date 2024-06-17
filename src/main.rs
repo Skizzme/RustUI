@@ -16,8 +16,8 @@
 use std::time::Instant;
 use glfw::WindowMode;
 use winapi::um::wincon::FreeConsole;
-use RustUI::default_screen::DefaultScreen;
-use RustUI::Window;
+use RustUI::components::window::Window;
+use RustUI::test_ui::default_screen::DefaultScreen;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -34,8 +34,8 @@ fn main() {
         let mut frames = 0;
         let mut last_fps = Instant::now();
 
-        // let shader = Shader::new(read_to_string("src\\resources\\shaders\\test\\vertex.glsl").unwrap(),
-        //                                  read_to_string("src\\resources\\shaders\\test\\fragment.glsl").unwrap());
+        // let shader = Shader::new(read_to_string("src\\resources\\shaders\\test_ui\\vertex.glsl").unwrap(),
+        //                                  read_to_string("src\\resources\\shaders\\test_ui\\fragment.glsl").unwrap());
         //
         // let mut vao = 0;
         // let mut vbo = 0;

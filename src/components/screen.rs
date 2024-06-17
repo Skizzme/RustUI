@@ -1,6 +1,6 @@
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 
-use crate::Window;
+use crate::components::window::Window;
 
 pub trait GuiScreen {
 

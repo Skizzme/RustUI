@@ -6,14 +6,17 @@ use std::time::{Duration, Instant};
 // use gl::types::{GLdouble, GLsizei};
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 
-use crate::font::FontManager;
-use crate::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
-use crate::{gl30};
+use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
+use crate::gl_binds::gl30;
 use gl::*;
 use gl::types::*;
-use crate::renderer::Renderer;
-use crate::screen::GuiScreen;
+use crate::components::render::font::FontManager;
+use crate::components::render::renderer::Renderer;
+use crate::components::screen::GuiScreen;
 
+/// A wrapper for the GLFW window
+///
+/// Contains all necessary variables, and should be the global window object of the program
 pub struct Window {
     pub screen_width: i32,
     pub screen_height: i32,

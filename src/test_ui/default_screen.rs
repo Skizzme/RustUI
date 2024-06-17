@@ -7,13 +7,13 @@ use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 use glfw::Action::Press;
 use image::open;
 
-use crate::animation::{Animation, AnimationType};
-use crate::font::ScaleMode;
 use gl::RGBA;
-use crate::screen::GuiScreen;
-use crate::shader::Shader;
-use crate::texture::Texture;
-use crate::Window;
+use crate::components::render::animation::Animation;
+use crate::components::render::font::ScaleMode;
+use crate::components::render::shader::Shader;
+use crate::components::render::texture::Texture;
+use crate::components::screen::GuiScreen;
+use crate::components::window::Window;
 
 pub struct DefaultScreen {
     move_progressive: Animation,
@@ -57,6 +57,7 @@ impl GuiScreen for DefaultScreen {
             self.offset_x = self.dragging.3 + (m.mouse_x as f32 - self.dragging.1);
             self.offset_y = self.dragging.4 +(m.mouse_y as f32 - self.dragging.2);
         }
+
         // self.move_progressive.animate(self.scroll as f64, 1.5f64, AnimationType::Progressive(10f64), m);
         // self.tex.as_mut().unwrap().draw();
         // self.tex.as_ref().unwrap().render();
@@ -70,7 +71,7 @@ impl GuiScreen for DefaultScreen {
         // self.tex.as_mut().unwrap().unbind();
         // m.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
         // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
-        m.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(self.scroll, "test", self.offset_x, self.offset_y, 0xff00ff90);
+        m.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(self.scroll, "test_ui", self.offset_x, self.offset_y, 0xff00ff90);
         // Enable(BLEND);
         // Enable(TEXTURE_2D);
         // self.circ_shader.bind();

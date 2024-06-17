@@ -1,7 +1,7 @@
 use std::fs::read_to_string;
 use gl::*;
 use gl::types::*;
-use crate::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, Vertex2d};
+use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, Vertex2d};
 
 use crate::shader::Shader;
 
