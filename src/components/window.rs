@@ -10,9 +10,9 @@ use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, W
 
 use crate::components::render::bounds::Bounds;
 use crate::components::render::font::FontManager;
-use crate::components::render::framebuffer::Framebuffer;
 use crate::components::render::renderer::Renderer;
 use crate::components::screen::GuiScreen;
+use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::gl_binds::gl30;
 use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
 

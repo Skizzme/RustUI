@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 // GENERATE OPEN GL BINDINGS FOR ANY VERSION
 // extern crate gl_generator;
 // use gl_generator::{Registry, Api, Profile, Fallbacks, GlobalGenerator};

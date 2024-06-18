@@ -14,8 +14,8 @@ use gl::types::GLdouble;
 use crate::asset_manager;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::renderer::Renderer;
-use crate::components::render::shader::Shader;
-use crate::components::render::texture::Texture;
+use crate::components::wrapper::shader::Shader;
+use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
 
 const FONT_RES: u32 = 64u32;

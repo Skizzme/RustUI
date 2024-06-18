@@ -55,6 +55,7 @@ impl Bounds {
         window.renderer.draw_rect_outline(self, 1.0, color);
     }
 
+    /// Creates a `Bounds` object from `Left, Top, Right, Bottom` parameters
     pub fn from_ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Bounds {
         let mut obj = Bounds::default();
         obj.set_left(left);
@@ -65,6 +66,7 @@ impl Bounds {
         obj
     }
 
+    /// Creates a `Bounds` object from `X, Y, Width, Height` parameters
     pub fn from_xywh(x: f32, y: f32, width: f32, height: f32) -> Bounds {
         let mut obj = Bounds::default();
         obj.set_x(x);
@@ -88,8 +90,14 @@ impl Bounds {
     pub fn set_y(&mut self, y: f32) { self.y = y; }
     pub fn set_width(&mut self, width: f32) { self.width = width; }
     pub fn set_height(&mut self, height: f32) { self.height = height; }
-    pub fn set_left(&mut self, left: f32) { self.x = left; }
-    pub fn set_top(&mut self, top: f32) { self.y = top; }
     pub fn set_right(&mut self, right: f32) { self.width = right-self.x; }
     pub fn set_bottom(&mut self, bottom: f32) { self.height = bottom-self.y; }
+    pub fn set_left(&mut self, left: f32) {
+        self.width += self.x - left; // Increases width, since setting the `left` of the bounds means the right shouldn't move
+        self.x = left;
+    }
+    pub fn set_top(&mut self, top: f32) {
+        self.height += self.y - top; // Increases height, since setting the `top` of the bounds means the bottom shouldn't move
+        self.y = top;
+    }
 }

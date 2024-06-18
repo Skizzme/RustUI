@@ -11,10 +11,11 @@ use crate::asset_manager;
 use crate::components::elements::Drawable;
 use crate::components::render::animation::Animation;
 use crate::components::render::bounds::Bounds;
-use crate::components::render::shader::Shader;
-use crate::components::render::texture::Texture;
+use crate::components::render::color::{Color, ToColor};
 use crate::components::screen::GuiScreen;
 use crate::components::window::Window;
+use crate::components::wrapper::shader::Shader;
+use crate::components::wrapper::texture::Texture;
 use crate::test_ui::test_object::DrawThing;
 
 #[allow(unused)]
@@ -54,15 +55,12 @@ impl DefaultScreen {
 
 impl GuiScreen for DefaultScreen {
     unsafe fn draw(&mut self, m: &mut Window) {
-        if self.tex.is_none() {
-            let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
-            self.tex = Some(Texture::create(m.renderer.clone(), img.width() as i32, img.height() as i32, &img.into_raw(), RGBA));
-        }
         if self.dragging.0 {
             self.offset_x = self.dragging.3 + (m.mouse_x as f32 - self.dragging.1);
             self.offset_y = self.dragging.4 +(m.mouse_y as f32 - self.dragging.2);
         }
         m.renderer.get_transform_matrix();
+
         // m.renderer.draw_rounded_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 15.0, 0xff909090);
         // m.renderer.draw_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 0xff909090);
         // m.renderer.draw_rect_outline(&Bounds::from_ltrb(20.0, 20.0, 100.0, 100.0), 2.0, 0xffffffff);

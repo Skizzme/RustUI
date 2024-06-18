@@ -1,6 +1,6 @@
 use crate::components::render::bounds::Bounds;
-use crate::components::render::framebuffer::Framebuffer;
 use crate::components::window::Window;
+use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::gl_binds::gl30::{ActiveTexture, RGBA, TEXTURE0, TEXTURE1};
 
 /// Uses the main window framebuffer and a new framebuffer and multiplies them together, mostly used for masking

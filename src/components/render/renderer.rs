@@ -3,7 +3,8 @@ use gl::types::*;
 
 use crate::asset_manager;
 use crate::components::render::bounds::Bounds;
-use crate::components::render::shader::Shader;
+use crate::components::render::color::ToColor;
+use crate::components::wrapper::shader::Shader;
 use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2d};
 
 /// The global renderer to render basically everything non-text related
@@ -43,13 +44,13 @@ impl Renderer {
     }
 
     /// Draws a nice rounded rectangle using texture shaders
-    pub unsafe fn draw_rounded_rect(&self, bounds: &Bounds, radius: f32, color: u32) {
+    pub unsafe fn draw_rounded_rect(&self, bounds: &Bounds, radius: f32, color: impl ToColor) {
         Enable(BLEND);
         Enable(TEXTURE_2D);
         self.rounded_rect_shader.bind();
         self.rounded_rect_shader.u_put_float("u_size", vec![bounds.width(), bounds.height()]);
         self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
-        self.rounded_rect_shader.u_put_float("u_color", self.get_rgb(color));
+        self.rounded_rect_shader.u_put_float("u_color", color.to_color().rgba());
 
         self.draw_texture_rect(bounds, 0xffffffff);
 
@@ -59,7 +60,7 @@ impl Renderer {
     }
 
     /// The most boring rectangle
-    pub unsafe fn draw_rect(&self, bounds: &Bounds, color: u32) {
+    pub unsafe fn draw_rect(&self, bounds: &Bounds, color: impl ToColor) {
         Disable(TEXTURE_2D);
         Enable(BLEND);
         self.set_color(color);
@@ -75,7 +76,7 @@ impl Renderer {
     /// A rectangle where each corner's color can be different
     ///
     /// Colors are in order of: bottom-left, bottom-right, top-right, top-left
-    pub unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (u32, u32, u32, u32)) {
+    pub unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor)) {
         Enable(BLEND);
         Begin(QUADS);
         self.set_color(color.0);
@@ -91,7 +92,7 @@ impl Renderer {
     }
 
     /// Draws only the outline of a rectangle
-    pub unsafe fn draw_rect_outline(&self, bounds: &Bounds, width: f32, color: u32) {
+    pub unsafe fn draw_rect_outline(&self, bounds: &Bounds, width: f32, color: impl ToColor) {
         Disable(TEXTURE_2D);
         Enable(BLEND);
         self.set_color(color);
@@ -108,7 +109,7 @@ impl Renderer {
     /// Draws a texture rectangle using normal UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect(&self, bounds: &Bounds, color: u32) {
+    pub unsafe fn draw_texture_rect(&self, bounds: &Bounds, color: impl ToColor) {
         Disable(TEXTURE_2D);
         Enable(BLEND);
         Begin(QUADS);
@@ -127,7 +128,7 @@ impl Renderer {
     /// Draws a texture rectangle using specified UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect_uv(&self, bounds: &Bounds, uv_bounds: &Bounds, color: u32) {
+    pub unsafe fn draw_texture_rect_uv(&self, bounds: &Bounds, uv_bounds: &Bounds, color: impl ToColor) {
         Enable(TEXTURE_2D);
         Begin(QUADS);
         self.set_color(color);
@@ -143,12 +144,9 @@ impl Renderer {
     }
 
     /// Converts the `color` to RGBA and calls gl_Color4d
-    pub unsafe fn set_color(&self, color: u32) {
-        let alpha = (color >> 24 & 255) as f32 / 255f32;
-        let red = (color >> 16 & 255) as f32 / 255f32;
-        let green = (color >> 8 & 255) as f32 / 255f32;
-        let blue = (color & 255) as f32 / 255f32;
-        Color4d(red as GLdouble, green as GLdouble, blue as GLdouble, alpha as GLdouble);
+    pub unsafe fn set_color(&self, color: impl ToColor) {
+        let color = color.to_color();
+        Color4d(color.red() as GLdouble, color.green() as GLdouble, color.blue() as GLdouble, color.alpha() as GLdouble);
     }
 
     /// Returns the RGBA of u32 color
