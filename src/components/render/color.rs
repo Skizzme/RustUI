@@ -67,19 +67,20 @@ impl Color {
             | ((self.blue * 255f32).round() as u32)
     }
 
-    pub fn set_red_f32(&mut self, red: f32) { self.red = red; }
-    pub fn set_green_f32(&mut self, green: f32) { self.green = green; }
-    pub fn set_blue_f32(&mut self, blue: f32) { self.blue = blue; }
-    pub fn set_alpha_f32(&mut self, alpha: f32) { self.alpha = alpha; }
-    pub fn set_red_u8(&mut self, red: u8) { self.red = (red as f32/255f32).clamp(0.0, 1.0); }
-    pub fn set_green_u8(&mut self, green: u8) { self.green = (green as f32/255f32).clamp(0.0, 1.0); }
-    pub fn set_blue_u8(&mut self, blue: u8) { self.blue = (blue as f32/255f32).clamp(0.0, 1.0); }
-    pub fn set_alpha_u8(&mut self, alpha: u8) { self.alpha = (alpha as f32/255f32).clamp(0.0, 1.0); }
-    pub fn set_color_u32(&mut self, color: u32) {
+    pub fn set_red_f32(mut self, red: f32) -> Color { self.red = red; self }
+    pub fn set_green_f32(mut self, green: f32) -> Color { self.green = green; self }
+    pub fn set_blue_f32(mut self, blue: f32) -> Color { self.blue = blue; self }
+    pub fn set_alpha_f32(mut self, alpha: f32) -> Color { self.alpha = alpha; self }
+    pub fn set_red_u8(mut self, red: u8) -> Color { self.red = (red as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_green_u8(mut self, green: u8) -> Color { self.green = (green as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_blue_u8(mut self, blue: u8) -> Color { self.blue = (blue as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_alpha_u8(mut self, alpha: u8) -> Color { self.alpha = (alpha as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_color_u32(mut self, color: u32) -> Color {
         self.alpha = (color >> 24 & 255) as f32 / 255f32;
         self.red = (color >> 16 & 255) as f32 / 255f32;
         self.green = (color >> 8 & 255) as f32 / 255f32;
         self.blue = (color & 255) as f32 / 255f32;
+        self
     }
 
     pub unsafe fn apply(&self) {

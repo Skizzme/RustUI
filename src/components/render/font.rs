@@ -187,7 +187,8 @@ impl Font {
     /// A shortcut to calling
     ///
     /// ```
-    /// Font::load(std::fs::read("cached_path").unwrap(), renderer);
+    /// use RustUI::components::render::font::FontManager;
+    /// FontManager::load(std::fs::read("cached_path").unwrap(), /*args_here*/);
     /// ```
     pub unsafe fn load_from_file(cached_path: &str, renderer: Rc<Renderer>) -> Self {
         let all_bytes = std::fs::read(cached_path).unwrap();
@@ -359,8 +360,8 @@ impl<'a> FontRenderer<'a> {
     ///
     /// `should_render` is an integer that is 0, 1, or 2. Is calculated based off of this FontRenderer's current offsets
     /// ```
-    /// use RustUI::font::FontRenderer;
-    /// let should_render = font_renderer::get_dimensions('A').2;
+    /// use RustUI::components::render::font::FontRenderer;
+    /// let should_render = FontRenderer::get_dimensions(FontRenderer::default() /*should be called non-statically*/, 'A').2;
     /// if should_render == 2 {
     ///     // End the rendering.
     ///     // This text is out of screen and no more will be rendered
