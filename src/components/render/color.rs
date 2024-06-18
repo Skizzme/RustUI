@@ -1,3 +1,5 @@
+use crate::gl_binds::gl30::Color4f;
+
 /// A struct to convert a color to all necessary forms
 ///
 /// All values are 0 to 1
@@ -58,6 +60,12 @@ impl Color {
     pub fn rgba_u8(&self) -> Vec<u8> {
         vec![(self.red*255.0).round() as u8, (self.green*255.0).round() as u8, (self.blue*255.0).round() as u8, (self.alpha*255.0).round() as u8]
     }
+    pub fn rgba_u32(&self) -> u32 {
+        (((self.alpha * 255f32).round() as u32) << 24)
+            | (((self.red * 255f32).round() as u32) << 16)
+            | (((self.green * 255f32).round() as u32) << 8)
+            | ((self.blue * 255f32).round() as u32)
+    }
 
     pub fn set_red_f32(&mut self, red: f32) { self.red = red; }
     pub fn set_green_f32(&mut self, green: f32) { self.green = green; }
@@ -68,15 +76,23 @@ impl Color {
     pub fn set_blue_u8(&mut self, blue: u8) { self.blue = (blue as f32/255f32).clamp(0.0, 1.0); }
     pub fn set_alpha_u8(&mut self, alpha: u8) { self.alpha = (alpha as f32/255f32).clamp(0.0, 1.0); }
     pub fn set_color_u32(&mut self, color: u32) {
+        self.alpha = (color >> 24 & 255) as f32 / 255f32;
         self.red = (color >> 16 & 255) as f32 / 255f32;
         self.green = (color >> 8 & 255) as f32 / 255f32;
         self.blue = (color & 255) as f32 / 255f32;
-        self.alpha = (color >> 24 & 255) as f32 / 255f32;
+    }
+
+    pub unsafe fn apply(&self) {
+        Color4f(self.red, self.green, self.blue, self.alpha);
     }
 }
 
 pub trait ToColor {
     fn to_color(&self) -> Color;
+
+    unsafe fn apply_color(&self) {
+        self.to_color().apply();
+    }
 }
 
 impl ToColor for Color {

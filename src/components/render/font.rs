@@ -13,6 +13,7 @@ use gl::types::GLdouble;
 
 use crate::asset_manager;
 use crate::components::render::bounds::Bounds;
+use crate::components::render::color::ToColor;
 use crate::components::render::renderer::Renderer;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
@@ -284,21 +285,22 @@ impl<'a> FontRenderer<'a> {
         }
     }
 
-    pub unsafe fn set_color(&mut self, color: u32) {
-        self.manager.sdf_shader.u_put_float("u_color", self.font.renderer.get_rgb(color));
+    pub unsafe fn set_color(&mut self, color: impl ToColor) {
+        let color = color.to_color();
+        self.manager.sdf_shader.u_put_float("u_color", color.rgba());
     }
 
     /// Renders a string using immediate GL
     ///
     /// The center of the rendered string is at `x`
-    pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: u32) -> (f32, f32) {
+    pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
         let string = string.to_string();
         let width = self.get_width(size, string.clone());
         self.draw_string(size, string, x-width/2.0, y, color)
     }
 
     /// The method to be called to a render a string using immediate GL
-    pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: u32) -> (f32, f32) {
+    pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
         let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
         self.begin(size, x, y);
         self.set_color(color);

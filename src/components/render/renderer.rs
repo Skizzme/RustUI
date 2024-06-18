@@ -1,11 +1,10 @@
 use gl::*;
-use gl::types::*;
 
 use crate::asset_manager;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::color::ToColor;
 use crate::components::wrapper::shader::Shader;
-use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2d};
+use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2f};
 
 /// The global renderer to render basically everything non-text related
 ///
@@ -63,12 +62,12 @@ impl Renderer {
     pub unsafe fn draw_rect(&self, bounds: &Bounds, color: impl ToColor) {
         Disable(TEXTURE_2D);
         Enable(BLEND);
-        self.set_color(color);
+        color.apply_color();
         Begin(QUADS);
-        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
-        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
-        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
-        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
+        Vertex2f(bounds.left(), bounds.bottom());
+        Vertex2f(bounds.right(), bounds.bottom());
+        Vertex2f(bounds.right(), bounds.top());
+        Vertex2f(bounds.left(), bounds.top());
         End();
         Disable(BLEND);
     }
@@ -79,14 +78,14 @@ impl Renderer {
     pub unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor)) {
         Enable(BLEND);
         Begin(QUADS);
-        self.set_color(color.0);
-        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
-        self.set_color(color.1);
-        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
-        self.set_color(color.2);
-        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
-        self.set_color(color.3);
-        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
+        color.0.apply_color();
+        Vertex2f(bounds.left(), bounds.bottom());
+        color.1.apply_color();
+        Vertex2f(bounds.right(), bounds.bottom());
+        color.2.apply_color();
+        Vertex2f(bounds.right(), bounds.top());
+        color.3.apply_color();
+        Vertex2f(bounds.left(), bounds.top());
         End();
         Disable(BLEND);
     }
@@ -95,14 +94,14 @@ impl Renderer {
     pub unsafe fn draw_rect_outline(&self, bounds: &Bounds, width: f32, color: impl ToColor) {
         Disable(TEXTURE_2D);
         Enable(BLEND);
-        self.set_color(color);
+        color.apply_color();
         LineWidth(width);
         Begin(LINE_STRIP);
-        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
-        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
-        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
-        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
-        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2f(bounds.left(), bounds.bottom());
+        Vertex2f(bounds.right(), bounds.bottom());
+        Vertex2f(bounds.right(), bounds.top());
+        Vertex2f(bounds.left(), bounds.top());
+        Vertex2f(bounds.left(), bounds.bottom());
         End();
     }
 
@@ -113,15 +112,15 @@ impl Renderer {
         Disable(TEXTURE_2D);
         Enable(BLEND);
         Begin(QUADS);
-        self.set_color(color);
+        color.apply_color();
         TexCoord2d(0.0, 1.0);
-        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2f(bounds.left(), bounds.bottom());
         TexCoord2d(1.0, 1.0);
-        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2f(bounds.right(), bounds.bottom());
         TexCoord2d(1.0, 0.0);
-        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
+        Vertex2f(bounds.right(), bounds.top());
         TexCoord2d(0.0, 0.0);
-        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
+        Vertex2f(bounds.left(), bounds.top());
         End();
     }
 
@@ -131,30 +130,15 @@ impl Renderer {
     pub unsafe fn draw_texture_rect_uv(&self, bounds: &Bounds, uv_bounds: &Bounds, color: impl ToColor) {
         Enable(TEXTURE_2D);
         Begin(QUADS);
-        self.set_color(color);
+        color.apply_color();
         TexCoord2f(uv_bounds.left(), uv_bounds.bottom());
-        Vertex2d(bounds.left() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2f(bounds.left(), bounds.bottom());
         TexCoord2f(uv_bounds.right(), uv_bounds.bottom());
-        Vertex2d(bounds.right() as GLdouble, bounds.bottom() as GLdouble);
+        Vertex2f(bounds.right(), bounds.bottom());
         TexCoord2f(uv_bounds.right(), uv_bounds.top());
-        Vertex2d(bounds.right() as GLdouble, bounds.top() as GLdouble);
+        Vertex2f(bounds.right(), bounds.top());
         TexCoord2f(uv_bounds.left(), uv_bounds.top());
-        Vertex2d(bounds.left() as GLdouble, bounds.top() as GLdouble);
+        Vertex2f(bounds.left(), bounds.top());
         End();
-    }
-
-    /// Converts the `color` to RGBA and calls gl_Color4d
-    pub unsafe fn set_color(&self, color: impl ToColor) {
-        let color = color.to_color();
-        Color4d(color.red() as GLdouble, color.green() as GLdouble, color.blue() as GLdouble, color.alpha() as GLdouble);
-    }
-
-    /// Returns the RGBA of u32 color
-    pub fn get_rgb(&self, color: u32) -> Vec<f32> {
-        let alpha = (color >> 24 & 255) as f32 / 255f32;
-        let red = (color >> 16 & 255) as f32 / 255f32;
-        let green = (color >> 8 & 255) as f32 / 255f32;
-        let blue = (color & 255) as f32 / 255f32;
-        vec![red, green, blue, alpha]
     }
 }

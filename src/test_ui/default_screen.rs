@@ -1,17 +1,12 @@
 use std::time::Instant;
 
-use gl::RGBA;
-// use gl::{GenTextures, TexImage2D, UNSIGNED_BYTE};
-// use gl::types::{GLdouble, GLint};
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 use glfw::Action::Press;
-use image::open;
 
 use crate::asset_manager;
 use crate::components::elements::Drawable;
 use crate::components::render::animation::Animation;
 use crate::components::render::bounds::Bounds;
-use crate::components::render::color::{Color, ToColor};
 use crate::components::screen::GuiScreen;
 use crate::components::window::Window;
 use crate::components::wrapper::shader::Shader;
@@ -59,37 +54,8 @@ impl GuiScreen for DefaultScreen {
             self.offset_x = self.dragging.3 + (m.mouse_x as f32 - self.dragging.1);
             self.offset_y = self.dragging.4 +(m.mouse_y as f32 - self.dragging.2);
         }
-        m.renderer.get_transform_matrix();
-
-        // m.renderer.draw_rounded_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 15.0, 0xff909090);
-        // m.renderer.draw_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 0xff909090);
-        // m.renderer.draw_rect_outline(&Bounds::from_ltrb(20.0, 20.0, 100.0, 100.0), 2.0, 0xffffffff);
-        // m.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(30.0, "Test", m.mouse_x, 20.0, 0xffff20ff);
-        // self.move_progressive.animate(self.scroll as f64, 1.5f64, AnimationType::Progressive(10f64), m);
-        // self.tex.as_mut().unwrap().draw();
-        // self.tex.as_ref().unwrap().render();
-        // self.move_cubic.animate(m.mouse_x as f64, 1f64, AnimationType::CubicIn, m);
-        // let font = m.fonts.get_font("JetBrainsMono-Medium").set_wrapping(Wrapping::None);
-        // m.renderer.draw_rounded_rect(self.move_progressive.get_value() as f32, 10.0, self.move_progressive.get_value() as f32 + 200.0, 10.0 + 100.0, 10.0, 0xff909090);
-        //(self.move_progressive.get_value() / 10.0) as f32
-        // self.tex.as_mut().unwrap().render();
-        // self.tex.as_mut().unwrap().bind();
-        // m.renderer.draw_texture_rect(0.0, 0.0, 1200.0, 1200.0, 0xff909090);
-        // self.tex.as_mut().unwrap().unbind();
-        // m.renderer.draw_rounded_rect(self.move_cubic.get_value() as f32, 230.0, self.move_cubic.get_value() as f32 + 200.0, 330.0, 10.0, 0xff909090);
         // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
         self.test_draw.draw(m);
-        // Enable(BLEND);
-        // Enable(TEXTURE_2D);
-        // self.circ_shader.bind();
-        // self.circ_shader.put_float("u_size", vec![100.0, 100.0]);
-        // self.circ_shader.put_float("u_radius", vec![5.0]);
-        // self.circ_shader.put_float("u_color", m.renderer.get_rgb(0xffffffff));
-        // self.circ_shader.put_float("u_time", vec![self.init.elapsed().as_secs_f32()]);
-        // println!("{}", self.init.elapsed().as_secs_f32());
-        //
-        // m.renderer.draw_texture_rect(100.0, 100.0, 300.0, 300.0, 0xffffffff);
-        // self.circ_shader.unbind();
     }
     #[allow(unused)]
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {

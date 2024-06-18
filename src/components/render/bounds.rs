@@ -1,4 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
+use crate::components::render::color::ToColor;
 
 use crate::components::window::Window;
 
@@ -51,7 +52,7 @@ impl Div for Bounds {
 }
 
 impl Bounds {
-    pub unsafe fn draw_bounds(&self, window: &mut Window, color: u32) {
+    pub unsafe fn draw_bounds(&self, window: &mut Window, color: impl ToColor) {
         window.renderer.draw_rect_outline(self, 1.0, color);
     }
 
@@ -93,11 +94,11 @@ impl Bounds {
     pub fn set_right(&mut self, right: f32) { self.width = right-self.x; }
     pub fn set_bottom(&mut self, bottom: f32) { self.height = bottom-self.y; }
     pub fn set_left(&mut self, left: f32) {
-        self.width += self.x - left; // Increases width, since setting the `left` of the bounds means the right shouldn't move
+        self.width += self.x - left; // Increases width, since setting the left of the bounds means the right shouldn't move
         self.x = left;
     }
     pub fn set_top(&mut self, top: f32) {
-        self.height += self.y - top; // Increases height, since setting the `top` of the bounds means the bottom shouldn't move
+        self.height += self.y - top; // Increases height, since setting the top of the bounds means the bottom shouldn't move
         self.y = top;
     }
 }
