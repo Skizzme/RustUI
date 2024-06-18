@@ -1,11 +1,9 @@
-use std::fs::read_to_string;
-use std::time::Instant;
-
 use gl::*;
 use gl::types::*;
+
+use crate::asset_manager;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::shader::Shader;
-
 use crate::gl_binds::gl30::{Begin, Color4d, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2d};
 
 /// The global renderer to render basically everything non-text related
@@ -23,16 +21,16 @@ impl Renderer {
     pub unsafe fn new() -> Self {
         Renderer {
             rounded_rect_shader: Shader::new(
-                read_to_string("src\\resources\\shaders\\rounded_rect\\vertex.glsl").unwrap(),
-                read_to_string("src\\resources\\shaders\\rounded_rect\\fragment.glsl").unwrap()
+                asset_manager::file_contents_str("shaders\\rounded_rect\\vertex.glsl").expect("Failed to read shader file"),
+                asset_manager::file_contents_str("shaders\\rounded_rect\\fragment.glsl").expect("Failed to read shader file"),
             ),
             texture_shader: Shader::new(
-                read_to_string("src\\resources\\shaders\\test_n\\vertex.glsl").unwrap(),
-                read_to_string("src\\resources\\shaders\\test_n\\fragment.glsl").unwrap()
+                asset_manager::file_contents_str("shaders\\test_n\\vertex.glsl").expect("Failed to read shader file"),
+                asset_manager::file_contents_str("shaders\\test_n\\fragment.glsl").expect("Failed to read shader file"),
             ),
             color_mult_shader: Shader::new(
-                read_to_string("src\\resources\\shaders\\color_mult\\vertex.glsl").unwrap(),
-                read_to_string("src\\resources\\shaders\\color_mult\\fragment.glsl").unwrap()
+                asset_manager::file_contents_str("shaders\\color_mult\\vertex.glsl").expect("Failed to read shader file"),
+                asset_manager::file_contents_str("shaders\\color_mult\\fragment.glsl").expect("Failed to read shader file"),
             ),
         }
     }

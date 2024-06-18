@@ -1,16 +1,9 @@
-use std::fs::read_to_string;
-use std::ops::{Mul, Sub};
-use gl::{BindTexture, BlendFunc, ClearColor, TEXTURE_2D};
 use crate::components::elements::Drawable;
 use crate::components::render::animation::{Animation, AnimationType};
-use crate::components::window::Window;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::font::ScaleMode;
-use crate::components::render::framebuffer::Framebuffer;
 use crate::components::render::mask::FramebufferMask;
-use crate::components::render::shader::Shader;
-use crate::gl_binds::gl30;
-use crate::gl_binds::gl30::{ActiveTexture, ALPHA, BLEND, Enable, ONE_MINUS_SRC_ALPHA, RGBA, SRC_ALPHA, TEXTURE0, TEXTURE1, TEXTURE10};
+use crate::components::window::Window;
 
 pub struct DrawThing {
     pub bounds: Bounds,
@@ -40,7 +33,8 @@ impl Drawable for DrawThing {
         // let (w, h) = window.fonts.get_font("ProductSans", true).scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);
 
         self.mask.begin_mask();
-        let (w, h) = window.fonts.get_font("ProductSans", true).scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);
+        let (w, _h) = window.fonts.get_font("ProductSans", true).scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);
+        // let (w, h) = (200.0, 200.0);
         self.mask.end_mask();
 
         self.mask.begin_draw();

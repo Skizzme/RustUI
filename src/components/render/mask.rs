@@ -1,7 +1,7 @@
 use crate::components::render::bounds::Bounds;
 use crate::components::render::framebuffer::Framebuffer;
 use crate::components::window::Window;
-use crate::gl_binds::gl30::{ActiveTexture, ALPHA, BLEND, BlendFunc, Enable, ONE, ONE_MINUS_SRC_ALPHA, RGBA, TEXTURE0, TEXTURE1};
+use crate::gl_binds::gl30::{ActiveTexture, RGBA, TEXTURE0, TEXTURE1};
 
 /// Uses the main window framebuffer and a new framebuffer and multiplies them together, mostly used for masking
 pub struct FramebufferMask {

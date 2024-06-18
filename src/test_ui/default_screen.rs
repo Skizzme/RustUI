@@ -1,24 +1,23 @@
-use std::fs::read_to_string;
 use std::time::Instant;
 
-use gl::{Disable, RGBA, TEXTURE_2D};
+use gl::RGBA;
 // use gl::{GenTextures, TexImage2D, UNSIGNED_BYTE};
 // use gl::types::{GLdouble, GLint};
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 use glfw::Action::Press;
 use image::open;
 
+use crate::asset_manager;
+use crate::components::elements::Drawable;
 use crate::components::render::animation::Animation;
-use crate::components::render::font::ScaleMode;
+use crate::components::render::bounds::Bounds;
 use crate::components::render::shader::Shader;
 use crate::components::render::texture::Texture;
 use crate::components::screen::GuiScreen;
-use crate::components::elements::Drawable;
-use crate::components::render::bounds::Bounds;
 use crate::components::window::Window;
-use crate::gl_binds::gl30::Enable;
 use crate::test_ui::test_object::DrawThing;
 
+#[allow(unused)]
 pub struct DefaultScreen {
     move_progressive: Animation,
     move_log: Animation,
@@ -41,7 +40,7 @@ impl DefaultScreen {
             move_log: Animation::new(),
             move_cubic: Animation::new(),
             target: 200f64,
-            circ_shader: Shader::new(read_to_string("src\\resources\\shaders\\spin_circle\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\spin_circle\\fragment.glsl").unwrap()),
+            circ_shader: Shader::new(asset_manager::file_contents_str ("shaders\\spin_circle\\vertex.glsl").unwrap(), asset_manager::file_contents_str ("shaders\\spin_circle\\fragment.glsl").unwrap()),
             init: Instant::now(),
             tex: None,
             offset_x: 0.0,
@@ -94,7 +93,7 @@ impl GuiScreen for DefaultScreen {
         // m.renderer.draw_texture_rect(100.0, 100.0, 300.0, 300.0, 0xffffffff);
         // self.circ_shader.unbind();
     }
-
+    #[allow(unused)]
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {
         match action {
             Action::Release => {}
@@ -118,11 +117,11 @@ impl GuiScreen for DefaultScreen {
             WindowEvent::Focus(_) => {}
             WindowEvent::Iconify(_) => {}
             WindowEvent::FramebufferSize(_, _) => {}
-            WindowEvent::MouseButton(button, action, mods) => {
+            WindowEvent::MouseButton(_button, action, _mods) => {
                 self.dragging = (action == Press, window.mouse_x, window.mouse_y, self.offset_x, self.offset_y);
             }
             WindowEvent::CursorEnter(_) => {}
-            WindowEvent::Scroll(x, y) => {
+            WindowEvent::Scroll(_x, y) => {
                 self.scroll += y as f32;
             }
             WindowEvent::Key(_, _, _, _) => {}

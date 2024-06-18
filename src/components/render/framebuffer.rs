@@ -1,5 +1,5 @@
 use std::ptr::null;
-use crate::components::window::Window;
+
 use crate::gl_binds::gl30::*;
 use crate::gl_binds::gl30::types::{GLenum, GLint};
 
@@ -28,7 +28,7 @@ impl Framebuffer {
 
         let status = CheckFramebufferStatus(FRAMEBUFFER);
         BindFramebuffer(FRAMEBUFFER, 0);
-        if (status != FRAMEBUFFER_COMPLETE) {
+        if status != FRAMEBUFFER_COMPLETE {
             Err(format!("Failed to create framebuffer object. Status: {}", status))
         } else {
             Ok(Framebuffer { framebuffer_id: framebuffer, texture_id: tex, parent_framebuffer: parent })

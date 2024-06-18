@@ -1,20 +1,20 @@
 use std::rc::Rc;
 use std::thread;
-use std::time::{Duration, Instant, UNIX_EPOCH};
+use std::time::{Duration, Instant};
 
 use gl::*;
 use gl::types::*;
 // use gl::*;
 // use gl::types::{GLdouble, GLsizei};
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
-use crate::components::render::bounds::Bounds;
 
+use crate::components::render::bounds::Bounds;
 use crate::components::render::font::FontManager;
 use crate::components::render::framebuffer::Framebuffer;
 use crate::components::render::renderer::Renderer;
 use crate::components::screen::GuiScreen;
 use crate::gl_binds::gl30;
-use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Rotated, Scaled, Translated};
+use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
 
 /// A wrapper for the GLFW window
 ///
@@ -72,6 +72,7 @@ impl Window {
     /// The method that should be called every frame.
     ///
     /// Polls events, tracks frame_delta, and calls `draw` on `current_screen`
+    #[allow(unused_mut)]
     pub unsafe fn frame(&mut self, mut current_screen: Box<&mut dyn GuiScreen>, last_frame: Instant) {
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
@@ -97,7 +98,7 @@ impl Window {
 
         if !self.p_window.is_focused() {
             self.glfw.set_swap_interval(SwapInterval::Sync(0));
-            let target_delta = (1.0/self.unfocused_fps as f32);
+            let target_delta = 1.0/self.unfocused_fps as f32;
             thread::sleep(Duration::from_secs_f32(target_delta));
         } else {
             self.glfw.set_swap_interval(SwapInterval::Sync(1));

@@ -5,3 +5,4 @@ pub use image::EncodableLayout;
 pub mod gl_binds;
 pub mod components;
 pub mod test_ui;
+pub mod asset_manager;

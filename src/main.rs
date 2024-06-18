@@ -30,7 +30,7 @@ fn main() {
     }
 
     unsafe {
-        let mut window = Window::create("Test", 1920/2, 1080/2, "src\\resources\\fonts\\", "", Vec::new(), WindowMode::Windowed, 30);
+        let mut window = Window::create("Test", 1920/2, 1080/2, "src\\assets\\fonts\\", "", Vec::new(), WindowMode::Windowed, 30);
         let mut current_screen = DefaultScreen::new(&mut window);
         let mut last_frame = Instant::now();
         let mut frames = 0;

@@ -1,4 +1,5 @@
 use std::f64::consts::PI;
+
 use crate::components::window::Window;
 
 /// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
@@ -66,7 +67,7 @@ impl Animation {
     /// Updates the animation value for 1 call
     ///
     /// Should generally be called every frame
-    pub fn animate(&mut self, target: f64, mut speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
+    pub fn animate(&mut self, target: f64, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
         if self.target != target {
             self.target = target;
             self.starting = self.value;

@@ -1,4 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
+
 use crate::components::window::Window;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]

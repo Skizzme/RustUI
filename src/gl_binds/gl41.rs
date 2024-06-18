@@ -2416,9 +2416,11 @@ pub type GLvdpauSurfaceNV = GLintptr;
 mod storage {
             #![allow(non_snake_case)]
             #![allow(non_upper_case_globals)]
-            use super::__gl_imports::raw;
-            use super::FnPtr;
-pub static mut ActiveShaderProgram: FnPtr = FnPtr {
+
+    use super::__gl_imports::raw;
+    use super::FnPtr;
+
+    pub static mut ActiveShaderProgram: FnPtr = FnPtr {
                 f: super::missing_fn_panic as *const raw::c_void,
                 is_loaded: false
             };
@@ -4454,7 +4456,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ActiveShaderProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4475,7 +4477,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ActiveTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4496,7 +4498,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod AttachShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4517,7 +4519,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BeginConditionalRender {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4538,7 +4540,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BeginQuery {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4559,7 +4561,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BeginQueryIndexed {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4580,7 +4582,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BeginTransformFeedback {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4601,7 +4603,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindAttribLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4622,7 +4624,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4643,7 +4645,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindBufferBase {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4664,7 +4666,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindBufferRange {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4685,7 +4687,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindFragDataLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4706,7 +4708,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindFragDataLocationIndexed {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4727,7 +4729,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindFramebuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4748,7 +4750,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindProgramPipeline {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4769,7 +4771,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindRenderbuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4790,7 +4792,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindSampler {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4811,7 +4813,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4832,7 +4834,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindTransformFeedback {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4853,7 +4855,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BindVertexArray {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4874,7 +4876,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendColor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4895,7 +4897,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendEquation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4916,7 +4918,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendEquationSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4937,7 +4939,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendEquationSeparatei {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4958,7 +4960,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendEquationi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -4979,7 +4981,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendFunc {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5000,7 +5002,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendFuncSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5021,7 +5023,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendFuncSeparatei {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5042,7 +5044,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlendFunci {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5063,7 +5065,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BlitFramebuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5084,7 +5086,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BufferData {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5105,7 +5107,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod BufferSubData {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5126,7 +5128,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CheckFramebufferStatus {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5147,7 +5149,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClampColor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5168,7 +5170,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Clear {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5189,7 +5191,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearBufferfi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5210,7 +5212,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearBufferfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5231,7 +5233,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearBufferiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5252,7 +5254,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearBufferuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5273,7 +5275,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearColor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5294,7 +5296,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearDepth {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5315,7 +5317,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearDepthf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5336,7 +5338,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClearStencil {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5357,7 +5359,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ClientWaitSync {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5378,7 +5380,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorMask {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5399,7 +5401,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorMaski {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5420,7 +5422,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorP3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5441,7 +5443,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorP3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5462,7 +5464,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorP4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5483,7 +5485,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ColorP4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5504,7 +5506,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompileShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5525,7 +5527,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5546,7 +5548,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5567,7 +5569,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5588,7 +5590,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexSubImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5609,7 +5611,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexSubImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5630,7 +5632,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CompressedTexSubImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5651,7 +5653,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyBufferSubData {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5672,7 +5674,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5693,7 +5695,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5714,7 +5716,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexSubImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5735,7 +5737,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexSubImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5756,7 +5758,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CopyTexSubImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5777,7 +5779,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CreateProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5798,7 +5800,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CreateShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5819,7 +5821,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CreateShaderProgramv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5840,7 +5842,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod CullFace {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5861,7 +5863,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteBuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5882,7 +5884,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteFramebuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5903,7 +5905,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5924,7 +5926,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteProgramPipelines {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5945,7 +5947,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteQueries {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5966,7 +5968,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteRenderbuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -5987,7 +5989,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteSamplers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6008,7 +6010,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6029,7 +6031,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteSync {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6050,7 +6052,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteTextures {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6071,7 +6073,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteTransformFeedbacks {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6092,7 +6094,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DeleteVertexArrays {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6113,7 +6115,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthFunc {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6134,7 +6136,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthMask {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6155,7 +6157,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthRange {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6176,7 +6178,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthRangeArrayv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6197,7 +6199,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthRangeIndexed {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6218,7 +6220,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DepthRangef {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6239,7 +6241,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DetachShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6260,7 +6262,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Disable {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6281,7 +6283,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DisableVertexAttribArray {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6302,7 +6304,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Disablei {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6323,7 +6325,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawArrays {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6344,7 +6346,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawArraysIndirect {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6365,7 +6367,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawArraysInstanced {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6386,7 +6388,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6407,7 +6409,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawBuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6428,7 +6430,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawElements {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6449,7 +6451,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawElementsBaseVertex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6470,7 +6472,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawElementsIndirect {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6491,7 +6493,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawElementsInstanced {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6512,7 +6514,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawElementsInstancedBaseVertex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6533,7 +6535,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawRangeElements {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6554,7 +6556,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawRangeElementsBaseVertex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6575,7 +6577,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawTransformFeedback {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6596,7 +6598,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod DrawTransformFeedbackStream {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6617,7 +6619,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Enable {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6638,7 +6640,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EnableVertexAttribArray {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6659,7 +6661,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Enablei {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6680,7 +6682,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EndConditionalRender {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6701,7 +6703,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EndQuery {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6722,7 +6724,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EndQueryIndexed {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6743,7 +6745,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod EndTransformFeedback {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6764,7 +6766,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FenceSync {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6785,7 +6787,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Finish {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6806,7 +6808,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Flush {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6827,7 +6829,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FlushMappedBufferRange {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6848,7 +6850,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FramebufferRenderbuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6869,7 +6871,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FramebufferTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6890,7 +6892,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FramebufferTexture1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6911,7 +6913,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FramebufferTexture2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6932,7 +6934,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FramebufferTexture3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6953,7 +6955,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FramebufferTextureLayer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6974,7 +6976,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod FrontFace {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -6995,7 +6997,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenBuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7016,7 +7018,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenFramebuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7037,7 +7039,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenProgramPipelines {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7058,7 +7060,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenQueries {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7079,7 +7081,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenRenderbuffers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7100,7 +7102,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenSamplers {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7121,7 +7123,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenTextures {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7142,7 +7144,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenTransformFeedbacks {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7163,7 +7165,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenVertexArrays {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7184,7 +7186,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GenerateMipmap {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7205,7 +7207,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveAttrib {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7226,7 +7228,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveSubroutineName {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7247,7 +7249,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveSubroutineUniformName {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7268,7 +7270,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveSubroutineUniformiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7289,7 +7291,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveUniform {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7310,7 +7312,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveUniformBlockName {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7331,7 +7333,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveUniformBlockiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7352,7 +7354,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveUniformName {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7373,7 +7375,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetActiveUniformsiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7394,7 +7396,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetAttachedShaders {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7415,7 +7417,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetAttribLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7436,7 +7438,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBooleani_v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7457,7 +7459,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBooleanv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7478,7 +7480,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBufferParameteri64v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7499,7 +7501,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBufferParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7520,7 +7522,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBufferPointerv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7541,7 +7543,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetBufferSubData {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7562,7 +7564,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetCompressedTexImage {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7583,7 +7585,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetDoublei_v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7604,7 +7606,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetDoublev {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7625,7 +7627,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetError {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7646,7 +7648,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetFloati_v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7667,7 +7669,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetFloatv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7688,7 +7690,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetFragDataIndex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7709,7 +7711,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetFragDataLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7730,7 +7732,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetFramebufferAttachmentParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7751,7 +7753,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetInteger64i_v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7772,7 +7774,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetInteger64v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7793,7 +7795,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetIntegeri_v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7814,7 +7816,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetIntegerv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7835,7 +7837,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetMultisamplefv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7856,7 +7858,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramBinary {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7877,7 +7879,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramInfoLog {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7898,7 +7900,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramPipelineInfoLog {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7919,7 +7921,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramPipelineiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7940,7 +7942,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramStageiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7961,7 +7963,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetProgramiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -7982,7 +7984,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryIndexediv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8003,7 +8005,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryObjecti64v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8024,7 +8026,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryObjectiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8045,7 +8047,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryObjectui64v {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8066,7 +8068,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryObjectuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8087,7 +8089,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetQueryiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8108,7 +8110,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetRenderbufferParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8129,7 +8131,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetSamplerParameterIiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8150,7 +8152,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetSamplerParameterIuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8171,7 +8173,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetSamplerParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8192,7 +8194,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetSamplerParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8213,7 +8215,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetShaderInfoLog {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8234,7 +8236,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetShaderPrecisionFormat {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8255,7 +8257,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetShaderSource {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8276,7 +8278,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetShaderiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8297,7 +8299,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetString {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8318,7 +8320,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetStringi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8339,7 +8341,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetSubroutineIndex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8360,7 +8362,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetSubroutineUniformLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8381,7 +8383,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetSynciv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8402,7 +8404,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexImage {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8423,7 +8425,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexLevelParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8444,7 +8446,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexLevelParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8465,7 +8467,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexParameterIiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8486,7 +8488,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexParameterIuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8507,7 +8509,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8528,7 +8530,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTexParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8549,7 +8551,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetTransformFeedbackVarying {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8570,7 +8572,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformBlockIndex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8591,7 +8593,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformIndices {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8612,7 +8614,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformLocation {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8633,7 +8635,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformSubroutineuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8654,7 +8656,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformdv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8675,7 +8677,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8696,7 +8698,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8717,7 +8719,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetUniformuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8738,7 +8740,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribIiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8759,7 +8761,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribIuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8780,7 +8782,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribLdv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8801,7 +8803,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribPointerv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8822,7 +8824,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribdv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8843,7 +8845,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8864,7 +8866,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod GetVertexAttribiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8885,7 +8887,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Hint {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8906,7 +8908,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8927,7 +8929,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsEnabled {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8948,7 +8950,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsEnabledi {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8969,7 +8971,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsFramebuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -8990,7 +8992,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9011,7 +9013,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsProgramPipeline {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9032,7 +9034,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsQuery {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9053,7 +9055,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsRenderbuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9074,7 +9076,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsSampler {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9095,7 +9097,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsShader {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9116,7 +9118,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsSync {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9137,7 +9139,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsTexture {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9158,7 +9160,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsTransformFeedback {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9179,7 +9181,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod IsVertexArray {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9200,7 +9202,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LineWidth {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9221,7 +9223,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LinkProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9242,7 +9244,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod LogicOp {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9263,7 +9265,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MapBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9284,7 +9286,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MapBufferRange {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9305,7 +9307,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MinSampleShading {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9326,7 +9328,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiDrawArrays {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9347,7 +9349,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiDrawElements {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9368,7 +9370,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiDrawElementsBaseVertex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9389,7 +9391,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP1ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9410,7 +9412,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP1uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9431,7 +9433,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP2ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9452,7 +9454,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP2uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9473,7 +9475,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9494,7 +9496,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9515,7 +9517,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9536,7 +9538,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod MultiTexCoordP4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9557,7 +9559,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod NormalP3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9578,7 +9580,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod NormalP3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9599,7 +9601,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PatchParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9620,7 +9622,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PatchParameteri {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9641,7 +9643,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PauseTransformFeedback {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9662,7 +9664,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelStoref {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9683,7 +9685,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PixelStorei {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9704,7 +9706,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameterf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9725,7 +9727,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9746,7 +9748,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameteri {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9767,7 +9769,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9788,7 +9790,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PointSize {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9809,7 +9811,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PolygonMode {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9830,7 +9832,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PolygonOffset {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9851,7 +9853,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod PrimitiveRestartIndex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9872,7 +9874,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramBinary {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9893,7 +9895,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramParameteri {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9914,7 +9916,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9935,7 +9937,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9956,7 +9958,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9977,7 +9979,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -9998,7 +10000,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10019,7 +10021,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10040,7 +10042,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10061,7 +10063,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform1uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10082,7 +10084,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10103,7 +10105,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10124,7 +10126,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10145,7 +10147,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10166,7 +10168,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10187,7 +10189,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10208,7 +10210,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10229,7 +10231,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform2uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10250,7 +10252,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10271,7 +10273,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10292,7 +10294,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10313,7 +10315,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10334,7 +10336,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10355,7 +10357,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10376,7 +10378,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10397,7 +10399,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10418,7 +10420,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10439,7 +10441,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10460,7 +10462,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10481,7 +10483,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10502,7 +10504,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10523,7 +10525,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10544,7 +10546,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10565,7 +10567,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniform4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10586,7 +10588,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10607,7 +10609,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10628,7 +10630,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix2x3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10649,7 +10651,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix2x3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10670,7 +10672,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix2x4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10691,7 +10693,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix2x4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10712,7 +10714,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10733,7 +10735,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10754,7 +10756,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix3x2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10775,7 +10777,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix3x2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10796,7 +10798,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix3x4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10817,7 +10819,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix3x4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10838,7 +10840,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10859,7 +10861,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10880,7 +10882,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix4x2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10901,7 +10903,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix4x2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10922,7 +10924,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix4x3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10943,7 +10945,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProgramUniformMatrix4x3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10964,7 +10966,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ProvokingVertex {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -10985,7 +10987,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod QueryCounter {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11006,7 +11008,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ReadBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11027,7 +11029,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ReadPixels {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11048,7 +11050,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ReleaseShaderCompiler {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11069,7 +11071,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RenderbufferStorage {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11090,7 +11092,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod RenderbufferStorageMultisample {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11111,7 +11113,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ResumeTransformFeedback {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11132,7 +11134,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SampleCoverage {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11153,7 +11155,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SampleMaski {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11174,7 +11176,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SamplerParameterIiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11195,7 +11197,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SamplerParameterIuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11216,7 +11218,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SamplerParameterf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11237,7 +11239,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SamplerParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11258,7 +11260,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SamplerParameteri {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11279,7 +11281,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SamplerParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11300,7 +11302,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Scissor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11321,7 +11323,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ScissorArrayv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11342,7 +11344,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ScissorIndexed {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11363,7 +11365,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ScissorIndexedv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11384,7 +11386,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColorP3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11405,7 +11407,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod SecondaryColorP3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11426,7 +11428,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ShaderBinary {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11447,7 +11449,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ShaderSource {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11468,7 +11470,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilFunc {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11489,7 +11491,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilFuncSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11510,7 +11512,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilMask {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11531,7 +11533,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilMaskSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11552,7 +11554,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilOp {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11573,7 +11575,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod StencilOpSeparate {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11594,7 +11596,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11615,7 +11617,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP1ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11636,7 +11638,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP1uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11657,7 +11659,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP2ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11678,7 +11680,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP2uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11699,7 +11701,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11720,7 +11722,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11741,7 +11743,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11762,7 +11764,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexCoordP4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11783,7 +11785,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11804,7 +11806,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11825,7 +11827,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage2DMultisample {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11846,7 +11848,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11867,7 +11869,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexImage3DMultisample {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11888,7 +11890,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameterIiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11909,7 +11911,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameterIuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11930,7 +11932,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameterf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11951,7 +11953,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameterfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11972,7 +11974,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameteri {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -11993,7 +11995,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexParameteriv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12014,7 +12016,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexSubImage1D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12035,7 +12037,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexSubImage2D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12056,7 +12058,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TexSubImage3D {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12077,7 +12079,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod TransformFeedbackVaryings {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12098,7 +12100,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12119,7 +12121,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12140,7 +12142,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12161,7 +12163,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12182,7 +12184,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12203,7 +12205,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12224,7 +12226,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12245,7 +12247,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform1uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12266,7 +12268,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12287,7 +12289,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12308,7 +12310,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12329,7 +12331,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12350,7 +12352,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12371,7 +12373,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12392,7 +12394,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12413,7 +12415,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform2uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12434,7 +12436,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12455,7 +12457,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12476,7 +12478,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12497,7 +12499,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12518,7 +12520,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12539,7 +12541,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12560,7 +12562,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12581,7 +12583,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12602,7 +12604,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12623,7 +12625,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12644,7 +12646,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12665,7 +12667,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12686,7 +12688,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12707,7 +12709,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12728,7 +12730,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12749,7 +12751,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Uniform4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12770,7 +12772,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformBlockBinding {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12791,7 +12793,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12812,7 +12814,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12833,7 +12835,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix2x3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12854,7 +12856,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix2x3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12875,7 +12877,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix2x4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12896,7 +12898,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix2x4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12917,7 +12919,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12938,7 +12940,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12959,7 +12961,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix3x2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -12980,7 +12982,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix3x2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13001,7 +13003,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix3x4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13022,7 +13024,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix3x4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13043,7 +13045,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13064,7 +13066,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13085,7 +13087,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix4x2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13106,7 +13108,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix4x2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13127,7 +13129,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix4x3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13148,7 +13150,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformMatrix4x3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13169,7 +13171,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UniformSubroutinesuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13190,7 +13192,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UnmapBuffer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13211,7 +13213,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UseProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13232,7 +13234,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod UseProgramStages {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13253,7 +13255,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ValidateProgram {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13274,7 +13276,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ValidateProgramPipeline {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13295,7 +13297,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13316,7 +13318,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13337,7 +13339,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13358,7 +13360,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13379,7 +13381,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13400,7 +13402,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib1sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13421,7 +13423,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13442,7 +13444,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13463,7 +13465,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13484,7 +13486,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13505,7 +13507,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13526,7 +13528,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib2sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13547,7 +13549,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13568,7 +13570,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13589,7 +13591,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13610,7 +13612,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13631,7 +13633,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13652,7 +13654,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib3sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13673,7 +13675,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nbv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13694,7 +13696,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Niv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13715,7 +13717,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nsv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13736,7 +13738,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nub {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13757,7 +13759,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13778,7 +13780,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nuiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13799,7 +13801,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4Nusv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13820,7 +13822,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4bv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13841,7 +13843,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13862,7 +13864,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13883,7 +13885,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4f {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13904,7 +13906,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4fv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13925,7 +13927,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13946,7 +13948,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4s {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13967,7 +13969,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -13988,7 +13990,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4ubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14009,7 +14011,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14030,7 +14032,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttrib4usv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14051,7 +14053,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribDivisor {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14072,7 +14074,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI1i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14093,7 +14095,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI1iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14114,7 +14116,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI1ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14135,7 +14137,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI1uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14156,7 +14158,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI2i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14177,7 +14179,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI2iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14198,7 +14200,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI2ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14219,7 +14221,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI2uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14240,7 +14242,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI3i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14261,7 +14263,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI3iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14282,7 +14284,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14303,7 +14305,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14324,7 +14326,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4bv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14345,7 +14347,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4i {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14366,7 +14368,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4iv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14387,7 +14389,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4sv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14408,7 +14410,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4ubv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14429,7 +14431,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14450,7 +14452,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14471,7 +14473,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribI4usv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14492,7 +14494,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribIPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14513,7 +14515,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL1d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14534,7 +14536,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL1dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14555,7 +14557,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL2d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14576,7 +14578,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL2dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14597,7 +14599,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL3d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14618,7 +14620,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL3dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14639,7 +14641,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL4d {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14660,7 +14662,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribL4dv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14681,7 +14683,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribLPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14702,7 +14704,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP1ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14723,7 +14725,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP1uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14744,7 +14746,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP2ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14765,7 +14767,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP2uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14786,7 +14788,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14807,7 +14809,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14828,7 +14830,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14849,7 +14851,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribP4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14870,7 +14872,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexAttribPointer {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14891,7 +14893,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexP2ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14912,7 +14914,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexP2uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14933,7 +14935,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexP3ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14954,7 +14956,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexP3uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14975,7 +14977,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexP4ui {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -14996,7 +14998,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod VertexP4uiv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15017,7 +15019,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod Viewport {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15038,7 +15040,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ViewportArrayv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15059,7 +15061,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ViewportIndexedf {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15080,7 +15082,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod ViewportIndexedfv {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 
@@ -15101,7 +15103,7 @@ pub static mut WaitSync: FnPtr = FnPtr {
 
             #[allow(non_snake_case)]
             pub mod WaitSync {
-                use super::{storage, metaloadfn};
+                use super::{metaloadfn, storage};
                 use super::__gl_imports::raw;
                 use super::FnPtr;
 

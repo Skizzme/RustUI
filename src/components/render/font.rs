@@ -1,8 +1,6 @@
 extern crate freetype;
 
 use std::collections::HashMap;
-use std::fmt::Pointer;
-use std::fs::read_to_string;
 use std::io::Write;
 use std::path::Path;
 use std::rc::Rc;
@@ -12,11 +10,13 @@ use freetype::face::LoadFlag;
 use freetype::RenderMode;
 use gl::*;
 use gl::types::GLdouble;
+
+use crate::asset_manager;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::renderer::Renderer;
 use crate::components::render::shader::Shader;
 use crate::components::render::texture::Texture;
-use crate::gl_binds::gl30::{PopMatrix, PROJECTION_MATRIX, PushMatrix, Scaled};
+use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
 
 const FONT_RES: u32 = 64u32;
 
@@ -44,7 +44,7 @@ pub struct FontManager {
 impl FontManager {
     pub unsafe fn new(screen_width: i32, screen_height: i32, renderer: Rc<Renderer>, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
         let st = Instant::now();
-        let s = Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap());
+        let s = Shader::new(asset_manager::file_contents_str("shaders\\sdf\\vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders\\sdf\\fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
@@ -131,8 +131,8 @@ impl Font {
 
             glyph.render_glyph(RenderMode::Sdf).unwrap();
 
-            let mut width = glyph.bitmap().width();
-            let mut height = glyph.bitmap().rows();
+            let width = glyph.bitmap().width();
+            let height = glyph.bitmap().rows();
             if max_height < height {
                 max_height = height;
             }
@@ -152,7 +152,7 @@ impl Font {
         }
 
         let mut meta_data: Vec<u8> = Vec::new();
-        for mut c_glyph in cache_glyphs.as_slice() {
+        for c_glyph in cache_glyphs.as_slice() {
             meta_data.write(&c_glyph.width.to_be_bytes()).unwrap();
             meta_data.write(&c_glyph.height.to_be_bytes()).unwrap();
             meta_data.write(&c_glyph.advance.to_be_bytes()).unwrap();
@@ -160,18 +160,18 @@ impl Font {
             meta_data.write(&c_glyph.top.to_be_bytes()).unwrap();
         }
 
-        /// Creates the single texture atlas with all glyphs,
-        /// since swapping textures for every character is slow.
-        /// Is also in a single row to waste less pixel space
+        // Creates the single texture atlas with all glyphs,
+        // since swapping textures for every character is slow.
+        // Is also in a single row to waste less pixel space
         let mut atlas_bytes: Vec<u8> = Vec::new();
         for i in 0..max_height {
-            /// Will write a single row of each glyph's pixels in order
-            /// so that a proper texture can be created quicker when loading
-            for mut c_glyph in cache_glyphs.as_slice() {
+            // Will write a single row of each glyph's pixels in order
+            // so that a proper texture can be created quicker when loading
+            for c_glyph in cache_glyphs.as_slice() {
                 let offset = i * c_glyph.width;
                 // Checks if the current glyph is too short/not enough height, and if it is it will fill the empty space
                 if c_glyph.width*c_glyph.height <= offset {
-                    for j in 0..c_glyph.width { atlas_bytes.push(0u8); }
+                    for _ in 0..c_glyph.width { atlas_bytes.push(0u8); }
                 } else {
                     atlas_bytes.write(&c_glyph.bytes[offset as usize..(offset+c_glyph.width) as usize]).unwrap();
                 }
@@ -189,7 +189,7 @@ impl Font {
     /// Font::load(std::fs::read("cached_path").unwrap(), renderer);
     /// ```
     pub unsafe fn load_from_file(cached_path: &str, renderer: Rc<Renderer>) -> Self {
-        let mut all_bytes = std::fs::read(cached_path).unwrap();
+        let all_bytes = std::fs::read(cached_path).unwrap();
         Self::load(all_bytes, renderer)
     }
 
@@ -291,14 +291,14 @@ impl<'a> FontRenderer<'a> {
     /// Renders a string using immediate GL
     ///
     /// The center of the rendered string is at `x`
-    pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
+    pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: u32) -> (f32, f32) {
         let string = string.to_string();
         let width = self.get_width(size, string.clone());
         self.draw_string(size, string, x-width/2.0, y, color)
     }
 
     /// The method to be called to a render a string using immediate GL
-    pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, mut x: f32, mut y: f32, color: u32) -> (f32, f32) {
+    pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: u32) -> (f32, f32) {
         let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
         self.begin(size, x, y);
         self.set_color(color);
@@ -306,7 +306,7 @@ impl<'a> FontRenderer<'a> {
             if char == '\n' {
                 match self.scale_mode {
                     ScaleMode::Normal => {
-                        self.y += (str_height + 2.0);
+                        self.y += str_height + 2.0;
                     }
                     ScaleMode::Quality => {
                         self.y += self.get_scaled_value((str_height + 2.0) * self.line_spacing, self.comb_scale_y);
@@ -322,7 +322,7 @@ impl<'a> FontRenderer<'a> {
                 continue;
             }
 
-            let (c_w, c_h, should_render) = self.get_dimensions(char);
+            let (c_w, _c_h, should_render) = self.get_dimensions(char);
             if should_render == 2 {
                 break;
             }
@@ -427,7 +427,7 @@ impl<'a> FontRenderer<'a> {
     }
 
     /// Sets this FontRenderer up for immediate GL drawing, setting shader uniforms, x and y offsets, scaling etc
-    pub unsafe fn begin(&mut self, size: f32, mut x: f32, mut y: f32) {
+    pub unsafe fn begin(&mut self, size: f32, x: f32, y: f32) {
         self.scale = match self.scale_mode {
             ScaleMode::Normal => {size/FONT_RES as f32}
             ScaleMode::Quality => {size.floor()/FONT_RES as f32}
@@ -441,7 +441,7 @@ impl<'a> FontRenderer<'a> {
         self.y = y*self.i_scale;
         self.start_x = x;
 
-        let mut matrix: [f64; 16] = self.manager.renderer.get_transform_matrix();
+        let matrix: [f64; 16] = self.manager.renderer.get_transform_matrix();
         self.scaled_factor_x = (matrix[0]*self.manager.screen_width as f64/2.0) as f32;
         self.scaled_factor_y = (matrix[5]*self.manager.screen_height as f64/-2.0) as f32;
         self.comb_scale_x = self.scaled_factor_x*self.scale;
@@ -472,7 +472,6 @@ impl<'a> FontRenderer<'a> {
     /// Returns the width, in pixels, of a string at a specific size
     pub unsafe fn get_width(&self, size: f32, string: String) -> f32 {
         let scale = size/FONT_RES as f32;
-        let i_scale = 1.0/(size/FONT_RES as f32);
         let mut width = 0.0f32;
 
         for char in string.chars() {
@@ -486,7 +485,6 @@ impl<'a> FontRenderer<'a> {
     /// Returns the height, in pixels, of a string at a specific size
     pub unsafe fn get_height(&self, size: f32) -> f32 {
         let scale = size/FONT_RES as f32;
-        let i_scale = 1.0/(size/FONT_RES as f32);
         self.font.glyphs.get('H' as usize).unwrap().top as f32 * scale
     }
 

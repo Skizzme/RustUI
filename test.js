@@ -56,7 +56,7 @@ impl FontManager {
         if !self.fonts.contains_key(name) {
             let mut b = Instant::now();
             if !Path::new(format!("{}_{}.cache", name, FONT_RES).as_str()).exists() {
-                Font::cache(format!("src\\resources\\fonts\\{}.ttf", name).as_str(), format!("{}_{}.cache", name, FONT_RES).as_str());
+                Font::cache(format!("src\\assets\\fonts\\{}.ttf", name).as_str(), format!("{}_{}.cache", name, FONT_RES).as_str());
                 println!("Font took {:?} to cache...", b.elapsed());
             }
 
@@ -158,7 +158,7 @@ impl Font {
             glyphs: [Glyph::default(); 128],
             renderer: renderer.clone(),
                 shader:
-            Shader::new(read_to_string("src\\resources\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\sdf\\fragment.glsl").unwrap()),
+            Shader::new(read_to_string("src\\assets\\shaders\\sdf\\vertex.glsl").unwrap(), read_to_string("src\\assets\\shaders\\sdf\\fragment.glsl").unwrap()),
                 atlas_tex: None,
         };
 

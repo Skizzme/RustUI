@@ -1,3 +1,4 @@
+#[allow(unused)]
 pub struct Button<C> where C: FnMut() {
     x: f32,
     y: f32,

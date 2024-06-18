@@ -1,12 +1,11 @@
-use std::fs::read_to_string;
 use std::mem::size_of_val;
 use std::ptr;
 use std::rc::Rc;
 
 use gl::*;
 use gl::types::*;
+
 use crate::components::render::renderer::Renderer;
-use crate::components::render::shader::Shader;
 use crate::gl_binds::gl30::Color4d;
 
 #[derive(Debug)]
@@ -23,7 +22,7 @@ pub struct Texture {
 
 impl Texture {
     pub unsafe fn create(renderer: Rc<Renderer>, width: i32, height: i32, bytes: &Vec<u8>, format: GLenum) -> Self {
-        let shader = Shader::new(read_to_string("src\\resources\\shaders\\test_n\\vertex.glsl").unwrap(), read_to_string("src\\resources\\shaders\\test_n\\fragment.glsl").unwrap());
+        // let shader = Shader::new(asset_manager::file_contents_str ("shaders\\test_n\\vertex.glsl").unwrap(), asset_manager::file_contents_str ("shaders\\test_n\\fragment.glsl").unwrap());
 
         let mut vao = 0;
         let mut vbo = 0;
