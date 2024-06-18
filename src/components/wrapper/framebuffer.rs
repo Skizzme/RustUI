@@ -6,11 +6,11 @@ use crate::gl_binds::gl30::types::{GLenum, GLint};
 pub struct Framebuffer {
     framebuffer_id: u32,
     texture_id: u32,
-    parent_framebuffer: u32,
+    parent_framebuffer: i32,
 }
 
 impl Framebuffer {
-    pub unsafe fn new(format: GLenum, window_width: i32, window_height: i32, parent: u32) -> Result<Framebuffer, String> {
+    pub unsafe fn new(format: GLenum, window_width: i32, window_height: i32) -> Result<Framebuffer, String> {
         let mut framebuffer = 0u32;
         GenFramebuffers(1, &mut framebuffer);
         BindFramebuffer(FRAMEBUFFER, framebuffer);
@@ -31,11 +31,12 @@ impl Framebuffer {
         if status != FRAMEBUFFER_COMPLETE {
             Err(format!("Failed to create framebuffer object. Status: {}", status))
         } else {
-            Ok(Framebuffer { framebuffer_id: framebuffer, texture_id: tex, parent_framebuffer: parent })
+            Ok(Framebuffer { framebuffer_id: framebuffer, texture_id: tex, parent_framebuffer: 0 })
         }
     }
 
-    pub unsafe fn bind(&self) {
+    pub unsafe fn bind(&mut self) {
+        GetIntegerv(FRAMEBUFFER_BINDING, &mut self.parent_framebuffer);
         BindFramebuffer(FRAMEBUFFER, self.framebuffer_id);
     }
 
@@ -48,7 +49,7 @@ impl Framebuffer {
     }
 
     pub unsafe fn unbind(&self) {
-        BindFramebuffer(FRAMEBUFFER, self.parent_framebuffer);
+        BindFramebuffer(FRAMEBUFFER, self.parent_framebuffer as u32);
     }
 
     pub unsafe fn bind_texture(&self) {

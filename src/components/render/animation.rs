@@ -67,12 +67,8 @@ impl Animation {
     /// Updates the animation value for 1 call
     ///
     /// Should generally be called every frame
-    pub fn animate(&mut self, target: f64, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
-        if self.target != target {
-            self.target = target;
-            self.starting = self.value;
-            self.state = 0f64;
-        }
+    pub fn animate_target(&mut self, target: f64, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
+        self.set_target(target);
 
         self.state += speed*screen.frame_delta;
         if self.state > 1.0 {self.state = 1.0}
@@ -82,7 +78,24 @@ impl Animation {
         self.value
     }
 
-    pub fn get_value(&self) -> f64 {
+    pub fn animate(&mut self, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
+        self.animate_target(self.target, speed, animation_type, screen)
+    }
+
+    pub fn set_target(&mut self, target: f64) -> &mut Self {
+        if self.target != target {
+            self.target = target;
+            self.starting = self.value;
+            self.state = 0f64;
+        }
+        self
+    }
+
+
+    pub fn value(&self) -> f64 {
         self.value
+    }
+    pub fn target(&self) -> f64 {
+        self.target
     }
 }

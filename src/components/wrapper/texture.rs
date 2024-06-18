@@ -22,7 +22,7 @@ pub struct Texture {
 
 impl Texture {
     pub unsafe fn create(renderer: Rc<Renderer>, width: i32, height: i32, bytes: &Vec<u8>, format: GLenum) -> Self {
-        // let shader = Shader::new(asset_manager::file_contents_str ("shaders\\test_n\\vertex.glsl").unwrap(), asset_manager::file_contents_str ("shaders\\test_n\\fragment.glsl").unwrap());
+        // let shader = Shader::new(asset_manager::file_contents_str ("shaders/test_n/vertex.glsl").unwrap(), asset_manager::file_contents_str ("shaders/test_n/fragment.glsl").unwrap());
 
         let mut vao = 0;
         let mut vbo = 0;

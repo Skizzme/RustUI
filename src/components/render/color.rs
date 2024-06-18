@@ -42,6 +42,15 @@ impl Color {
         }
     }
 
+    pub fn from_hsv(hue: f32, saturation: f32, value: f32) -> Color {
+        Color {
+            red: ((((hue * 6.0 - 3.0).abs() - 1.0).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
+            green: (((2.0 - (hue * 6.0 - 2.0).abs()).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
+            blue: (((2.0 - (hue * 6.0 - 4.0).abs()).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
+            alpha: 1.0,
+        }
+    }
+
     pub fn red(&self) -> f32 {
         self.red
     }

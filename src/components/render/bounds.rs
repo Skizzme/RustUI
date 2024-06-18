@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
-use crate::components::render::color::ToColor;
 
+use crate::components::render::color::ToColor;
 use crate::components::window::Window;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -9,6 +9,22 @@ pub struct Bounds {
     y: f32,
     width: f32,
     height: f32,
+}
+
+pub trait ToBounds {
+    fn to_bounds(&self) -> Bounds;
+}
+
+impl ToBounds for Bounds {
+    fn to_bounds(&self) -> Bounds {
+        self.clone()
+    }
+}
+
+impl ToBounds for &Bounds {
+    fn to_bounds(&self) -> Bounds {
+        *self.clone()
+    }
 }
 
 impl Sub for Bounds {
@@ -86,6 +102,8 @@ impl Bounds {
     pub fn top(&self) -> f32 { self.y }
     pub fn right(&self) -> f32 { self.x + self.width }
     pub fn bottom(&self) -> f32 { self.y + self.height }
+    pub fn center_x(&self) -> f32 { self.x + self.width / 2.0 }
+    pub fn center_y(&self) -> f32 { self.y + self.height / 2.0 }
 
     pub fn set_x(&mut self, x: f32) { self.x = x; }
     pub fn set_y(&mut self, y: f32) { self.y = y; }

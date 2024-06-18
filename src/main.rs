@@ -7,7 +7,7 @@
 // use std::path::Path;
 //
 // fn main() {
-//     let mut file = File::create("src\\gl.rs").unwrap();
+//     let mut file = File::create("src/gl.rs").unwrap();
 //
 //     Registry::new(Api::Gl, (3, 0), Profile::Core, Fallbacks::All, [])
 //         .write_bindings(GlobalGenerator, &mut file)
@@ -31,7 +31,7 @@ fn main() {
     }
 
     unsafe {
-        let mut window = Window::create("Test", 1920/2, 1080/2, "src\\assets\\fonts\\", "", Vec::new(), WindowMode::Windowed, 30);
+        let mut window = Window::create("Test", 1920/2, 1080/2, "src/assets/fonts/", "", Vec::new(), WindowMode::Windowed, 30);
         let mut current_screen = DefaultScreen::new(&mut window);
         let mut last_frame = Instant::now();
         let mut frames = 0;

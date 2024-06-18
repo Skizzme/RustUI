@@ -40,12 +40,13 @@ pub struct FontManager {
     cache_location: String,
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     sdf_shader: Shader,
+    font_byte_library: HashMap<String, Vec<u8>>,
 }
 
 impl FontManager {
     pub unsafe fn new(screen_width: i32, screen_height: i32, renderer: Rc<Renderer>, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
         let st = Instant::now();
-        let s = Shader::new(asset_manager::file_contents_str("shaders\\sdf\\vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders\\sdf\\fragment.glsl").unwrap());
+        let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
@@ -56,21 +57,31 @@ impl FontManager {
             cache_location: cache_location.to_string(),
             mem_atlas_cache: HashMap::new(),
             sdf_shader: s,
+            font_byte_library: HashMap::new(),
         }
     }
 
+    /// Sets the byte-data for a font to be used by the loader so that fonts don't have to be files
+    ///
+    /// Should only be used on setup, and the memory will be freed once the font is loaded
+    pub fn set_font_bytes(&mut self, name: impl ToString, font_bytes: Vec<u8>) {
+        self.font_byte_library.insert(name.to_string(), font_bytes);
+    }
 
     /// Creates a new FontRenderer object every call
     ///
     /// This should not be called every frame, but is just a way to create a fond renderer with the needed options
-    pub unsafe fn get_font(&mut self, name: &str, from_file_cache: bool) -> FontRenderer {
+    pub unsafe fn get_font(&mut self, name: &str, from_file_cache: bool) -> Result<FontRenderer, String> {
         if !self.fonts.contains_key(name) {
+            if !self.font_byte_library.contains_key(name) {
+                return Err(format!("No font data for '{}' was set. Use the 'set_font_bytes' method", name));
+            }
             let mut b = Instant::now();
             let cache_path = format!("{}{}_{}.cache", self.cache_location, name, FONT_RES);
             let font_path = format!("{}{}.ttf", self.fonts_location, name);
             if !from_file_cache {
                 if !self.mem_atlas_cache.contains_key(name) {
-                    self.mem_atlas_cache.insert(name.to_string(), Font::create_font_data(&font_path));
+                    self.mem_atlas_cache.insert(name.to_string(), Font::create_font_data(self.font_byte_library.remove(name).unwrap()));
                 }
 
                 let ft = Font::load(self.mem_atlas_cache.get(&name.to_string()).unwrap().clone(), self.renderer.clone());
@@ -79,7 +90,7 @@ impl FontManager {
                 self.fonts.insert(name.to_string(), Rc::new(ft));
             } else {
                 if !Path::new(cache_path.as_str()).exists() {
-                    Font::cache(font_path.as_str(), cache_path.as_str());
+                    Font::cache(self.font_byte_library.remove(name).unwrap(), cache_path.as_str());
                     println!("Font took {:?} to cache...", b.elapsed());
                 }
 
@@ -90,7 +101,7 @@ impl FontManager {
                 self.fonts.insert(name.to_string(), Rc::new(ft));
             }
         }
-        FontRenderer::new(self, self.fonts.get(name).unwrap().clone())
+        Ok(FontRenderer::new(self, self.fonts.get(name).unwrap().clone()))
     }
 
     pub fn updated_screen_dims(&mut self, width: i32, height: i32) {
@@ -108,16 +119,16 @@ pub struct Font {
 
 impl Font {
     /// Saves this font's atlas texture to a file
-    pub unsafe fn cache(font_path: &str, cache_path: &str) {
-        std::fs::write(cache_path, Font::create_font_data(font_path)).unwrap();
+    pub unsafe fn cache(font_bytes: Vec<u8>, cache_path: &str) {
+        std::fs::write(cache_path, Font::create_font_data(font_bytes)).unwrap();
     }
 
     /// Creates the atlas texture and char data as bytes by rendering each char using FreeType.
     ///
     /// Calls to this should be minimized
-    pub unsafe fn create_font_data(font_path: &str) -> Vec<u8> {
+    pub unsafe fn create_font_data(font_bytes: Vec<u8>) -> Vec<u8> {
         let lib = freetype::Library::init().unwrap();
-        let face = lib.new_face(font_path, 0).unwrap();
+        let face = lib.new_memory_face(font_bytes, 0).unwrap();
 
         face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
 

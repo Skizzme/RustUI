@@ -12,6 +12,7 @@ pub struct Shader {
     fragment_source: String,
 }
 
+// TODO: GEOMETRY SHADERS!!! (could be cool for stuff like bezier curves)
 impl Shader {
     /// Creates a shader program from the vertex and fragment sources.
     pub unsafe fn new(vertex_source: impl ToString, fragment_source: impl ToString) -> Self {

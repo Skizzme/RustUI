@@ -1,7 +1,8 @@
+use std::path;
 use gl::*;
 
-use crate::asset_manager;
-use crate::components::render::bounds::Bounds;
+use crate::asset_manager::file_contents_str;
+use crate::components::render::bounds::{Bounds, ToBounds};
 use crate::components::render::color::ToColor;
 use crate::components::wrapper::shader::Shader;
 use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2f};
@@ -21,16 +22,16 @@ impl Renderer {
     pub unsafe fn new() -> Self {
         Renderer {
             rounded_rect_shader: Shader::new(
-                asset_manager::file_contents_str("shaders\\rounded_rect\\vertex.glsl").expect("Failed to read shader file"),
-                asset_manager::file_contents_str("shaders\\rounded_rect\\fragment.glsl").expect("Failed to read shader file"),
+                file_contents_str("shaders/rounded_rect/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (rounded_rect/vertex.glsl)"),
+                file_contents_str("shaders/rounded_rect/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (rounded_rect/fragment.glsl)"),
             ),
             texture_shader: Shader::new(
-                asset_manager::file_contents_str("shaders\\test_n\\vertex.glsl").expect("Failed to read shader file"),
-                asset_manager::file_contents_str("shaders\\test_n\\fragment.glsl").expect("Failed to read shader file"),
+                file_contents_str("shaders/test_n/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (test_n/vertex.glsl)"),
+                file_contents_str("shaders/test_n/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (test_n/fragment.glsl)"),
             ),
             color_mult_shader: Shader::new(
-                asset_manager::file_contents_str("shaders\\color_mult\\vertex.glsl").expect("Failed to read shader file"),
-                asset_manager::file_contents_str("shaders\\color_mult\\fragment.glsl").expect("Failed to read shader file"),
+                file_contents_str("shaders/color_mult/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (color_mult/vertex.glsl)"),
+                file_contents_str("shaders/color_mult/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (color_mult/fragment.glsl)"),
             ),
         }
     }
@@ -43,7 +44,8 @@ impl Renderer {
     }
 
     /// Draws a nice rounded rectangle using texture shaders
-    pub unsafe fn draw_rounded_rect(&self, bounds: &Bounds, radius: f32, color: impl ToColor) {
+    pub unsafe fn draw_rounded_rect(&self, mut bounds: impl ToBounds, radius: f32, color: impl ToColor) {
+        let mut bounds = bounds.to_bounds() + Bounds::from_ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
         Enable(BLEND);
         Enable(TEXTURE_2D);
         self.rounded_rect_shader.bind();
@@ -51,15 +53,21 @@ impl Renderer {
         self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
         self.rounded_rect_shader.u_put_float("u_color", color.to_color().rgba());
 
-        self.draw_texture_rect(bounds, 0xffffffff);
+        self.draw_texture_rect(&bounds, 0xffffffff);
 
         self.rounded_rect_shader.unbind();
         Disable(TEXTURE_2D);
         Disable(BLEND);
     }
 
+    /// Draws a circle, using a rounded rect, with the center point at x, y
+    pub unsafe fn draw_circle(&self, x: f32, y: f32, radius: f32, color: impl ToColor) {
+        self.draw_rounded_rect(Bounds::from_ltrb(x-radius, y-radius, x+radius, y+radius), radius, color);
+    }
+
     /// The most boring rectangle
-    pub unsafe fn draw_rect(&self, bounds: &Bounds, color: impl ToColor) {
+    pub unsafe fn draw_rect(&self, bounds: impl ToBounds, color: impl ToColor) {
+        let bounds = bounds.to_bounds();
         Disable(TEXTURE_2D);
         Enable(BLEND);
         color.apply_color();

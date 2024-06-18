@@ -2,7 +2,7 @@ use std::path::Path;
 
 use include_dir::{Dir, include_dir};
 
-static ASSETS: Dir = include_dir!("src\\assets\\");
+static ASSETS: Dir = include_dir!("src/assets/");
 
 pub fn file_contents_str<'a>(path: impl AsRef<Path>) -> Result<&'a str, String> {
     if let Some(file) = ASSETS.get_file(path) {

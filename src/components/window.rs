@@ -4,8 +4,6 @@ use std::time::{Duration, Instant};
 
 use gl::*;
 use gl::types::*;
-// use gl::*;
-// use gl::types::{GLdouble, GLsizei};
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 
 use crate::components::render::bounds::Bounds;
@@ -49,7 +47,7 @@ impl Window {
         p_window.set_all_polling(true);
 
         gl30::load_with(|f_name| glfw.get_proc_address_raw(f_name));
-        gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
+        load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
         let renderer = Rc::new(Renderer::new());
 
@@ -65,7 +63,7 @@ impl Window {
             glfw,
             events,
             unfocused_fps,
-            framebuffer: Framebuffer::new(RGBA, width, height, 0).expect("Failed to create main framebuffer"),
+            framebuffer: Framebuffer::new(RGBA, width, height).expect("Failed to create main framebuffer"),
         }
     }
 
@@ -110,7 +108,7 @@ impl Window {
         self.frame_delta = last_frame.elapsed().as_secs_f64();
     }
 
-    unsafe fn pre_render(&self) {
+    unsafe fn pre_render(&mut self) {
         Viewport(0, 0, self.width as GLsizei, self.height as GLsizei);
 
         check_error("pre");
