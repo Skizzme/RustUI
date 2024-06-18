@@ -112,8 +112,6 @@ impl Window {
     unsafe fn pre_render(&self) {
         Viewport(0, 0, self.width as GLsizei, self.height as GLsizei);
 
-        self.framebuffer.bind();
-        self.framebuffer.clear();
         check_error("pre");
         Clear(DEPTH_BUFFER_BIT);
         MatrixMode(PROJECTION);
@@ -123,6 +121,8 @@ impl Window {
 
         Clear(COLOR_BUFFER_BIT);
         BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+        self.framebuffer.bind();
+        self.framebuffer.clear();
     }
 
     unsafe fn post_render(&mut self) {

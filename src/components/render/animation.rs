@@ -73,7 +73,6 @@ impl Animation {
             self.state = 0f64;
         }
 
-        println!("{}", screen.frame_delta);
         self.state += speed*screen.frame_delta;
         if self.state > 1.0 {self.state = 1.0}
 

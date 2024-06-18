@@ -38,7 +38,6 @@ impl FramebufferMask {
     }
 
     pub unsafe fn render(&self, window: &mut Window) {
-        Enable(BLEND);
         window.renderer.color_mult_shader.bind();
 
         window.renderer.color_mult_shader.u_put_int("texture0", vec![0]);
@@ -51,8 +50,6 @@ impl FramebufferMask {
         ActiveTexture(TEXTURE0);
         self.apply_framebuffer.bind_texture();
 
-        BlendFunc(ONE, ONE_MINUS_SRC_ALPHA);
-        Enable(BLEND);
         window.renderer.draw_texture_rect(&Bounds::from_ltrb(0.0, window.height as f32, window.width as f32, 0.0),0x00000000);
 
         window.renderer.color_mult_shader.unbind();

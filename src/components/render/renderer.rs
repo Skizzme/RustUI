@@ -1,4 +1,5 @@
 use std::fs::read_to_string;
+use std::time::Instant;
 
 use gl::*;
 use gl::types::*;
@@ -37,10 +38,10 @@ impl Renderer {
     }
 
     /// Should be called every frame, and whenever the matrix needs to be stored and sent to shaders
-    pub unsafe fn update_matrix(&self) {
-        let mut model_view_projection_matrix: [f32; 16] = [0.0; 16];
-        GetFloatv(PROJECTION_MATRIX, model_view_projection_matrix.as_mut_ptr());
-        UniformMatrix4fv(self.texture_shader.get_uniform_location("u_projection"), 1, FALSE, model_view_projection_matrix.as_ptr().cast());
+    pub unsafe fn get_transform_matrix(&self) -> [f64; 16] {
+        let mut matrix: [f64; 16] = [0.0; 16];
+        GetDoublev(PROJECTION_MATRIX, matrix.as_mut_ptr());
+        matrix
     }
 
     /// Draws a nice rounded rectangle using texture shaders

@@ -63,7 +63,7 @@ impl GuiScreen for DefaultScreen {
             self.offset_x = self.dragging.3 + (m.mouse_x as f32 - self.dragging.1);
             self.offset_y = self.dragging.4 +(m.mouse_y as f32 - self.dragging.2);
         }
-
+        m.renderer.get_transform_matrix();
         // m.renderer.draw_rounded_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 15.0, 0xff909090);
         // m.renderer.draw_rect(&Bounds::from_xywh(20.0, 20.0, 100.0, 100.0), 0xff909090);
         // m.renderer.draw_rect_outline(&Bounds::from_ltrb(20.0, 20.0, 100.0, 100.0), 2.0, 0xffffffff);

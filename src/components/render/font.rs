@@ -76,9 +76,11 @@ impl FontManager {
                 println!("Font took {:?} to render and load...", b.elapsed());
 
                 self.fonts.insert(name.to_string(), Rc::new(ft));
-            } else if !Path::new(cache_path.as_str()).exists() {
-                Font::cache(font_path.as_str(), cache_path.as_str());
-                println!("Font took {:?} to cache...", b.elapsed());
+            } else {
+                if !Path::new(cache_path.as_str()).exists() {
+                    Font::cache(font_path.as_str(), cache_path.as_str());
+                    println!("Font took {:?} to cache...", b.elapsed());
+                }
 
                 b = Instant::now();
                 let ft = Font::load_from_file(format!("{}_{}.cache", name, FONT_RES).as_str(), self.renderer.clone());
@@ -434,14 +436,14 @@ impl<'a> FontRenderer<'a> {
 
         let atlas = self.font.atlas_tex.as_ref().unwrap();
         Enable(BLEND);
+        Enable(TEXTURE_2D);
         self.x = x*self.i_scale;
         self.y = y*self.i_scale;
         self.start_x = x;
 
-        let mut model_view_projection_matrix: [f64; 16] = [0.0; 16];
-        GetDoublev(PROJECTION_MATRIX, model_view_projection_matrix.as_mut_ptr());
-        self.scaled_factor_x = (model_view_projection_matrix[0]*self.manager.screen_width as f64/2.0) as f32;
-        self.scaled_factor_y = (model_view_projection_matrix[5]*self.manager.screen_height as f64/-2.0) as f32;
+        let mut matrix: [f64; 16] = self.manager.renderer.get_transform_matrix();
+        self.scaled_factor_x = (matrix[0]*self.manager.screen_width as f64/2.0) as f32;
+        self.scaled_factor_y = (matrix[5]*self.manager.screen_height as f64/-2.0) as f32;
         self.comb_scale_x = self.scaled_factor_x*self.scale;
         self.comb_scale_y = self.scaled_factor_y*self.scale;
 

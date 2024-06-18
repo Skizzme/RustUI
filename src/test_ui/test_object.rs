@@ -23,7 +23,7 @@ impl DrawThing {
     pub unsafe fn new(bounds: Bounds, w: &mut Window) -> DrawThing {
         DrawThing {
             bounds,
-            target: 200.0,
+            target: 0.0,
             animator: Animation::new(),
             mask: FramebufferMask::new(w),
         }
@@ -32,24 +32,29 @@ impl DrawThing {
 
 impl Drawable for DrawThing {
     unsafe fn draw<'a>(&mut self, window: &mut Window) {
-        if self.target == 0.0 && self.animator.get_value() <= 1.0 {
-            self.target = 200.0
+        if self.target == 0.0 && self.animator.get_value() <= 0.001 {
+            self.target = 1.0
         }
-        self.animator.animate(self.target as f64, 0.5, AnimationType::Linear, window);
-        window.renderer.draw_rect(&Bounds::from_ltrb(00.0, 0.0, window.width as f32, window.height as f32), 0xff131619);
-        // window.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(30.0, "Test", 20.0, 20.0, 0xff00ff00);
+        self.animator.animate(self.target as f64, 0.5, AnimationType::Sin, window);
+        window.renderer.draw_rect(&Bounds::from_ltrb(20.0, 20.0, 200.0, 100.0), 0xff909090);
+        // let (w, h) = window.fonts.get_font("ProductSans", true).scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);
 
         self.mask.begin_mask();
-        window.renderer.draw_rect(&self.bounds, 0xff00ffff);
+        let (w, h) = window.fonts.get_font("ProductSans", true).scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);
         self.mask.end_mask();
+
         self.mask.begin_draw();
-        window.fonts.get_font("JetBrainsMono-Medium", false).scale_mode(ScaleMode::Quality).draw_string(30.0, "Test", 20.0, 20.0, 0xff00ff00);
+        let l_color = 0xff00ff00;
+        let m_color = 0xff0000ff;
+        let r_color = 0xffff0000;
+        window.renderer.draw_gradient_rect(&Bounds::from_xywh(20.0, 0.0, w/2.0, 100.0), (l_color, m_color, m_color, l_color));
+        window.renderer.draw_gradient_rect(&Bounds::from_xywh(20.0+w/2.0, 0.0, w/2.0, 100.0), (m_color, r_color, r_color, m_color));
         self.mask.end_draw();
+
         self.mask.render(window);
 
-        self.bounds.set_left(-self.animator.get_value() as f32);
         // self.bounds.draw_bounds(window, 0xffffffff);
-        if self.target == 200.0 && self.animator.get_value() >= 199.0 {
+        if self.target == 1.0 && self.animator.get_value() >= 0.999 {
             self.target = 0.0;
         }
     }
