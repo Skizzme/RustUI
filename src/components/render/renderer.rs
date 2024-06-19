@@ -14,7 +14,7 @@ use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2
 pub struct Renderer {
     rounded_rect_shader: Shader,
     pub texture_shader: Shader,
-    pub(crate) color_mult_shader: Shader,
+    pub(crate) mask_shader: Shader,
 }
 
 impl Renderer {
@@ -29,9 +29,9 @@ impl Renderer {
                 file_contents_str("shaders/test_n/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (test_n/vertex.glsl)"),
                 file_contents_str("shaders/test_n/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (test_n/fragment.glsl)"),
             ),
-            color_mult_shader: Shader::new(
-                file_contents_str("shaders/color_mult/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (color_mult/vertex.glsl)"),
-                file_contents_str("shaders/color_mult/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (color_mult/fragment.glsl)"),
+            mask_shader: Shader::new(
+                file_contents_str("shaders/mask/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/vertex.glsl)"),
+                file_contents_str("shaders/mask/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/fragment.glsl)"),
             ),
         }
     }
@@ -69,7 +69,6 @@ impl Renderer {
     pub unsafe fn draw_rect(&self, bounds: impl ToBounds, color: impl ToColor) {
         let bounds = bounds.to_bounds();
         Disable(TEXTURE_2D);
-        Enable(BLEND);
         color.apply_color();
         Begin(QUADS);
         Vertex2f(bounds.left(), bounds.bottom());
@@ -77,14 +76,12 @@ impl Renderer {
         Vertex2f(bounds.right(), bounds.top());
         Vertex2f(bounds.left(), bounds.top());
         End();
-        Disable(BLEND);
     }
 
     /// A rectangle where each corner's color can be different
     ///
     /// Colors are in order of: bottom-left, bottom-right, top-right, top-left
     pub unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor)) {
-        Enable(BLEND);
         Begin(QUADS);
         color.0.apply_color();
         Vertex2f(bounds.left(), bounds.bottom());
@@ -95,13 +92,11 @@ impl Renderer {
         color.3.apply_color();
         Vertex2f(bounds.left(), bounds.top());
         End();
-        Disable(BLEND);
     }
 
     /// Draws only the outline of a rectangle
     pub unsafe fn draw_rect_outline(&self, bounds: &Bounds, width: f32, color: impl ToColor) {
         Disable(TEXTURE_2D);
-        Enable(BLEND);
         color.apply_color();
         LineWidth(width);
         Begin(LINE_STRIP);
@@ -118,7 +113,6 @@ impl Renderer {
     /// The texture should be bound before calling this
     pub unsafe fn draw_texture_rect(&self, bounds: &Bounds, color: impl ToColor) {
         Disable(TEXTURE_2D);
-        Enable(BLEND);
         Begin(QUADS);
         color.apply_color();
         TexCoord2d(0.0, 1.0);

@@ -9,12 +9,13 @@ use crate::asset_manager::file_contents_str;
 use crate::components::elements::Drawable;
 use crate::components::render::animation::{Animation, AnimationType};
 use crate::components::render::bounds::Bounds;
-use crate::components::render::color::Color;
+use crate::components::render::color::{Color, ToColor};
 use crate::components::render::mask::FramebufferMask;
 use crate::components::screen::{Element, ScreenTrait};
 use crate::components::window::Window;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
+use crate::gl_binds::gl30::{BLEND, BlendFunc, Enable, ONE_MINUS_SRC_ALPHA, SRC_ALPHA};
 use crate::test_ui::test_object::DrawThing;
 
 #[allow(unused)]
@@ -70,7 +71,7 @@ impl<'a> ScreenTrait<'a> for TestScreen<'a> {
         let b = Bounds::from_xywh(20.0, 20.0, 150.0, 150.0);
         // w.renderer.draw_rect(b, Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 1.0, 1.0));
         // w.renderer.draw_rounded_rect(b, 20.0, 0xffffffff);
-        // w.renderer.draw_rect(Bounds::from_xywh(0.0, 0.0, w.width as f32, w.height as f32), 0xffffffff);
+        w.renderer.draw_rect(Bounds::from_xywh(0.0, 0.0, w.width as f32, w.height as f32), 0xff100000);
 
         if self.move_log.value() > 0.99 && self.move_log.target() == 1.0 {
             self.move_log.set_target(0.0);
@@ -82,12 +83,17 @@ impl<'a> ScreenTrait<'a> for TestScreen<'a> {
 
         self.mask.begin_mask();
         w.renderer.draw_circle(b.center_x(), b.center_y(), (self.move_log.value() * 150.0) as f32, 0xffffffff);
+        // w.renderer.draw_rect(b, 0xffffffff);
         self.mask.end_mask();
         self.mask.begin_draw();
         // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
-        w.renderer.draw_rect(b, Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 0.6, 1.0).set_alpha_f32(0.9));
-        self.mask.end_mask();
+        //Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 0.6, 1.0)
+        w.renderer.draw_rect(b, 0x99ffffff);
+        self.mask.end_draw();
         self.mask.render(w);
+        Enable(BLEND);
+        w.renderer.draw_rect(b + Bounds::from_xywh(125.0, 0.0, 0.0, 0.0), 0x99ffffff);
+        println!("{:?}", 0x99ffffff.to_color())
     }
     #[allow(unused)]
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {

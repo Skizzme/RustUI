@@ -7,6 +7,7 @@ pub struct MouseEvent {
     // TODO
 }
 
+#[derive(Clone, Copy)]
 pub struct KeyboardEvent {
     key: Key,
     code: Scancode,

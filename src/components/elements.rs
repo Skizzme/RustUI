@@ -15,7 +15,7 @@ pub trait MouseInput {
 }
 
 pub trait KeyboardInput {
-    fn key_action(&self, window: &mut Window, action: KeyboardEvent);
+    fn key_action(&self, window: &mut Window, action: &KeyboardEvent);
 
     fn focused(&self) -> bool;
     fn set_focused(&self, value: bool);

@@ -16,7 +16,7 @@ pub trait ScreenTrait<'a> {
 #[derive(Clone)]
 pub enum Element {
     Drawable(Rc<Mutex<dyn Drawable>>),
-    KeyboardInput(Rc<Mutex<dyn KeyboardInput>>),
+    KeyboardReceiver(Rc<Mutex<dyn KeyboardInput>>),
     MouseInputs(Rc<Mutex<dyn MouseInput>>),
 }
 

@@ -74,6 +74,7 @@ impl Window {
     #[allow(unused_mut)]
     pub unsafe fn frame(&mut self, mut current_screen: Box<&mut dyn ScreenTrait>, last_frame: Instant) {
         self.glfw.poll_events();
+        let mut keyboard_events = Vec::new();
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
                 WindowEvent::CursorPos(x, y) => {
@@ -82,6 +83,7 @@ impl Window {
                 }
                 WindowEvent::Key(key, code, action, mods) => {
                     current_screen.key_press(key, code, action, mods);
+                    keyboard_events.push(KeyboardEvent::new(key, code, action, mods));
                     // for i in 0..current_screen.screen().keyboard_inputs.len() {
                     //     let input = current_screen.screen().keyboard_inputs[i];
                     //     input.key_action(self.(), KeyboardEvent::new(key, code, action, mods))
@@ -114,12 +116,18 @@ impl Window {
 
         current_screen.draw(self);
         // Will also draw elements
-        match current_screen.elements().get(0).unwrap() {
-            Element::Drawable(drawable) => {
-                drawable.lock().unwrap().draw(self);
+        for e in current_screen.elements().iter() {
+            match e {
+                Element::Drawable(drawable) => {
+                    drawable.lock().unwrap().draw(self);
+                }
+                Element::KeyboardReceiver(r) => {
+                    for key in keyboard_events.iter() {
+                        r.lock().unwrap().key_action(self, key)
+                    }
+                }
+                Element::MouseInputs(_) => {}
             }
-            Element::KeyboardInput(_) => {}
-            Element::MouseInputs(_) => {}
         }
 
         self.post_render();
