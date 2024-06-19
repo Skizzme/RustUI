@@ -10,7 +10,7 @@ use crate::components::events::KeyboardEvent;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
-use crate::components::screen::ScreenTrait;
+use crate::components::screen::{Element, ScreenTrait};
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::gl_binds::gl30;
 use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
@@ -114,6 +114,13 @@ impl Window {
 
         current_screen.draw(self);
         // Will also draw elements
+        match current_screen.elements().get(0).unwrap() {
+            Element::Drawable(drawable) => {
+                drawable.lock().unwrap().draw(self);
+            }
+            Element::KeyboardInput(_) => {}
+            Element::MouseInputs(_) => {}
+        }
 
         self.post_render();
         self.frame_delta = last_frame.elapsed().as_secs_f64();

@@ -1,4 +1,6 @@
 use std::path;
+use std::rc::Rc;
+use std::sync::Mutex;
 use std::time::{Instant, UNIX_EPOCH};
 
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
@@ -9,7 +11,7 @@ use crate::components::render::animation::{Animation, AnimationType};
 use crate::components::render::bounds::Bounds;
 use crate::components::render::color::Color;
 use crate::components::render::mask::FramebufferMask;
-use crate::components::screen::{Elements, ScreenTrait};
+use crate::components::screen::{Element, ScreenTrait};
 use crate::components::window::Window;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
@@ -28,16 +30,14 @@ pub struct TestScreen<'a> {
     offset_y: f32,
     dragging: (bool, f32, f32, f32, f32),
     scroll: f32,
-    test_draw: DrawThing,
+    test_draw: Rc<Mutex<DrawThing>>,
     mask: FramebufferMask,
-    elements: Elements<'a>,
+    elements: Vec<Element>,
+    dummy: &'a str,
 }
 
 impl<'a> TestScreen<'a> {
     pub unsafe fn new(window: &mut Window) -> Self {
-        let mut s = Elements::empty();
-        let d = DrawThing::new(Bounds::from_xywh(10.0, 10.0, 200.0, 100.0), window);
-
         let mut ds = TestScreen {
             move_progressive: Animation::new(),
             move_log: Animation::new(),
@@ -50,17 +50,17 @@ impl<'a> TestScreen<'a> {
             offset_y: 0.0,
             dragging: (false, 0.0, 0.0, 0.0, 0.0),
             scroll: 50.0,
-            test_draw: d,
+            test_draw: Rc::new(Mutex::new(DrawThing::new(Bounds::from_xywh(10.0, 10.0, 200.0, 100.0), window))),
             mask: FramebufferMask::new(window),
-            elements: s,
+            elements: vec![],
+            dummy: "",
         };
-        let a = &ds.test_draw as &'a dyn Drawable;
-        ds.elements.drawables.push(a);
+        ds.elements.push(Element::Drawable(ds.test_draw.clone()));
         ds
     }
 }
 
-impl<'a> ScreenTrait for TestScreen<'a> {
+impl<'a> ScreenTrait<'a> for TestScreen<'a> {
     unsafe fn draw(&mut self, w: &mut Window) {
         if self.dragging.0 {
             self.offset_x = self.dragging.3 + (w.mouse_x - self.dragging.1);
@@ -85,7 +85,6 @@ impl<'a> ScreenTrait for TestScreen<'a> {
         self.mask.end_mask();
         self.mask.begin_draw();
         // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
-        self.test_draw.draw(w);
         w.renderer.draw_rect(b, Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 0.6, 1.0).set_alpha_f32(0.9));
         self.mask.end_mask();
         self.mask.render(w);
@@ -131,7 +130,7 @@ impl<'a> ScreenTrait for TestScreen<'a> {
         }
     }
 
-    fn elements(&self) -> &Elements {
-        &self.elements
+    fn elements(&self) -> Vec<Element> {
+        self.elements.clone()
     }
 }
