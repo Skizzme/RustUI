@@ -71,6 +71,8 @@ impl FontManager {
     /// Creates a new FontRenderer object every call
     ///
     /// This should not be called every frame, but is just a way to create a fond renderer with the needed options
+    ///
+    /// `name` references the name specified when calling `set_font_bytes`
     pub unsafe fn get_font(&mut self, name: &str, from_file_cache: bool) -> Result<FontRenderer, String> {
         if !self.fonts.contains_key(name) {
             if !self.font_byte_library.contains_key(name) {

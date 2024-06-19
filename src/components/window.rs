@@ -5,11 +5,12 @@ use std::time::{Duration, Instant};
 use gl::*;
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
+use crate::components::events::KeyboardEvent;
 
 use crate::components::render::bounds::Bounds;
 use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
-use crate::components::screen::GuiScreen;
+use crate::components::screen::ScreenTrait;
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::gl_binds::gl30;
 use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
@@ -71,7 +72,7 @@ impl Window {
     ///
     /// Polls events, tracks frame_delta, and calls `draw` on `current_screen`
     #[allow(unused_mut)]
-    pub unsafe fn frame(&mut self, mut current_screen: Box<&mut dyn GuiScreen>, last_frame: Instant) {
+    pub unsafe fn frame(&mut self, mut current_screen: Box<&mut dyn ScreenTrait>, last_frame: Instant) {
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
@@ -79,7 +80,16 @@ impl Window {
                     self.mouse_x = x as f32;
                     self.mouse_y = y as f32;
                 }
-                WindowEvent::Key(key, code, action, mods) => current_screen.key_press(key, code, action, mods),
+                WindowEvent::Key(key, code, action, mods) => {
+                    current_screen.key_press(key, code, action, mods);
+                    // for i in 0..current_screen.screen().keyboard_inputs.len() {
+                    //     let input = current_screen.screen().keyboard_inputs[i];
+                    //     input.key_action(self.(), KeyboardEvent::new(key, code, action, mods))
+                    // }
+                    // for mut input in current_screen.screen().keyboard_inputs {
+                        // let a = self;
+                    // }
+                },
                 WindowEvent::Size(width, height) => {
                     self.width = width;
                     self.height = height;
@@ -103,6 +113,7 @@ impl Window {
         }
 
         current_screen.draw(self);
+        // Will also draw elements
 
         self.post_render();
         self.frame_delta = last_frame.elapsed().as_secs_f64();

@@ -1,3 +1,5 @@
+use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
+
 #[allow(unused)]
 pub struct MouseEvent {
     scroll: i32,
@@ -6,5 +8,28 @@ pub struct MouseEvent {
 }
 
 pub struct KeyboardEvent {
-    // TODO
+    key: Key,
+    code: Scancode,
+    action: Action,
+    mods: Modifiers,
+}
+
+impl KeyboardEvent {
+    pub fn from_windowevent(event: WindowEvent) -> Option<KeyboardEvent> {
+        match event {
+            WindowEvent::Key(key, code, action, mods)=> {
+                Some(KeyboardEvent::new(key, code, action, mods))
+            }
+            _ => None,
+        }
+    }
+
+    pub fn new(key: Key, code: Scancode, action: Action, mods: Modifiers) -> KeyboardEvent {
+        KeyboardEvent {
+            key,
+            code,
+            action,
+            mods
+        }
+    }
 }

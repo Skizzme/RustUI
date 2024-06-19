@@ -20,7 +20,7 @@ use glfw::WindowMode;
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::window::Window;
-use RustUI::test_ui::default_screen::DefaultScreen;
+use RustUI::test_ui::default_screen::TestScreen;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -32,7 +32,7 @@ fn main() {
 
     unsafe {
         let mut window = Window::create("Test", 1920/2, 1080/2, "src/assets/fonts/", "", Vec::new(), WindowMode::Windowed, 30);
-        let mut current_screen = DefaultScreen::new(&mut window);
+        let mut current_screen = TestScreen::new(&mut window);
         let mut last_frame = Instant::now();
         let mut frames = 0;
         let mut last_fps = Instant::now();

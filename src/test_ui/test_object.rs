@@ -17,7 +17,7 @@ pub struct DrawThing {
 
 impl DrawThing {
     pub unsafe fn new(bounds: Bounds, w: &mut Window) -> DrawThing {
-        w.fonts.set_font_bytes("ProductSans", read("src/assets/fonts/ProductSans.ttf".replace("/", path::MAIN_SEPARATOR_STR)).unwrap());
+        w.fonts.set_font_bytes("ProductSans", read("src/assets/fonts/Comfortaa-Light.ttf".replace("/", path::MAIN_SEPARATOR_STR)).unwrap());
         DrawThing {
             bounds,
             target: 0.0,

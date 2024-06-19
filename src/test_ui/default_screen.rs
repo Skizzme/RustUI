@@ -9,14 +9,14 @@ use crate::components::render::animation::{Animation, AnimationType};
 use crate::components::render::bounds::Bounds;
 use crate::components::render::color::Color;
 use crate::components::render::mask::FramebufferMask;
-use crate::components::screen::GuiScreen;
+use crate::components::screen::{Elements, ScreenTrait};
 use crate::components::window::Window;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::test_ui::test_object::DrawThing;
 
 #[allow(unused)]
-pub struct DefaultScreen {
+pub struct TestScreen<'a> {
     move_progressive: Animation,
     move_log: Animation,
     move_cubic: Animation,
@@ -30,11 +30,15 @@ pub struct DefaultScreen {
     scroll: f32,
     test_draw: DrawThing,
     mask: FramebufferMask,
+    elements: Elements<'a>,
 }
 
-impl DefaultScreen {
+impl<'a> TestScreen<'a> {
     pub unsafe fn new(window: &mut Window) -> Self {
-        DefaultScreen {
+        let mut s = Elements::empty();
+        let d = DrawThing::new(Bounds::from_xywh(10.0, 10.0, 200.0, 100.0), window);
+
+        let mut ds = TestScreen {
             move_progressive: Animation::new(),
             move_log: Animation::new(),
             move_cubic: Animation::new(),
@@ -46,13 +50,17 @@ impl DefaultScreen {
             offset_y: 0.0,
             dragging: (false, 0.0, 0.0, 0.0, 0.0),
             scroll: 50.0,
-            test_draw: DrawThing::new(Bounds::from_xywh(10.0, 10.0, 200.0, 100.0), window),
+            test_draw: d,
             mask: FramebufferMask::new(window),
-        }
+            elements: s,
+        };
+        let a = &ds.test_draw as &'a dyn Drawable;
+        ds.elements.drawables.push(a);
+        ds
     }
 }
 
-impl GuiScreen for DefaultScreen {
+impl<'a> ScreenTrait for TestScreen<'a> {
     unsafe fn draw(&mut self, w: &mut Window) {
         if self.dragging.0 {
             self.offset_x = self.dragging.3 + (w.mouse_x - self.dragging.1);
@@ -121,5 +129,9 @@ impl GuiScreen for DefaultScreen {
             WindowEvent::ContentScale(_, _) => {}
             _ => {}
         }
+    }
+
+    fn elements(&self) -> &Elements {
+        &self.elements
     }
 }

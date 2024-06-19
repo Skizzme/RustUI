@@ -15,18 +15,12 @@ pub trait MouseInput {
 }
 
 pub trait KeyboardInput {
-    fn key_action(&mut self, window: &mut Window, action: KeyboardEvent);
+    fn key_action(&self, window: &mut Window, action: KeyboardEvent);
 
-    fn focused(&mut self) -> bool;
-    fn set_focused(&mut self, value: bool);
+    fn focused(&self) -> bool;
+    fn set_focused(&self, value: bool);
 
-    /// Returns the element to be focused when `Tab` is pressed
-    fn next(&mut self) -> Self;
-
-    /// Returns the element to be focused when `Shift+Tab` is pressed
-    fn previous(&mut self) -> Self;
-
-    fn bounds(&mut self) -> &Bounds;
+    fn bounds(&self) -> &Bounds;
 }
 
 /// A trait for anything to implement that might have multiple elements
