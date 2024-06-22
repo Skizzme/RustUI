@@ -1,10 +1,12 @@
 extern crate freetype;
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::rc::Rc;
-use std::time::Instant;
+use std::sync::mpsc::{channel, SendError};
+use std::time::{Duration, Instant};
 
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
@@ -21,14 +23,41 @@ use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
 
 const FONT_RES: u32 = 64u32;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, PartialOrd)]
 struct CacheGlyph {
+    id: usize,
     bytes: Vec<u8>,
     width: i32,
     height: i32,
     advance: i32,
     bearing_x: i32,
     top: i32,
+}
+
+impl Ord for CacheGlyph {
+    fn cmp(&self, other: &Self) -> Ordering {
+        todo!()
+    }
+
+    fn max(self, other: Self) -> Self where Self: Sized {
+        if self.id > other.id {
+            self
+        } else {
+            other
+        }
+    }
+
+    fn min(self, other: Self) -> Self where Self: Sized {
+        if self.id < other.id {
+            self
+        } else {
+            other
+        }
+    }
+
+    fn clamp(self, min: Self, max: Self) -> Self where Self: Sized, Self: PartialOrd {
+        todo!()
+    }
 }
 
 pub struct FontManager {
@@ -129,44 +158,94 @@ impl Font {
     ///
     /// Calls to this should be minimized
     pub unsafe fn create_font_data(font_bytes: Vec<u8>) -> Vec<u8> {
-        let lib = freetype::Library::init().unwrap();
-        let face = lib.new_memory_face(font_bytes, 0).unwrap();
 
-        face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
-
-        let mut cache_glyphs = Vec::new();
+        let mut cache_glyphs: Vec<CacheGlyph> = Vec::new();
         let mut max_height = 0;
 
         PixelStorei(UNPACK_ALIGNMENT, 1);
-        for i in 0..128 {
-            face.load_char(i, LoadFlag::RENDER).unwrap();
 
-            let glyph = face.glyph();
+        let (sender, receiver) = channel();
 
-            glyph.render_glyph(RenderMode::Sdf).unwrap();
+        let thread_count = 32;
+        let mut threads = Vec::new();
+        for j in 0..thread_count {
+            let total_length = 128;
+            let batch_size = total_length / thread_count;
+            let offset = j*batch_size;
+            let t_sender = sender.clone();
+            let st = Instant::now();
+            let t_bytes = font_bytes.clone();
+            let thread = std::thread::spawn(move || {
+                let lib = freetype::Library::init().unwrap();
+                let face = lib.new_memory_face(t_bytes, 0).unwrap();
 
-            let width = glyph.bitmap().width();
-            let height = glyph.bitmap().rows();
-            if max_height < height {
-                max_height = height;
-            }
-            let mut bytes = Vec::new();
-            bytes.write(glyph.bitmap().buffer()).unwrap();
+                face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
+                for i in offset..offset + batch_size {
+                    face.load_char(i, LoadFlag::RENDER).unwrap();
 
-            cache_glyphs.push(
-                CacheGlyph {
-                    bytes,
-                    width,
-                    height,
-                    advance: glyph.advance().x >> 6,
-                    bearing_x: glyph.metrics().horiBearingX >> 6,
-                    top: glyph.bitmap_top(),
+                    let glyph = face.glyph();
+
+                    glyph.render_glyph(RenderMode::Sdf).unwrap();
+
+                    let width = glyph.bitmap().width();
+                    let height = glyph.bitmap().rows();
+                    // if max_height < height {
+                    //     max_height = height;
+                    // }
+                    let mut bytes = Vec::new();
+                    bytes.write(glyph.bitmap().buffer()).unwrap();
+
+                    match t_sender.send(CacheGlyph {
+                        id: i,
+                        bytes,
+                        width,
+                        height,
+                        advance: glyph.advance().x >> 6,
+                        bearing_x: glyph.metrics().horiBearingX >> 6,
+                        top: glyph.bitmap_top(),
+                    }) {
+                        Ok(_) => {}
+                        Err(err) => {
+                            println!("{}", err);
+                        }
+                    };
+                    // cache_glyphs.push(
+                    //     CacheGlyph {
+                    //         bytes,
+                    //         width,
+                    //         height,
+                    //         advance: glyph.advance().x >> 6,
+                    //         bearing_x: glyph.metrics().horiBearingX >> 6,
+                    //         top: glyph.bitmap_top(),
+                    //     }
+                    // )
                 }
-            )
+            });
+            threads.push(thread);
+        }
+
+        loop {
+            let mut finished_count = 0;
+            for i in 0..thread_count {
+                if !threads[i].is_finished() {
+                    break;
+                }
+                finished_count += 1;
+            }
+            if let Ok(recv) = receiver.try_recv() {
+                cache_glyphs.push(recv);
+            }
+            if finished_count == thread_count {
+                break;
+            }
         }
 
         let mut meta_data: Vec<u8> = Vec::new();
+        cache_glyphs.sort();
         for c_glyph in cache_glyphs.as_slice() {
+            if max_height < c_glyph.height {
+                max_height = c_glyph.height;
+            }
             meta_data.write(&c_glyph.width.to_be_bytes()).unwrap();
             meta_data.write(&c_glyph.height.to_be_bytes()).unwrap();
             meta_data.write(&c_glyph.advance.to_be_bytes()).unwrap();

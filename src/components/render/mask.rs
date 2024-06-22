@@ -8,6 +8,8 @@ use crate::gl_binds::gl30::{ActiveTexture, ALPHA, BLEND, BlendFunc, Disable, Ena
 /// Creates a mask based off of brightness in the mask framebuffer, applied onto the draw framebuffer
 ///
 /// If the mask is fully white, then the draw framebuffer will show. If it's black it wont
+///
+/// Make sure ALL drawing within the mask and apply layer DO NOT HAVE BLEND ENABLED
 pub struct FramebufferMask {
     mask_framebuffer: Framebuffer,
     apply_framebuffer: Framebuffer,

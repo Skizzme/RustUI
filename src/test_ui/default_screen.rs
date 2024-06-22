@@ -61,7 +61,7 @@ impl<'a> TestScreen<'a> {
     }
 }
 
-impl<'a> ScreenTrait<'a> for TestScreen<'a> {
+impl<'a> ScreenTrait for TestScreen<'a> {
     unsafe fn draw(&mut self, w: &mut Window) {
         if self.dragging.0 {
             self.offset_x = self.dragging.3 + (w.mouse_x - self.dragging.1);
@@ -87,13 +87,11 @@ impl<'a> ScreenTrait<'a> for TestScreen<'a> {
         self.mask.end_mask();
         self.mask.begin_draw();
         // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
-        //Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 0.6, 1.0)
-        w.renderer.draw_rect(b, 0x99ffffff);
+        w.renderer.draw_rect(b, Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 0.6, 1.0).set_alpha_f32(0.5));
         self.mask.end_draw();
         self.mask.render(w);
         Enable(BLEND);
         w.renderer.draw_rect(b + Bounds::from_xywh(125.0, 0.0, 0.0, 0.0), 0x99ffffff);
-        println!("{:?}", 0x99ffffff.to_color())
     }
     #[allow(unused)]
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {

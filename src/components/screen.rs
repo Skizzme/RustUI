@@ -5,7 +5,7 @@ use crate::components::elements::{Drawable, KeyboardInput, MouseInput};
 
 use crate::components::window::Window;
 
-pub trait ScreenTrait<'a> {
+pub trait ScreenTrait {
     // TODO: Maybe make some sort of pre-render process, allowing for off-screen rendering of framebuffers / effects like blur etc
     unsafe fn draw(&mut self, window: &mut Window);
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers);
