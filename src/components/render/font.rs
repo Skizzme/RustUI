@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::rc::Rc;
-use std::sync::mpsc::{channel, SendError};
-use std::time::{Duration, Instant};
+use std::sync::mpsc::channel;
+use std::time::Instant;
 
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
@@ -21,7 +21,7 @@ use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
 
-const FONT_RES: u32 = 64u32;
+const FONT_RES: u32 = 48u32;
 
 #[derive(Debug, Eq, PartialEq, PartialOrd)]
 struct CacheGlyph {
@@ -116,18 +116,18 @@ impl FontManager {
                 }
 
                 let ft = Font::load(self.mem_atlas_cache.get(&name.to_string()).unwrap().clone(), self.renderer.clone());
-                println!("Font took {:?} to render and load...", b.elapsed());
+                println!("Font '{}' took {:?} to render and load...", name, b.elapsed());
 
                 self.fonts.insert(name.to_string(), Rc::new(ft));
             } else {
                 if !Path::new(cache_path.as_str()).exists() {
                     Font::cache(self.font_byte_library.remove(name).unwrap(), cache_path.as_str());
-                    println!("Font took {:?} to cache...", b.elapsed());
+                    println!("Font '{}' took {:?} to cache...", name, b.elapsed());
                 }
 
                 b = Instant::now();
                 let ft = Font::load_from_file(format!("{}_{}.cache", name, FONT_RES).as_str(), self.renderer.clone());
-                println!("Font took {:?} to load...", b.elapsed());
+                println!("Font '{}' took {:?} to load...", name, b.elapsed());
 
                 self.fonts.insert(name.to_string(), Rc::new(ft));
             }
@@ -154,7 +154,7 @@ impl Font {
         std::fs::write(cache_path, Font::create_font_data(font_bytes)).unwrap();
     }
 
-    /// Creates the atlas texture and char data as bytes by rendering each char using FreeType.
+    /// Creates the atlas texture and char data as bytes by rendering each char using FreeType using multithreading for faster speeds.
     ///
     /// Calls to this should be minimized
     pub unsafe fn create_font_data(font_bytes: Vec<u8>) -> Vec<u8> {
@@ -166,8 +166,11 @@ impl Font {
 
         let (sender, receiver) = channel();
 
-        let thread_count = 32;
+        let thread_count = 32; // Seems to provide the best results
         let mut threads = Vec::new();
+        let m_lib = freetype::Library::init().unwrap();
+        let m_face = m_lib.new_memory_face(font_bytes.clone(), 0).unwrap();
+        println!("{} {} {}", m_face.num_faces(), m_face.num_charmaps(), m_face.num_glyphs());
         for j in 0..thread_count {
             let total_length = 128;
             let batch_size = total_length / thread_count;
@@ -189,9 +192,7 @@ impl Font {
 
                     let width = glyph.bitmap().width();
                     let height = glyph.bitmap().rows();
-                    // if max_height < height {
-                    //     max_height = height;
-                    // }
+
                     let mut bytes = Vec::new();
                     bytes.write(glyph.bitmap().buffer()).unwrap();
 
@@ -209,16 +210,6 @@ impl Font {
                             println!("{}", err);
                         }
                     };
-                    // cache_glyphs.push(
-                    //     CacheGlyph {
-                    //         bytes,
-                    //         width,
-                    //         height,
-                    //         advance: glyph.advance().x >> 6,
-                    //         bearing_x: glyph.metrics().horiBearingX >> 6,
-                    //         top: glyph.bitmap_top(),
-                    //     }
-                    // )
                 }
             });
             threads.push(thread);
@@ -442,6 +433,7 @@ impl<'a> FontRenderer<'a> {
         (self.line_width*self.scale, str_height*self.scale)
     }
 
+    // todo make this match scale mode
     pub fn get_scaled_value(&self, value: f32, scale_factor: f32) -> f32 {
         (value * scale_factor).floor() / scale_factor
     }
@@ -550,7 +542,9 @@ impl<'a> FontRenderer<'a> {
         self.manager.sdf_shader.bind();
 
         atlas.bind();
-        self.manager.sdf_shader.u_put_float("u_smoothing", vec![(0.25 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)]);
+        // was 0.25 / ... but .35 seems better?
+        //(0.30 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)
+        self.manager.sdf_shader.u_put_float("u_smoothing", vec![(0.35 / (size / 4.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)]);
         self.manager.sdf_shader.u_put_float("atlas_width", vec![atlas.width as f32]);
         self.manager.sdf_shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
     }

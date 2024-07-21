@@ -1,8 +1,9 @@
 use std::rc::Rc;
 use std::sync::Mutex;
-use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
-use crate::components::elements::{Drawable, KeyboardInput, MouseInput};
 
+use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
+
+use crate::components::elements::{Drawable, KeyboardInput, MouseInput};
 use crate::components::window::Window;
 
 pub trait ScreenTrait {

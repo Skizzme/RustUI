@@ -9,13 +9,13 @@ use crate::asset_manager::file_contents_str;
 use crate::components::elements::Drawable;
 use crate::components::render::animation::{Animation, AnimationType};
 use crate::components::render::bounds::Bounds;
-use crate::components::render::color::{Color, ToColor};
+use crate::components::render::color::Color;
 use crate::components::render::mask::FramebufferMask;
 use crate::components::screen::{Element, ScreenTrait};
 use crate::components::window::Window;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl30::{BLEND, BlendFunc, Enable, ONE_MINUS_SRC_ALPHA, SRC_ALPHA};
+use crate::gl_binds::gl30::{BLEND, Enable};
 use crate::test_ui::test_object::DrawThing;
 
 #[allow(unused)]

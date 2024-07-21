@@ -35,6 +35,7 @@ impl Drawable for DrawThing {
         self.animator.animate_target(self.target as f64, 0.5, AnimationType::Sin, window);
         window.renderer.draw_rect(&Bounds::from_ltrb(20.0, 20.0, 200.0, 100.0), 0xff909090);
         // let (w, h) = window.fonts.get_font("ProductSans", true).scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);
+        let (w, _h) = window.fonts.get_font("ProductSans", false).unwrap().scale_mode(ScaleMode::Quality).draw_string(60.0, "A", 20.0, 20.0, 0xffffffff);
 
         self.mask.begin_mask();
         let (w, _h) = window.fonts.get_font("ProductSans", false).unwrap().scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);

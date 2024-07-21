@@ -5,8 +5,8 @@ use std::time::{Duration, Instant};
 use gl::*;
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
-use crate::components::events::KeyboardEvent;
 
+use crate::components::events::KeyboardEvent;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
@@ -97,6 +97,8 @@ impl Window {
                     self.height = height;
                     self.fonts.screen_width = width;
                     self.fonts.screen_height = height;
+                    self.framebuffer.delete();
+                    self.framebuffer = Framebuffer::new(RGBA, width, height).expect("Failed to create main framebuffer");
                 }
                 e => {
                     current_screen.event(e, self);
