@@ -1,6 +1,7 @@
 extern crate freetype;
 
 use std::cmp::Ordering;
+use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
@@ -9,7 +10,7 @@ use std::sync::mpsc::channel;
 use std::time::Instant;
 
 use freetype::face::LoadFlag;
-use freetype::RenderMode;
+use freetype::{GlyphMetrics, RenderMode};
 use gl::*;
 use gl::types::GLdouble;
 
@@ -23,7 +24,7 @@ use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
 
 const FONT_RES: u32 = 48u32;
 
-#[derive(Debug, Eq, PartialEq, PartialOrd)]
+#[derive(Debug, Eq, PartialEq)]
 struct CacheGlyph {
     id: usize,
     bytes: Vec<u8>,
@@ -32,6 +33,17 @@ struct CacheGlyph {
     advance: i32,
     bearing_x: i32,
     top: i32,
+}
+impl PartialOrd<Self> for CacheGlyph {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        if self.id > other.id {
+            Some(Greater)
+        } else if self.id < other.id {
+            Some(Less)
+        } else {
+            Some(Equal)
+        }
+    }
 }
 
 impl Ord for CacheGlyph {
@@ -93,35 +105,31 @@ impl FontManager {
     /// Sets the byte-data for a font to be used by the loader so that fonts don't have to be files
     ///
     /// Should only be used on setup, and the memory will be freed once the font is loaded
-    pub fn set_font_bytes(&mut self, name: impl ToString, font_bytes: Vec<u8>) {
+    pub fn set_font_bytes(&mut self, name: impl ToString, font_bytes: Vec<u8>) -> &mut FontManager {
         self.font_byte_library.insert(name.to_string(), font_bytes);
+        self
     }
 
-    /// Creates a new FontRenderer object every call
-    ///
-    /// This should not be called every frame, but is just a way to create a fond renderer with the needed options
-    ///
-    /// `name` references the name specified when calling `set_font_bytes`
-    pub unsafe fn get_font(&mut self, name: &str, from_file_cache: bool) -> Result<FontRenderer, String> {
-        if !self.fonts.contains_key(name) {
-            if !self.font_byte_library.contains_key(name) {
-                return Err(format!("No font data for '{}' was set. Use the 'set_font_bytes' method", name));
+    pub unsafe fn load_font(&mut self, name: impl ToString, from_cache: bool) -> Option<String> {
+        let name = name.to_string();
+        if !self.fonts.contains_key(&name) {
+            if !self.font_byte_library.contains_key(&name) {
+                return Some(format!("No font data for '{}' was set. Use the 'set_font_bytes' method", &name));
             }
             let mut b = Instant::now();
-            let cache_path = format!("{}{}_{}.cache", self.cache_location, name, FONT_RES);
-            let font_path = format!("{}{}.ttf", self.fonts_location, name);
-            if !from_file_cache {
-                if !self.mem_atlas_cache.contains_key(name) {
-                    self.mem_atlas_cache.insert(name.to_string(), Font::create_font_data(self.font_byte_library.remove(name).unwrap()));
+            let cache_path = format!("{}{}_{}.cache", self.cache_location, &name, FONT_RES);
+            if !from_cache {
+                if !self.mem_atlas_cache.contains_key(&name) {
+                    self.mem_atlas_cache.insert(name.to_string(), Font::create_font_data(self.font_byte_library.remove(&name).unwrap()));
                 }
 
-                let ft = Font::load(self.mem_atlas_cache.get(&name.to_string()).unwrap().clone(), self.renderer.clone());
-                println!("Font '{}' took {:?} to render and load...", name, b.elapsed());
+                let ft = Font::load(self.mem_atlas_cache.get(&name).unwrap().clone(), self.renderer.clone());
+                println!("Font '{}' took {:?} to render and load...", &name, b.elapsed());
 
-                self.fonts.insert(name.to_string(), Rc::new(ft));
+                self.fonts.insert(name, Rc::new(ft));
             } else {
                 if !Path::new(cache_path.as_str()).exists() {
-                    Font::cache(self.font_byte_library.remove(name).unwrap(), cache_path.as_str());
+                    Font::cache(self.font_byte_library.remove(&name).unwrap(), cache_path.as_str());
                     println!("Font '{}' took {:?} to cache...", name, b.elapsed());
                 }
 
@@ -131,6 +139,18 @@ impl FontManager {
 
                 self.fonts.insert(name.to_string(), Rc::new(ft));
             }
+        }
+        return None
+    }
+
+    /// Creates a new FontRenderer object every call
+    ///
+    /// This should not be called every frame, but is just a way to create a fond renderer with the needed options
+    ///
+    /// `name` references the name specified when calling `set_font_bytes`
+    pub unsafe fn get_font(&mut self, name: &str) -> Result<FontRenderer, String> {
+        if !self.fonts.contains_key(name) {
+            self.load_font(name, false);
         }
         Ok(FontRenderer::new(self, self.fonts.get(name).unwrap().clone()))
     }
@@ -196,6 +216,7 @@ impl Font {
                     let mut bytes = Vec::new();
                     bytes.write(glyph.bitmap().buffer()).unwrap();
 
+                    // println!("{:?} {:?} {:?}", i as u8 as char, glyph.metrics().vertBearingX >> 6, glyph.metrics().vertBearingY >> 6);
                     match t_sender.send(CacheGlyph {
                         id: i,
                         bytes,
@@ -435,7 +456,10 @@ impl<'a> FontRenderer<'a> {
 
     // todo make this match scale mode
     pub fn get_scaled_value(&self, value: f32, scale_factor: f32) -> f32 {
-        (value * scale_factor).floor() / scale_factor
+        match self.scale_mode {
+            ScaleMode::Normal => (value * scale_factor) / scale_factor,
+            ScaleMode::Quality => (value * scale_factor).ceil() / scale_factor
+        }
     }
 
     /// Returns the necessary dimensions of a glyph / character
@@ -468,7 +492,10 @@ impl<'a> FontRenderer<'a> {
             }
         };
 
-        let (c_w, c_h) = (((glyph.advance - glyph.bearing_x) as f32).floor(), (glyph.height as f32).floor());
+        let (c_w, c_h) = match self.scale_mode {
+            ScaleMode::Normal => ((glyph.advance - glyph.bearing_x) as f32, glyph.height as f32),
+            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil())
+        };
         let mut should_render = 0u32;
         if self.y > self.manager.screen_height as f32 * self.i_scale {
             should_render = 2;
@@ -505,19 +532,22 @@ impl<'a> FontRenderer<'a> {
             }
         };
         self.font.renderer.draw_texture_rect_uv(
-            &Bounds::from_ltrb(x, pos_y, right, bottom),
+            &Bounds::from_ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom),
             &Bounds::from_ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
             0xffffff,
         );
 
-        (((glyph.advance - glyph.bearing_x) as f32).floor(), (glyph.height as f32).floor())
+        match self.scale_mode {
+            ScaleMode::Normal => (((glyph.advance - glyph.bearing_x) as f32), (glyph.height as f32)),
+            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil())
+        }
     }
 
     /// Sets this FontRenderer up for immediate GL drawing, setting shader uniforms, x and y offsets, scaling etc
     pub unsafe fn begin(&mut self, size: f32, x: f32, y: f32) {
         self.scale = match self.scale_mode {
             ScaleMode::Normal => {size/FONT_RES as f32}
-            ScaleMode::Quality => {size.floor()/FONT_RES as f32}
+            ScaleMode::Quality => {size.ceil()/FONT_RES as f32}
         };
         self.i_scale = 1.0/self.scale;
 
@@ -543,8 +573,9 @@ impl<'a> FontRenderer<'a> {
 
         atlas.bind();
         // was 0.25 / ... but .35 seems better?
-        //(0.30 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)
-        self.manager.sdf_shader.u_put_float("u_smoothing", vec![(0.35 / (size / 4.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4)]);
+        //(0.30 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4) // original smoothing
+        let smoothing = (0.35 / (size / 6.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.25);
+        self.manager.sdf_shader.u_put_float("u_smoothing", vec![smoothing]);
         self.manager.sdf_shader.u_put_float("atlas_width", vec![atlas.width as f32]);
         self.manager.sdf_shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
     }
