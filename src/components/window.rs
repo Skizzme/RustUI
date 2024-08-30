@@ -12,7 +12,7 @@ use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::screen::{Element, ScreenTrait};
 use crate::components::wrapper::framebuffer::Framebuffer;
-use crate::gl_binds::gl30;
+use crate::gl_binds::{gl11, gl20, gl30};
 use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
 
 /// A wrapper for the GLFW window
@@ -48,6 +48,9 @@ impl Window {
         p_window.set_all_polling(true);
 
         gl30::load_with(|f_name| glfw.get_proc_address_raw(f_name));
+        gl11::load_with(|f_name| glfw.get_proc_address_raw(f_name));
+        gl20::load_with(|f_name| glfw.get_proc_address_raw(f_name));
+        gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
         let renderer = Rc::new(Renderer::new());

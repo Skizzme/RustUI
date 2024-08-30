@@ -15,7 +15,8 @@ use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2
 pub struct Renderer {
     rounded_rect_shader: Shader,
     pub texture_shader: Shader,
-    pub(crate) mask_shader: Shader,
+    pub mask_shader: Shader,
+    pub circle_shader: Shader,
 }
 
 impl Renderer {
@@ -33,6 +34,10 @@ impl Renderer {
             mask_shader: Shader::new(
                 file_contents_str("shaders/mask/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/vertex.glsl)"),
                 file_contents_str("shaders/mask/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/fragment.glsl)"),
+            ),
+            circle_shader: Shader::new(
+                file_contents_str("shaders/circle/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/vertex.glsl)"),
+                file_contents_str("shaders/circle/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/fragment.glsl)"),
             ),
         }
     }

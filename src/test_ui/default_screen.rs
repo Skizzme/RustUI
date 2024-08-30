@@ -1,3 +1,4 @@
+use std::fs::read;
 use std::path;
 use std::rc::Rc;
 use std::sync::Mutex;
@@ -39,6 +40,7 @@ pub struct TestScreen<'a> {
 
 impl<'a> TestScreen<'a> {
     pub unsafe fn new(window: &mut Window) -> Self {
+        window.fonts.set_font_bytes("ProductSans", read("src/assets/fonts/ProductSans.ttf".replace("/", path::MAIN_SEPARATOR_STR)).unwrap()).load_font("ProductSans", false);
         let mut ds = TestScreen {
             move_progressive: Animation::new(),
             move_log: Animation::new(),
@@ -73,11 +75,20 @@ impl<'a> ScreenTrait for TestScreen<'a> {
         // w.renderer.draw_rounded_rect(b, 20.0, 0xffffffff);
         w.renderer.draw_rect(Bounds::from_xywh(0.0, 0.0, w.width as f32, w.height as f32), 0xff100000);
 
+        w.fonts.get_font("ProductSans").unwrap().draw_string((self.move_progressive.value() * 15.0 + 20.0) as f32, "TestABCjskIlG", 0.0, 0.0, Color::from_u32(0xffffffff));
+
         if self.move_log.value() > 0.99 && self.move_log.target() == 1.0 {
             self.move_log.set_target(0.0);
         } else if self.move_log.value() < 0.01 {
             self.move_log.set_target(1.0);
         }
+
+        if w.mouse_x > 100.0 && w.mouse_y > 100.0 {
+            self.move_progressive.animate_target(1.0, 1.0, AnimationType::Sin, w);
+        } else {
+            self.move_progressive.animate_target(0.0, 1.0, AnimationType::Sin, w);
+        }
+        w.fonts.get_font("ProductSans").unwrap().draw_string((self.move_progressive.value() * 15.0 + 20.0) as f32, "A test", 100.0, 100.0, Color::from_u32(0xffffffff));
 
         self.move_log.animate(0.6, AnimationType::Progressive(10.0), w);
 

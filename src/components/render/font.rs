@@ -48,7 +48,7 @@ impl PartialOrd<Self> for CacheGlyph {
 
 impl Ord for CacheGlyph {
     fn cmp(&self, other: &Self) -> Ordering {
-        todo!()
+        self.partial_cmp(other).unwrap()
     }
 
     fn max(self, other: Self) -> Self where Self: Sized {
@@ -165,6 +165,8 @@ impl FontManager {
 pub struct Font {
     pub glyphs: [Glyph; 128],
     renderer: Rc<Renderer>,
+    ascender: f32,
+    decender: f32,
     pub atlas_tex: Option<Texture>,
 }
 
@@ -189,7 +191,12 @@ impl Font {
         let thread_count = 32; // Seems to provide the best results
         let mut threads = Vec::new();
         let m_lib = freetype::Library::init().unwrap();
+
         let m_face = m_lib.new_memory_face(font_bytes.clone(), 0).unwrap();
+        m_face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
+
+        let size_metrics = m_face.size_metrics().unwrap();
+
         println!("{} {} {}", m_face.num_faces(), m_face.num_charmaps(), m_face.num_glyphs());
         for j in 0..thread_count {
             let total_length = 128;
@@ -253,6 +260,8 @@ impl Font {
         }
 
         let mut meta_data: Vec<u8> = Vec::new();
+        meta_data.write(&(size_metrics.ascender as f32 / 64.0).to_be_bytes()).unwrap();
+        meta_data.write(&(size_metrics.descender as f32 / 64.0).to_be_bytes()).unwrap();
         cache_glyphs.sort();
         for c_glyph in cache_glyphs.as_slice() {
             if max_height < c_glyph.height {
@@ -301,9 +310,14 @@ impl Font {
 
     /// Loads each char / glyph from the same format created by [Font::create_font_data]
     pub unsafe fn load(mut all_bytes: Vec<u8>, renderer: Rc<Renderer>) -> Self {
+        let ascender = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
+        let decender = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
+        println!("AS {} DS {}", ascender, decender);
         let mut font = Font {
             glyphs: [Glyph::default(); 128],
             renderer: renderer.clone(),
+            ascender,
+            decender,
             atlas_tex: None,
         };
 
@@ -406,7 +420,8 @@ impl<'a> FontRenderer<'a> {
 
     /// The method to be called to a render a string using immediate GL
     pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
-        let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        let str_height = self.get_height(size);
         self.begin(size, x, y);
         self.set_color(color);
         for char in string.to_string().chars() {
@@ -436,7 +451,7 @@ impl<'a> FontRenderer<'a> {
 
             if should_render <= 1 {
                 if should_render == 0 {
-                    self.draw_char(self.comb_scale_x, self.comb_scale_y, self.font.atlas_tex.as_ref().unwrap(), char, self.x, self.y, str_height);
+                    self.draw_char(size, self.comb_scale_x, self.comb_scale_y, self.font.atlas_tex.as_ref().unwrap(), char, self.x, self.y);
                 }
 
                 self.line_width += c_w;
@@ -512,7 +527,7 @@ impl<'a> FontRenderer<'a> {
     /// Draws a single char
     ///
     /// The exact draw methods are determined by this FontRenderer's options, like [FontRenderer::scale_mode] etc
-    pub unsafe fn draw_char(&self, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32, offset_y: f32) -> (f32, f32) {
+    pub unsafe fn draw_char(&self, size: f32, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32) -> (f32, f32) {
         let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
             None => {
                 return (0.0, 0.0);
@@ -521,7 +536,7 @@ impl<'a> FontRenderer<'a> {
                 glyph
             }
         };
-        let pos_y = y + offset_y - glyph.top as f32;
+        let pos_y = y + self.get_height(size) - glyph.top as f32;
 
         let (right, bottom) = match self.scale_mode {
             ScaleMode::Normal => {
@@ -536,10 +551,10 @@ impl<'a> FontRenderer<'a> {
             &Bounds::from_ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
             0xffffff,
         );
-
+        // TODO make rendering use bearing x correctly
         match self.scale_mode {
             ScaleMode::Normal => (((glyph.advance - glyph.bearing_x) as f32), (glyph.height as f32)),
-            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil())
+            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32).floor(), (glyph.height as f32).floor())
         }
     }
 
@@ -605,7 +620,9 @@ impl<'a> FontRenderer<'a> {
     /// Returns the height, in pixels, of a string at a specific size
     pub unsafe fn get_height(&self, size: f32) -> f32 {
         let scale = size/FONT_RES as f32;
-        self.font.glyphs.get('H' as usize).unwrap().top as f32 * scale
+        let v = self.font.ascender - self.font.decender;
+        v * scale
+        // self.font.glyphs.get('H' as usize).unwrap().top as f32 * scale
     }
 
     pub fn line_spacing(mut self, spacing: f32) -> Self {

@@ -49,7 +49,7 @@ impl FramebufferMask {
 
     /// Applies to mask framebuffer to the draw framebuffer, and renders it onto the parent framebuffer
     pub unsafe fn render(&self, window: &mut Window) {
-        Disable(BLEND);
+        // Disable(BLEND);
         window.renderer.mask_shader.bind();
 
         window.renderer.mask_shader.u_put_int("draw_texture", vec![0]);
@@ -69,6 +69,6 @@ impl FramebufferMask {
         window.renderer.draw_texture_rect(&Bounds::from_ltrb(0.0, window.height as f32, window.width as f32, 0.0),0x00000000);
 
         window.renderer.mask_shader.unbind();
-        Enable(BLEND);
+        // Enable(BLEND);
     }
 }
