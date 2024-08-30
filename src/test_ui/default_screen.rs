@@ -58,7 +58,7 @@ impl<'a> TestScreen<'a> {
             elements: vec![],
             dummy: "",
         };
-        ds.elements.push(Element::Drawable(ds.test_draw.clone()));
+        // ds.elements.push(Element::Drawable(ds.test_draw.clone()));
         ds
     }
 }
@@ -75,7 +75,7 @@ impl<'a> ScreenTrait for TestScreen<'a> {
         // w.renderer.draw_rounded_rect(b, 20.0, 0xffffffff);
         w.renderer.draw_rect(Bounds::from_xywh(0.0, 0.0, w.width as f32, w.height as f32), 0xff100000);
 
-        w.fonts.get_font("ProductSans").unwrap().draw_string((self.move_progressive.value() * 15.0 + 20.0) as f32, "TestABCjskIlG", 0.0, 0.0, Color::from_u32(0xffffffff));
+        w.fonts.get_font("ProductSans").unwrap().draw_string((self.move_progressive.value() * 15.0 + 20.0) as f32, "TestABCjskIlG", 4.0, 4.0, Color::from_u32(0xffffffff));
 
         if self.move_log.value() > 0.99 && self.move_log.target() == 1.0 {
             self.move_log.set_target(0.0);
@@ -88,21 +88,21 @@ impl<'a> ScreenTrait for TestScreen<'a> {
         } else {
             self.move_progressive.animate_target(0.0, 1.0, AnimationType::Sin, w);
         }
-        w.fonts.get_font("ProductSans").unwrap().draw_string((self.move_progressive.value() * 15.0 + 20.0) as f32, "A test", 100.0, 100.0, Color::from_u32(0xffffffff));
-
-        self.move_log.animate(0.6, AnimationType::Progressive(10.0), w);
-
-        self.mask.begin_mask();
-        w.renderer.draw_circle(b.center_x(), b.center_y(), (self.move_log.value() * 150.0) as f32, 0xffffffff);
-        // w.renderer.draw_rect(b, 0xffffffff);
-        self.mask.end_mask();
-        self.mask.begin_draw();
-        // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
-        w.renderer.draw_rect(b, Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 0.6, 1.0).set_alpha_f32(0.5));
-        self.mask.end_draw();
-        self.mask.render(w);
-        Enable(BLEND);
-        w.renderer.draw_rect(b + Bounds::from_xywh(125.0, 0.0, 0.0, 0.0), 0x99ffffff);
+        // w.fonts.get_font("ProductSans").unwrap().draw_string((self.move_progressive.value() * 15.0 + 20.0) as f32, "A test", 100.0, 100.0, Color::from_u32(0xffffffff));
+        //
+        // self.move_log.animate(0.6, AnimationType::Progressive(10.0), w);
+        //
+        // self.mask.begin_mask();
+        // w.renderer.draw_circle(b.center_x(), b.center_y(), (self.move_log.value() * 150.0) as f32, 0xffffffff);
+        // // w.renderer.draw_rect(b, 0xffffffff);
+        // self.mask.end_mask();
+        // self.mask.begin_draw();
+        // // TODO: Make some sort of text element method that does not use gl immediate drawing, and instead it would create a VBO etc with all the chars and such
+        // w.renderer.draw_rect(b, Color::from_hsv((UNIX_EPOCH.elapsed().unwrap().as_secs_f64() % 5.0 / 5.0) as f32, 0.6, 1.0).set_alpha_f32(0.5));
+        // self.mask.end_draw();
+        // self.mask.render(w);
+        // Enable(BLEND);
+        // w.renderer.draw_rect(b + Bounds::from_xywh(125.0, 0.0, 0.0, 0.0), 0x99ffffff);
     }
     #[allow(unused)]
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {

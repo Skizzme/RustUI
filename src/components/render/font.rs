@@ -11,6 +11,7 @@ use std::time::Instant;
 
 use freetype::face::LoadFlag;
 use freetype::{GlyphMetrics, RenderMode};
+use freetype::ffi::FT_Size_Metrics;
 use gl::*;
 use gl::types::GLdouble;
 
@@ -161,12 +162,16 @@ impl FontManager {
     }
 }
 
+pub struct FontMetrics {
+    ascent: f32,
+    decent: f32,
+}
+
 /// Only holds the data per font to be used by the font renderer
 pub struct Font {
     pub glyphs: [Glyph; 128],
     renderer: Rc<Renderer>,
-    ascender: f32,
-    decender: f32,
+    metrics: FontMetrics,
     pub atlas_tex: Option<Texture>,
 }
 
@@ -310,14 +315,16 @@ impl Font {
 
     /// Loads each char / glyph from the same format created by [Font::create_font_data]
     pub unsafe fn load(mut all_bytes: Vec<u8>, renderer: Rc<Renderer>) -> Self {
-        let ascender = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
-        let decender = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
-        println!("AS {} DS {}", ascender, decender);
+        let ascent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
+        let decent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
+
         let mut font = Font {
             glyphs: [Glyph::default(); 128],
             renderer: renderer.clone(),
-            ascender,
-            decender,
+            metrics: FontMetrics {
+                ascent,
+                decent,
+            },
             atlas_tex: None,
         };
 
@@ -421,17 +428,16 @@ impl<'a> FontRenderer<'a> {
     /// The method to be called to a render a string using immediate GL
     pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
         // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
-        let str_height = self.get_height(size);
         self.begin(size, x, y);
         self.set_color(color);
         for char in string.to_string().chars() {
             if char == '\n' {
                 match self.scale_mode {
                     ScaleMode::Normal => {
-                        self.y += str_height + 2.0;
+                        self.y += self.get_line_height() * self.comb_scale_y;
                     }
                     ScaleMode::Quality => {
-                        self.y += self.get_scaled_value((str_height + 2.0) * self.line_spacing, self.comb_scale_y);
+                        self.y += self.get_scaled_value(self.get_line_height(), self.comb_scale_y);
                     }
                 }
                 self.line_width = 0.0;
@@ -451,7 +457,7 @@ impl<'a> FontRenderer<'a> {
 
             if should_render <= 1 {
                 if should_render == 0 {
-                    self.draw_char(size, self.comb_scale_x, self.comb_scale_y, self.font.atlas_tex.as_ref().unwrap(), char, self.x, self.y);
+                    self.draw_char(self.comb_scale_x, self.comb_scale_y, self.font.atlas_tex.as_ref().unwrap(), char, self.x, self.y);
                 }
 
                 self.line_width += c_w;
@@ -466,7 +472,7 @@ impl<'a> FontRenderer<'a> {
             }
         }
         self.end();
-        (self.line_width*self.scale, str_height*self.scale)
+        (self.line_width*self.scale, self.get_line_height()*self.scale)
     }
 
     // todo make this match scale mode
@@ -527,7 +533,7 @@ impl<'a> FontRenderer<'a> {
     /// Draws a single char
     ///
     /// The exact draw methods are determined by this FontRenderer's options, like [FontRenderer::scale_mode] etc
-    pub unsafe fn draw_char(&self, size: f32, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32) -> (f32, f32) {
+    pub unsafe fn draw_char(&self, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32) -> (f32, f32) {
         let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
             None => {
                 return (0.0, 0.0);
@@ -536,7 +542,7 @@ impl<'a> FontRenderer<'a> {
                 glyph
             }
         };
-        let pos_y = y + self.get_height(size) - glyph.top as f32;
+        let pos_y = y + self.get_height() - glyph.top as f32;
 
         let (right, bottom) = match self.scale_mode {
             ScaleMode::Normal => {
@@ -571,7 +577,7 @@ impl<'a> FontRenderer<'a> {
         Enable(TEXTURE_2D);
         self.x = x*self.i_scale;
         self.y = y*self.i_scale;
-        self.start_x = x;
+        self.start_x = self.x;
 
         let matrix: [f64; 16] = self.manager.renderer.get_transform_matrix();
         self.scaled_factor_x = (matrix[0]*self.manager.screen_width as f64/2.0) as f32;
@@ -617,12 +623,14 @@ impl<'a> FontRenderer<'a> {
         width*scale
     }
 
-    /// Returns the height, in pixels, of a string at a specific size
-    pub unsafe fn get_height(&self, size: f32) -> f32 {
-        let scale = size/FONT_RES as f32;
-        let v = self.font.ascender - self.font.decender;
-        v * scale
+    /// Returns the height, in pixels, of the font. Unscaled
+    pub unsafe fn get_height(&self) -> f32 {
+        self.font.metrics.ascent + self.font.metrics.decent
         // self.font.glyphs.get('H' as usize).unwrap().top as f32 * scale
+    }
+
+    pub unsafe fn get_line_height(&self) -> f32 {
+        self.get_height() + self.line_spacing
     }
 
     pub fn line_spacing(mut self, spacing: f32) -> Self {
