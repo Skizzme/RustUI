@@ -8,6 +8,7 @@ use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
 
 use crate::asset_manager::file_contents_str;
 use crate::components::elements::Drawable;
+use crate::components::position::Pos;
 use crate::components::render::animation::{Animation, AnimationType};
 use crate::components::render::bounds::Bounds;
 use crate::components::render::color::Color;
@@ -32,9 +33,9 @@ pub struct TestScreen<'a> {
     offset_y: f32,
     dragging: (bool, f32, f32, f32, f32),
     scroll: f32,
-    test_draw: Rc<Mutex<DrawThing>>,
+    test_draw: DrawThing,
     mask: FramebufferMask,
-    elements: Vec<Element>,
+    elements: Vec<Element<'a>>,
     dummy: &'a str,
 }
 
@@ -53,12 +54,12 @@ impl<'a> TestScreen<'a> {
             offset_y: 0.0,
             dragging: (false, 0.0, 0.0, 0.0, 0.0),
             scroll: 50.0,
-            test_draw: Rc::new(Mutex::new(DrawThing::new(Bounds::from_xywh(10.0, 10.0, 200.0, 100.0), window))),
+            test_draw: DrawThing::new(Bounds::from_xywh(10.0, 10.0, 200.0, 100.0), window),
             mask: FramebufferMask::new(window),
             elements: vec![],
             dummy: "",
         };
-        // ds.elements.push(Element::Drawable(ds.test_draw.clone()));
+        ds.elements.push(Element::Drawable::<'a>(&mut ds.test_draw));
         ds
     }
 }
@@ -88,6 +89,7 @@ impl<'a> ScreenTrait for TestScreen<'a> {
         } else {
             self.move_progressive.animate_target(0.0, 1.0, AnimationType::Sin, w);
         }
+        // self.test_draw.draw(w);
         // w.fonts.get_font("ProductSans").unwrap().draw_string((self.move_progressive.value() * 15.0 + 20.0) as f32, "A test", 100.0, 100.0, Color::from_u32(0xffffffff));
         //
         // self.move_log.animate(0.6, AnimationType::Progressive(10.0), w);
@@ -104,6 +106,7 @@ impl<'a> ScreenTrait for TestScreen<'a> {
         // Enable(BLEND);
         // w.renderer.draw_rect(b + Bounds::from_xywh(125.0, 0.0, 0.0, 0.0), 0x99ffffff);
     }
+
     #[allow(unused)]
     fn key_press(&mut self, key: Key, code: Scancode, action: Action, mods: Modifiers) {
         match action {
@@ -146,6 +149,7 @@ impl<'a> ScreenTrait for TestScreen<'a> {
     }
 
     fn elements(&self) -> Vec<Element> {
-        self.elements.clone()
+        // self.elements.clone()
+        vec![]
     }
 }

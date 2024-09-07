@@ -121,14 +121,16 @@ impl Window {
 
         current_screen.draw(self);
         // Will also draw elements
-        for e in current_screen.elements().iter() {
+        for e in current_screen.elements() {
             match e {
                 Element::Drawable(drawable) => {
-                    drawable.lock().unwrap().draw(self);
+                    // drawable.lock().unwrap().draw(self);
+                    drawable.draw(self);
                 }
                 Element::KeyboardReceiver(r) => {
                     for key in keyboard_events.iter() {
-                        r.lock().unwrap().key_action(self, key)
+                        // r.lock().unwrap().key_action(self, key)
+                        r.key_action(self, key)
                     }
                 }
                 Element::MouseInputs(_) => {}

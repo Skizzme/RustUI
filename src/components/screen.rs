@@ -14,11 +14,11 @@ pub trait ScreenTrait {
     fn elements(&self) -> Vec<Element>;
 }
 
-#[derive(Clone)]
-pub enum Element {
-    Drawable(Rc<Mutex<dyn Drawable>>),
-    KeyboardReceiver(Rc<Mutex<dyn KeyboardInput>>),
-    MouseInputs(Rc<Mutex<dyn MouseInput>>),
+// #[derive(Clone)]
+pub enum Element<'a> {
+    Drawable(&'a mut dyn Drawable),
+    KeyboardReceiver(&'a mut dyn KeyboardInput),
+    MouseInputs(&'a mut dyn MouseInput),
 }
 
 // pub struct Elements<'a> {
