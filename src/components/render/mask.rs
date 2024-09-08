@@ -50,11 +50,11 @@ impl FramebufferMask {
     /// Applies to mask framebuffer to the draw framebuffer, and renders it onto the parent framebuffer
     pub unsafe fn render(&self, window: &mut Window) {
         // Disable(BLEND);
-        window.renderer.mask_shader.bind();
+        window.renderer.inner().borrow_mut().mask_shader.bind();
 
-        window.renderer.mask_shader.u_put_int("draw_texture", vec![0]);
-        window.renderer.mask_shader.u_put_int("mask_texture", vec![1]);
-        window.renderer.mask_shader.u_put_int("base_texture", vec![2]);
+        window.renderer.inner().borrow_mut().mask_shader.u_put_int("draw_texture", vec![0]);
+        window.renderer.inner().borrow_mut().mask_shader.u_put_int("mask_texture", vec![1]);
+        window.renderer.inner().borrow_mut().mask_shader.u_put_int("base_texture", vec![2]);
 
         ActiveTexture(TEXTURE2);
         window.framebuffer().bind_texture();
@@ -66,9 +66,9 @@ impl FramebufferMask {
         ActiveTexture(TEXTURE0);
         self.apply_framebuffer.bind_texture();
 
-        window.renderer.draw_texture_rect(&Bounds::from_ltrb(0.0, window.height as f32, window.width as f32, 0.0),0x00000000);
+        window.renderer.draw_texture_rect(&Bounds::ltrb(0.0, window.height as f32, window.width as f32, 0.0), 0x00000000);
 
-        window.renderer.mask_shader.unbind();
+        window.renderer.inner().borrow_mut().mask_shader.unbind();
         // Enable(BLEND);
     }
 }

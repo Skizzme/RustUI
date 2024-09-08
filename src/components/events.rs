@@ -1,6 +1,14 @@
 use glfw::{Action, Key, Modifiers, Scancode, WindowEvent};
+use crate::components::window::Window;
 
-#[allow(unused)]
+// #[derive(Clone)]
+pub enum Event<'a> {
+    Mouse(&'a mut Window, MouseEvent),
+    Keyboard(&'a mut Window, KeyboardEvent),
+    Draw(&'a mut Window),
+}
+
+#[derive(Clone)]
 pub struct MouseEvent {
     scroll: i32,
     clicked_button: i32,

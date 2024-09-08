@@ -34,7 +34,7 @@ pub trait Drawable {
 }
 
 pub trait MouseInput {
-    fn mouse_button(&mut self, window: &mut Window, action: MouseEvent);
+    fn mouse_button(&mut self, window: &mut Window, action: &MouseEvent);
 
     fn bounds(&self) -> &Bounds;
 }

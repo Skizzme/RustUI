@@ -1,11 +1,13 @@
 extern crate freetype;
 
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::time::Instant;
 
@@ -18,7 +20,8 @@ use gl::types::GLdouble;
 use crate::asset_manager;
 use crate::components::render::bounds::Bounds;
 use crate::components::render::color::ToColor;
-use crate::components::render::renderer::Renderer;
+use crate::components::render::renderer::{Renderer, RendererWrapped};
+use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
@@ -75,7 +78,7 @@ impl Ord for CacheGlyph {
 
 pub struct FontManager {
     fonts: HashMap<String, Rc<Font>>,
-    renderer: Rc<Renderer>,
+    renderer: RendererWrapped,
     pub screen_width: i32,
     pub screen_height: i32,
     fonts_location: String,
@@ -86,7 +89,7 @@ pub struct FontManager {
 }
 
 impl FontManager {
-    pub unsafe fn new(screen_width: i32, screen_height: i32, renderer: Rc<Renderer>, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
+    pub unsafe fn new(screen_width: i32, screen_height: i32, renderer: RendererWrapped, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
         let st = Instant::now();
         let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
@@ -170,7 +173,7 @@ pub struct FontMetrics {
 /// Only holds the data per font to be used by the font renderer
 pub struct Font {
     pub glyphs: [Glyph; 128],
-    renderer: Rc<Renderer>,
+    renderer: RendererWrapped,
     metrics: FontMetrics,
     pub atlas_tex: Option<Texture>,
 }
@@ -308,13 +311,13 @@ impl Font {
     /// use RustUI::components::render::font::FontManager;
     /// FontManager::load(std::fs::read("cached_path").unwrap(), /*args_here*/);
     /// ```
-    pub unsafe fn load_from_file(cached_path: &str, renderer: Rc<Renderer>) -> Self {
+    pub unsafe fn load_from_file(cached_path: &str, renderer: RendererWrapped) -> Self {
         let all_bytes = std::fs::read(cached_path).unwrap();
         Self::load(all_bytes, renderer)
     }
 
     /// Loads each char / glyph from the same format created by [Font::create_font_data]
-    pub unsafe fn load(mut all_bytes: Vec<u8>, renderer: Rc<Renderer>) -> Self {
+    pub unsafe fn load(mut all_bytes: Vec<u8>, renderer: RendererWrapped) -> Self {
         let ascent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
         let decent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
 
@@ -553,8 +556,8 @@ impl<'a> FontRenderer<'a> {
             }
         };
         self.font.renderer.draw_texture_rect_uv(
-            &Bounds::from_ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom),
-            &Bounds::from_ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
+            &Bounds::ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom),
+            &Bounds::ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
             0xffffff,
         );
         // TODO make rendering use bearing x correctly
@@ -573,8 +576,9 @@ impl<'a> FontRenderer<'a> {
         self.i_scale = 1.0/self.scale;
 
         let atlas = self.font.atlas_tex.as_ref().unwrap();
-        Enable(BLEND);
-        Enable(TEXTURE_2D);
+        self.manager.renderer.stack().begin();
+        self.manager.renderer.stack().push(Blend(true));
+        self.manager.renderer.stack().push(Texture2D(true));
         self.x = x*self.i_scale;
         self.y = y*self.i_scale;
         self.start_x = self.x;
@@ -599,6 +603,8 @@ impl<'a> FontRenderer<'a> {
         self.manager.sdf_shader.u_put_float("u_smoothing", vec![smoothing]);
         self.manager.sdf_shader.u_put_float("atlas_width", vec![atlas.width as f32]);
         self.manager.sdf_shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
+
+        self.manager.renderer.stack().end();
     }
 
     pub unsafe fn end(&self) {

@@ -18,6 +18,7 @@ use std::time::Instant;
 
 use glfw::WindowMode;
 use winapi::um::wincon::FreeConsole;
+use RustUI::components::screen::ScreenTrait;
 
 use RustUI::components::window::Window;
 use RustUI::test_ui::default_screen::TestScreen;
@@ -38,7 +39,7 @@ fn main() {
         let mut last_fps = Instant::now();
 
         while !window.p_window.should_close() {
-            window.frame(Box::new(&mut current_screen), last_frame);
+            window.frame(current_screen.base(), last_frame);
             last_frame = Instant::now();
             if last_fps.elapsed().as_secs_f32() > 1.0 {
                 println!("FPS {:?}", frames);

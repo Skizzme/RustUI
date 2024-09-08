@@ -73,7 +73,7 @@ impl Bounds {
     }
 
     /// Creates a `Bounds` object from `Left, Top, Right, Bottom` parameters
-    pub fn from_ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Bounds {
+    pub fn ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Bounds {
         let mut obj = Bounds::default();
         obj.set_left(left);
         obj.set_top(top);
@@ -84,7 +84,7 @@ impl Bounds {
     }
 
     /// Creates a `Bounds` object from `X, Y, Width, Height` parameters
-    pub fn from_xywh(x: f32, y: f32, width: f32, height: f32) -> Bounds {
+    pub fn xywh(x: f32, y: f32, width: f32, height: f32) -> Bounds {
         let mut obj = Bounds::default();
         obj.set_x(x);
         obj.set_y(y);

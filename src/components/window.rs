@@ -1,4 +1,6 @@
+use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -6,11 +8,11 @@ use gl::*;
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 
-use crate::components::events::KeyboardEvent;
+use crate::components::events::{Event, KeyboardEvent};
 use crate::components::render::bounds::Bounds;
 use crate::components::render::font::FontManager;
-use crate::components::render::renderer::Renderer;
-use crate::components::screen::{Element, ScreenTrait};
+use crate::components::render::renderer::{Renderer, RendererWrapped};
+use crate::components::screen::{Element, Screen};
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::gl_binds::{gl11, gl20, gl30};
 use crate::gl_binds::gl30::{LoadIdentity, MatrixMode, Ortho, PROJECTION, Translated};
@@ -24,7 +26,7 @@ pub struct Window {
     pub mouse_x: f32,
     pub mouse_y: f32,
     pub frame_delta: f64,
-    pub renderer: Rc<Renderer>,
+    pub renderer: RendererWrapped,
     pub fonts: FontManager,
 
     pub p_window: PWindow,
@@ -53,7 +55,7 @@ impl Window {
         gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
-        let renderer = Rc::new(Renderer::new());
+        let renderer = RendererWrapped::new(Rc::new(RefCell::new(Renderer::new())));
 
         Window {
             width,
@@ -75,7 +77,7 @@ impl Window {
     ///
     /// Polls events, tracks frame_delta, and calls `draw` on `current_screen`
     #[allow(unused_mut)]
-    pub unsafe fn frame(&mut self, mut current_screen: Box<&mut dyn ScreenTrait>, last_frame: Instant) {
+    pub unsafe fn frame(&mut self, mut current_screen: &mut Screen, last_frame: Instant) {
         self.glfw.poll_events();
         let mut keyboard_events = Vec::new();
         for (_, event) in glfw::flush_messages(&self.events) {
@@ -85,7 +87,7 @@ impl Window {
                     self.mouse_y = y as f32;
                 }
                 WindowEvent::Key(key, code, action, mods) => {
-                    current_screen.key_press(key, code, action, mods);
+                    // current_screen.key_press(key, code, action, mods);
                     keyboard_events.push(KeyboardEvent::new(key, code, action, mods));
                     // for i in 0..current_screen.screen().keyboard_inputs.len() {
                     //     let input = current_screen.screen().keyboard_inputs[i];
@@ -104,9 +106,13 @@ impl Window {
                     self.framebuffer = Framebuffer::new(RGBA, width, height).expect("Failed to create main framebuffer");
                 }
                 e => {
-                    current_screen.event(e, self);
+                    // current_screen.event(e, self);
                 }
             }
+        }
+
+        for k_event in keyboard_events {
+            current_screen.handle(Event::Keyboard(self, k_event));
         }
 
         self.pre_render();
@@ -119,23 +125,23 @@ impl Window {
             self.glfw.set_swap_interval(SwapInterval::Sync(1));
         }
 
-        current_screen.draw(self);
+        current_screen.handle(Event::Draw(self));
         // Will also draw elements
-        for e in current_screen.elements() {
-            match e {
-                Element::Drawable(drawable) => {
-                    // drawable.lock().unwrap().draw(self);
-                    drawable.draw(self);
-                }
-                Element::KeyboardReceiver(r) => {
-                    for key in keyboard_events.iter() {
-                        // r.lock().unwrap().key_action(self, key)
-                        r.key_action(self, key)
-                    }
-                }
-                Element::MouseInputs(_) => {}
-            }
-        }
+        // for e in current_screen.elements() {
+        //     match e {
+        //         Element::Drawable(mut drawable) => {
+        //             // drawable.lock().unwrap().draw(self);
+        //             drawable.draw(self);
+        //         }
+        //         Element::KeyboardReceiver(r) => {
+        //             for key in keyboard_events.iter() {
+        //                 // r.lock().unwrap().key_action(self, key)
+        //                 r.key_action(self, key)
+        //             }
+        //         }
+        //         Element::MouseInputs(_) => {}
+        //     }
+        // }
 
         self.post_render();
         self.frame_delta = last_frame.elapsed().as_secs_f64();
@@ -161,7 +167,7 @@ impl Window {
         check_error("post");
         self.framebuffer.unbind();
         self.framebuffer.bind_texture();
-        self.renderer.draw_texture_rect_uv(&Bounds::from_xywh(0.0, 0.0, self.width as f32, self.height as f32), &Bounds::from_ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        self.renderer.draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, self.width as f32, self.height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
         self.framebuffer.unbind();
 
         self.p_window.swap_buffers();

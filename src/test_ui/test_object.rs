@@ -32,7 +32,7 @@ impl Drawable for DrawThing {
             self.target = 1.0
         }
         self.animator.animate_target(self.target as f64, 0.5, AnimationType::Sin, window);
-        window.renderer.draw_rect(&Bounds::from_ltrb(20.0, 20.0, 200.0, 100.0), 0xff909090);
+        window.renderer.draw_rect(&Bounds::ltrb(20.0, 20.0, 200.0, 100.0), 0xff909090);
         // let (w, h) = window.fonts.get_font("ProductSans", true).scale_mode(ScaleMode::Quality).draw_string(60.0, "Test", 20.0, 20.0, 0xffffffff);
         let (w, _h) = window.fonts.get_font("ProductSans").unwrap().scale_mode(ScaleMode::Quality).draw_string(60.0, "A", 20.0, 20.0, 0xffffffff);
 
@@ -45,8 +45,8 @@ impl Drawable for DrawThing {
         let l_color = 0xff00ff00;
         let m_color = 0xff0000ff;
         let r_color = 0xffff0000;
-        window.renderer.draw_gradient_rect(&Bounds::from_xywh(20.0, 0.0, w/2.0, 100.0), (l_color, m_color, m_color, l_color));
-        window.renderer.draw_gradient_rect(&Bounds::from_xywh(20.0+w/2.0, 0.0, w/3.0, 100.0), (m_color, r_color, r_color, m_color));
+        window.renderer.draw_gradient_rect(&Bounds::xywh(20.0, 0.0, w/2.0, 100.0), (l_color, m_color, m_color, l_color));
+        window.renderer.draw_gradient_rect(&Bounds::xywh(20.0+w/2.0, 0.0, w/3.0, 100.0), (m_color, r_color, r_color, m_color));
         self.mask.end_draw();
 
         self.mask.render(window);
