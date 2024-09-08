@@ -177,70 +177,71 @@ impl Renderer {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct RendererWrapped {
-    renderer: Rc<RefCell<Renderer>>
+pub trait RendererWrapped {
+    // fn stack(&self) -> &mut Stack;
+    unsafe fn get_transform_matrix(&self) -> [f64; 16];
+    unsafe fn draw_rounded_rect(&mut self, bounds: impl ToBounds, radius: f32, color: impl ToColor);
+    unsafe fn draw_circle(&mut self, x: f32, y: f32, radius: f32, color: impl ToColor);
+    unsafe fn draw_rect(&mut self, bounds: impl ToBounds, color: impl ToColor);
+    unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor));
+    unsafe fn draw_rect_outline(&mut self, bounds: &Bounds, width: f32, color: impl ToColor);
+    unsafe fn draw_texture_rect(&mut self, bounds: &Bounds, color: impl ToColor);
+    unsafe fn draw_texture_rect_uv(&mut self, bounds: &Bounds, uv_bounds: &Bounds, color: impl ToColor);
 }
 
-impl RendererWrapped {
-    pub fn new(renderer: Rc<RefCell<Renderer>>) -> Self {
-        RendererWrapped {
-            renderer
-        }
-    }
+// #[derive(Debug, Clone)]
+// pub struct RendererWrapped {
+//     renderer: Rc<RefCell<Renderer>>
+// }
 
-    pub fn stack(&mut self) -> &mut Stack {
-        let mut s = self.renderer.borrow_mut();
-        &mut s.stack
-    }
+impl RendererWrapped for Rc<RefCell<Renderer>> {
+    // fn stack(&self) -> &mut Stack {
+    //     &mut self.borrow_mut().stack
+    // }
 
     /// Should be called every frame, and whenever the matrix needs to be stored and sent to shaders
-    pub unsafe fn get_transform_matrix(&self) -> [f64; 16] {
-        self.renderer.borrow_mut().get_transform_matrix()
+    unsafe fn get_transform_matrix(&self) -> [f64; 16] {
+        self.borrow_mut().get_transform_matrix()
     }
 
     /// Draws a nice rounded rectangle using texture shaders
-    pub unsafe fn draw_rounded_rect(&mut self, mut bounds: impl ToBounds, radius: f32, color: impl ToColor) {
-        self.renderer.borrow_mut().draw_rounded_rect(bounds, radius, color);
+    unsafe fn draw_rounded_rect(&mut self, mut bounds: impl ToBounds, radius: f32, color: impl ToColor) {
+        self.borrow_mut().draw_rounded_rect(bounds, radius, color);
     }
 
     /// Draws a circle, using a rounded rect, with the center point at x, y
-    pub unsafe fn draw_circle(&mut self, x: f32, y: f32, radius: f32, color: impl ToColor) {
-        self.renderer.borrow_mut().draw_circle(x, y, radius, color);
+    unsafe fn draw_circle(&mut self, x: f32, y: f32, radius: f32, color: impl ToColor) {
+        self.borrow_mut().draw_circle(x, y, radius, color);
     }
 
     /// The most boring rectangle
-    pub unsafe fn draw_rect(&mut self, bounds: impl ToBounds, color: impl ToColor) {
-        self.renderer.borrow_mut().draw_rect(bounds, color);
+    unsafe fn draw_rect(&mut self, bounds: impl ToBounds, color: impl ToColor) {
+        self.borrow_mut().draw_rect(bounds, color);
     }
 
     /// A rectangle where each corner's color can be different
     ///
     /// Colors are in order of: bottom-left, bottom-right, top-right, top-left
-    pub unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor)) {
-        self.renderer.borrow_mut().draw_gradient_rect(bounds, color);
+    unsafe fn draw_gradient_rect(&self, bounds: &Bounds, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor)) {
+        self.borrow_mut().draw_gradient_rect(bounds, color);
     }
 
     /// Draws only the outline of a rectangle
-    pub unsafe fn draw_rect_outline(&mut self, bounds: &Bounds, width: f32, color: impl ToColor) {
-        self.renderer.borrow_mut().draw_rect_outline(bounds, width, color);
+    unsafe fn draw_rect_outline(&mut self, bounds: &Bounds, width: f32, color: impl ToColor) {
+        self.borrow_mut().draw_rect_outline(bounds, width, color);
     }
 
     /// Draws a texture rectangle using normal UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect(&mut self, bounds: &Bounds, color: impl ToColor) {
-        self.renderer.borrow_mut().draw_texture_rect(bounds, color);
+    unsafe fn draw_texture_rect(&mut self, bounds: &Bounds, color: impl ToColor) {
+        self.borrow_mut().draw_texture_rect(bounds, color);
     }
 
     /// Draws a texture rectangle using specified UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect_uv(&mut self, bounds: &Bounds, uv_bounds: &Bounds, color: impl ToColor) {
-        self.renderer.borrow_mut().draw_texture_rect_uv(bounds, uv_bounds, color);
-    }
-
-    pub fn inner(&self) -> Rc<RefCell<Renderer>> {
-        self.renderer.clone()
+    unsafe fn draw_texture_rect_uv(&mut self, bounds: &Bounds, uv_bounds: &Bounds, color: impl ToColor) {
+        self.borrow_mut().draw_texture_rect_uv(bounds, uv_bounds, color);
     }
 }

@@ -77,8 +77,8 @@ impl Ord for CacheGlyph {
 }
 
 pub struct FontManager {
-    fonts: HashMap<String, Rc<Font>>,
-    renderer: RendererWrapped,
+    fonts: HashMap<String, Rc<RefCell<Font>>>,
+    renderer: Rc<RefCell<Renderer>>,
     pub screen_width: i32,
     pub screen_height: i32,
     fonts_location: String,
@@ -89,7 +89,7 @@ pub struct FontManager {
 }
 
 impl FontManager {
-    pub unsafe fn new(screen_width: i32, screen_height: i32, renderer: RendererWrapped, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
+    pub unsafe fn new(screen_width: i32, screen_height: i32, renderer: Rc<RefCell<Renderer>>, fonts_location: impl ToString, cache_location: impl ToString) -> Self {
         let st = Instant::now();
         let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
@@ -130,7 +130,7 @@ impl FontManager {
                 let ft = Font::load(self.mem_atlas_cache.get(&name).unwrap().clone(), self.renderer.clone());
                 println!("Font '{}' took {:?} to render and load...", &name, b.elapsed());
 
-                self.fonts.insert(name, Rc::new(ft));
+                self.fonts.insert(name, Rc::new(RefCell::new(ft)));
             } else {
                 if !Path::new(cache_path.as_str()).exists() {
                     Font::cache(self.font_byte_library.remove(&name).unwrap(), cache_path.as_str());
@@ -141,7 +141,7 @@ impl FontManager {
                 let ft = Font::load_from_file(format!("{}_{}.cache", name, FONT_RES).as_str(), self.renderer.clone());
                 println!("Font '{}' took {:?} to load...", name, b.elapsed());
 
-                self.fonts.insert(name.to_string(), Rc::new(ft));
+                self.fonts.insert(name.to_string(), Rc::new(RefCell::new(ft)));
             }
         }
         return None
@@ -173,7 +173,7 @@ pub struct FontMetrics {
 /// Only holds the data per font to be used by the font renderer
 pub struct Font {
     pub glyphs: [Glyph; 128],
-    renderer: RendererWrapped,
+    renderer: Rc<RefCell<Renderer>>,
     metrics: FontMetrics,
     pub atlas_tex: Option<Texture>,
 }
@@ -311,13 +311,13 @@ impl Font {
     /// use RustUI::components::render::font::FontManager;
     /// FontManager::load(std::fs::read("cached_path").unwrap(), /*args_here*/);
     /// ```
-    pub unsafe fn load_from_file(cached_path: &str, renderer: RendererWrapped) -> Self {
+    pub unsafe fn load_from_file(cached_path: &str, renderer: Rc<RefCell<Renderer>>) -> Self {
         let all_bytes = std::fs::read(cached_path).unwrap();
         Self::load(all_bytes, renderer)
     }
 
     /// Loads each char / glyph from the same format created by [Font::create_font_data]
-    pub unsafe fn load(mut all_bytes: Vec<u8>, renderer: RendererWrapped) -> Self {
+    pub unsafe fn load(mut all_bytes: Vec<u8>, renderer: Rc<RefCell<Renderer>>) -> Self {
         let ascent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
         let decent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
 
@@ -373,7 +373,7 @@ impl Font {
 ///
 /// It would be preferable not to be created each frame
 pub struct FontRenderer<'a> {
-    pub font: Rc<Font>,
+    pub font: Rc<RefCell<Font>>,
     pub wrapping: Wrapping,
     pub scale_mode: ScaleMode,
     pub tab_length: u32, // The length of tabs in spaces. Default is 4
@@ -393,7 +393,7 @@ pub struct FontRenderer<'a> {
 }
 
 impl<'a> FontRenderer<'a> {
-    pub unsafe fn new(manager: &'a FontManager, font: Rc<Font>) -> Self {
+    pub unsafe fn new(manager: &'a FontManager, font: Rc<RefCell<Font>>) -> Self {
         FontRenderer {
             font,
             tab_length: 4,
@@ -430,7 +430,7 @@ impl<'a> FontRenderer<'a> {
 
     /// The method to be called to a render a string using immediate GL
     pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
-        // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        // let str_height = self.font.borrow_mut().glyphs.get('H' as usize).unwrap().top as f32;
         self.begin(size, x, y);
         self.set_color(color);
         for char in string.to_string().chars() {
@@ -460,7 +460,8 @@ impl<'a> FontRenderer<'a> {
 
             if should_render <= 1 {
                 if should_render == 0 {
-                    self.draw_char(self.comb_scale_x, self.comb_scale_y, self.font.atlas_tex.as_ref().unwrap(), char, self.x, self.y);
+                    let atlas_ref= self.font.borrow_mut().atlas_tex.as_ref().unwrap().clone();
+                    self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
                 }
 
                 self.line_width += c_w;
@@ -507,7 +508,7 @@ impl<'a> FontRenderer<'a> {
     /// }
     /// ```
     pub fn get_dimensions(&self, char: char) -> (f32, f32, u32) {
-        let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
+        let glyph: &Glyph = match self.font.borrow_mut().glyphs.get(char as usize) {
             None => {
                 return (0.0, 0.0, 0);
             }
@@ -536,8 +537,8 @@ impl<'a> FontRenderer<'a> {
     /// Draws a single char
     ///
     /// The exact draw methods are determined by this FontRenderer's options, like [FontRenderer::scale_mode] etc
-    pub unsafe fn draw_char(&self, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32) -> (f32, f32) {
-        let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
+    pub unsafe fn draw_char(&mut self, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32) -> (f32, f32) {
+        let glyph: &Glyph = match self.font.borrow_mut().glyphs.get(char as usize) {
             None => {
                 return (0.0, 0.0);
             }
@@ -555,7 +556,7 @@ impl<'a> FontRenderer<'a> {
                 (self.get_scaled_value(x+glyph.width as f32, scaled_x), self.get_scaled_value(pos_y+glyph.height as f32, scaled_y))
             }
         };
-        self.font.renderer.draw_texture_rect_uv(
+        self.font.borrow_mut().renderer.draw_texture_rect_uv(
             &Bounds::ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom),
             &Bounds::ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
             0xffffff,
@@ -575,10 +576,10 @@ impl<'a> FontRenderer<'a> {
         };
         self.i_scale = 1.0/self.scale;
 
-        let atlas = self.font.atlas_tex.as_ref().unwrap();
-        self.manager.renderer.stack().begin();
-        self.manager.renderer.stack().push(Blend(true));
-        self.manager.renderer.stack().push(Texture2D(true));
+        let atlas = self.font.borrow_mut().atlas_tex.as_ref().unwrap();
+        self.manager.renderer.borrow_mut().stack().begin();
+        self.manager.renderer.borrow_mut().stack().push(Blend(true));
+        self.manager.renderer.borrow_mut().stack().push(Texture2D(true));
         self.x = x*self.i_scale;
         self.y = y*self.i_scale;
         self.start_x = self.x;
@@ -604,7 +605,7 @@ impl<'a> FontRenderer<'a> {
         self.manager.sdf_shader.u_put_float("atlas_width", vec![atlas.width as f32]);
         self.manager.sdf_shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
 
-        self.manager.renderer.stack().end();
+        self.manager.renderer.borrow_mut().stack().end();
     }
 
     pub unsafe fn end(&self) {
@@ -612,7 +613,7 @@ impl<'a> FontRenderer<'a> {
 
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();
-        self.font.atlas_tex.as_ref().unwrap().unbind();
+        self.font.borrow_mut().atlas_tex.as_ref().unwrap().unbind();
         Disable(BLEND);
     }
 
@@ -622,7 +623,7 @@ impl<'a> FontRenderer<'a> {
         let mut width = 0.0f32;
 
         for char in string.chars() {
-            let glyph =  self.font.glyphs.get(char as usize).unwrap();
+            let glyph =  self.font.borrow_mut().glyphs.get(char as usize).unwrap();
             width += (glyph.advance - glyph.bearing_x) as f32;
         }
 
@@ -631,8 +632,8 @@ impl<'a> FontRenderer<'a> {
 
     /// Returns the height, in pixels, of the font. Unscaled
     pub unsafe fn get_height(&self) -> f32 {
-        self.font.metrics.ascent + self.font.metrics.decent
-        // self.font.glyphs.get('H' as usize).unwrap().top as f32 * scale
+        self.font.borrow_mut().metrics.ascent + self.font.borrow_mut().metrics.decent
+        // self.font.borrow_mut().glyphs.get('H' as usize).unwrap().top as f32 * scale
     }
 
     pub unsafe fn get_line_height(&self) -> f32 {

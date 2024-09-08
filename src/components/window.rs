@@ -26,7 +26,7 @@ pub struct Window {
     pub mouse_x: f32,
     pub mouse_y: f32,
     pub frame_delta: f64,
-    pub renderer: RendererWrapped,
+    pub renderer: Rc<RefCell<Renderer>>,
     pub fonts: FontManager,
 
     pub p_window: PWindow,
@@ -55,7 +55,7 @@ impl Window {
         gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
-        let renderer = RendererWrapped::new(Rc::new(RefCell::new(Renderer::new())));
+        let renderer = Rc::new(RefCell::new(Renderer::new()));
 
         Window {
             width,

@@ -1,6 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use crate::components::render::color::ToColor;
+use crate::components::render::renderer::RendererWrapped;
 use crate::components::window::Window;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]

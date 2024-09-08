@@ -13,6 +13,7 @@ use crate::components::render::animation::{Animation, AnimationType};
 use crate::components::render::bounds::Bounds;
 use crate::components::render::color::Color;
 use crate::components::render::mask::FramebufferMask;
+use crate::components::render::renderer::RendererWrapped;
 use crate::components::screen::{Element, Screen, ScreenTrait};
 use crate::components::window::Window;
 use crate::components::wrapper::shader::Shader;

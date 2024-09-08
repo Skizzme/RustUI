@@ -6,6 +6,7 @@ use crate::components::render::animation::{Animation, AnimationType};
 use crate::components::render::bounds::Bounds;
 use crate::components::render::font::ScaleMode;
 use crate::components::render::mask::FramebufferMask;
+use crate::components::render::renderer::RendererWrapped;
 use crate::components::window::Window;
 
 pub struct DrawThing {
