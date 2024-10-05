@@ -8,7 +8,7 @@ use gl::*;
 use gl::types::*;
 use crate::components::context::context;
 
-use crate::components::render::renderer::{Renderer, RendererWrapped};
+use crate::components::render::renderer::Renderer;
 use crate::gl_binds::gl30::Color4d;
 
 #[derive(Debug, Clone)]

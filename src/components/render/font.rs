@@ -19,9 +19,10 @@ use gl::types::GLdouble;
 
 use crate::asset_manager;
 use crate::components::context::{context};
-use crate::components::render::bounds::Bounds;
+use crate::components::position::Pos;
+use crate::components::bounds::Bounds;
 use crate::components::render::color::ToColor;
-use crate::components::render::renderer::{Renderer, RendererWrapped};
+use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
@@ -148,11 +149,11 @@ impl FontManager {
     /// This should not be called every frame, but is just a way to create a fond renderer with the needed options
     ///
     /// `name` references the name specified when calling `set_font_bytes`
-    pub unsafe fn get_font(&mut self, name: &str) -> Result<FontRenderer, String> {
+    pub unsafe fn get_font(&mut self, name: &str) -> FontRenderer {
         if !self.fonts.contains_key(name) {
             self.load_font(name, false);
         }
-        Ok(FontRenderer::new(self.fonts.get_mut(name).unwrap()))
+        FontRenderer::new(self.fonts.get_mut(name).unwrap())
     }
 }
 
@@ -412,12 +413,13 @@ impl<'a> FontRenderer<'a> {
     pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
         let string = string.to_string();
         let width = self.get_width(size, string.clone());
-        self.draw_string(size, string, x-width/2.0, y, color)
+        self.draw_string(size, string, (x-width/2.0, y), color)
     }
 
     /// The method to be called to a render a string using immediate GL
-    pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
+    pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
         // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        let (x, y) = pos.into().xy();
         self.begin(size, x, y);
         self.set_color(color);
         for char in string.to_string().chars() {
@@ -564,7 +566,6 @@ impl<'a> FontRenderer<'a> {
         self.i_scale = 1.0/self.scale;
 
         let atlas = self.font.atlas_tex.as_ref().unwrap();
-        println!("begin fr");
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));

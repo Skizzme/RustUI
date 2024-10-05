@@ -2,7 +2,9 @@ use std::fs;
 use std::time::Instant;
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowMode};
-use crate::components::render::bounds::Bounds;
+use crate::components::framework::event::Event;
+use crate::components::framework::framework::Framework;
+use crate::components::bounds::Bounds;
 use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::window::Window;
@@ -29,6 +31,7 @@ pub struct UIContext {
     window: Window,
     renderer: Renderer,
     font_manager: FontManager,
+    framework: Framework,
 }
 
 impl UIContext {
@@ -53,6 +56,7 @@ impl UIContext {
             window: Window::new(width, height),
             renderer: Renderer::new(),
             font_manager: FontManager::new("src/assets/fonts", ""),
+            framework: Framework::new(),
         });
         context().fonts().set_font_bytes("main", include_bytes!("../assets/fonts/ProductSans.ttf").to_vec());
     }
@@ -62,7 +66,6 @@ impl UIContext {
             self.handle();
 
             self.glfw.set_swap_interval(SwapInterval::Sync(1));
-            self.last_frame = Instant::now();
         }
     }
 
@@ -70,8 +73,8 @@ impl UIContext {
         self.handle_events();
 
         self.pre_render();
-        self.renderer.draw_rect(Bounds::ltrb(0.0, 0.0, 100.0, 100.0), 0x10ffffff);
-        self.fonts().get_font("main").unwrap().draw_string(20.0, "test", 120.0, 5.0, 0xff909090);
+        self.framework.current_screen.event(Event::Render(self.last_frame.elapsed().as_secs_f32()));
+        self.last_frame = Instant::now();
         check_error("render");
         self.post_render();
     }
@@ -108,8 +111,7 @@ impl UIContext {
         loop {
             match self.events.receive() {
                 Some((_, event)) => {
-                    println!("event: {:?}", event);
-                    // dispatch
+                    self.window.handle(&event);
                 }
                 None => break
             }

@@ -1,7 +1,8 @@
 use gl::TEXTURE2;
 
-use crate::components::render::bounds::Bounds;
-use crate::components::render::renderer::RendererWrapped;
+use crate::components::bounds::Bounds;
+use crate::components::context::context;
+use crate::components::render::stack::State::Blend;
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::gl_binds::gl30::{ActiveTexture, BLEND, Disable, Enable, RGBA, TEXTURE0, TEXTURE1};
 
@@ -39,12 +40,12 @@ impl FramebufferMask {
     pub unsafe fn begin_draw(&mut self) {
         self.apply_framebuffer.bind();
         self.apply_framebuffer.clear();
-        Disable(BLEND);
+        context().renderer().stack().push_l(Blend(false), 1);
     }
 
     pub unsafe fn end_draw(&self) {
         self.apply_framebuffer.unbind();
-        Enable(BLEND);
+        context().renderer().stack().pop();
     }
 
     // Applies to mask framebuffer to the draw framebuffer, and renders it onto the parent framebuffer

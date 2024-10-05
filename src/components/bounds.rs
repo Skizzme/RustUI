@@ -1,9 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::components::render::color::ToColor;
-use crate::components::render::renderer::RendererWrapped;
-// use crate::components::window::Window;
-
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Bounds {
     x: f32,
@@ -12,20 +8,8 @@ pub struct Bounds {
     height: f32,
 }
 
-pub trait ToBounds {
-    fn to_bounds(&self) -> Bounds;
-}
-
-impl ToBounds for Bounds {
-    fn to_bounds(&self) -> Bounds {
-        self.clone()
-    }
-}
-
-impl ToBounds for &Bounds {
-    fn to_bounds(&self) -> Bounds {
-        *self.clone()
-    }
+impl Into<Bounds> for &Bounds {
+    fn into(self) -> Bounds { self.clone() }
 }
 
 impl Sub for Bounds {

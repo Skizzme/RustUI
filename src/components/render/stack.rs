@@ -3,12 +3,9 @@ use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
 use crate::gl_binds::gl11::types::GLenum;
 
 unsafe fn enable_disable(state: GLenum, value: bool) {
-    if value {
-        println!("enable {}", state);
-        Enable(state);
-    } else {
-        println!("disable {}", state);
-        Disable(state);
+    match value {
+        true => Enable(state),
+        false => Disable(state)
     }
 }
 
@@ -121,19 +118,18 @@ impl Stack {
         self.markers.push(self.stack.len())
     }
 
-    pub unsafe fn push(&mut self, mut state: State) {
-        self.push_l(GlState::new(0, state));
+    pub unsafe fn push(&mut self, state: State) {
+        self.push_l(state, 0);
     }
 
-    pub unsafe fn push_l(&mut self, mut state: GlState) {
+    pub unsafe fn push_l(&mut self, state: State, level: u8) {
+        let mut state = GlState::new(level, state);
         let id = state.state.id();
         if !self.current.contains_key(&id) {
             self.current.insert(id, state.clone());
-            println!("apply {:?}", state.state);
             state.apply();
         } else {
             let current = self.current.get(&id).unwrap();
-            println!("{:?} {:?}", current.state, state.state);
             if !current.state.same(&state.state) && current.level <= state.level {
                 state.apply();
             }
