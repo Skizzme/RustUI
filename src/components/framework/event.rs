@@ -1,5 +1,6 @@
 use glfw::{Action, Key, Modifiers, MouseButton, WindowEvent};
 
+#[derive(Debug)]
 pub enum Event {
     Render(RenderPass),
     MouseClick(MouseButton, Action),
@@ -7,6 +8,7 @@ pub enum Event {
     GlfwRaw(WindowEvent),
 }
 
+#[derive(Debug)]
 pub enum RenderPass {
     Main,
     Blur,

@@ -1,4 +1,4 @@
-use std::ops::{Add, Sub};
+use std::ops::{Add, AddAssign, Sub};
 use crate::components::bounds::Bounds;
 
 #[derive(Clone, Debug, Copy,)]
@@ -53,4 +53,13 @@ impl Into<Pos> for &Bounds {
 }
 impl Into<Pos> for &mut Bounds {
     fn into(self) -> Pos { Pos::new(self.x(), self.y()) }
+}
+
+impl AddAssign<(f32, f32)> for Pos {
+    fn add_assign(&mut self, rhs: (f32, f32)) {
+        *self = Pos {
+            x: self.x + rhs.0,
+            y: self.y + rhs.1,
+        }
+    }
 }

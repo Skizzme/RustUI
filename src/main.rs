@@ -14,10 +14,14 @@
 //         .unwrap();
 // }
 
-use glfw::WindowMode;
+use glfw::{Action, MouseButton, WindowHint, WindowMode};
 use winapi::um::wincon::FreeConsole;
+use RustUI::components::bounds::Bounds;
 
-use RustUI::components::context::{context, UIContext};
+use RustUI::components::context::{context, ContextBuilder, UIContext};
+use RustUI::components::framework::element::Element;
+use RustUI::components::framework::event::Event;
+use RustUI::components::framework::screen::ScreenTrait;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -28,7 +32,91 @@ fn main() {
     }
 
     unsafe {
-        UIContext::create_instance(1920/2, 1080/2, "Test", WindowMode::Windowed);
+        let mut builder = ContextBuilder::new();
+        builder.title("Test");
+        builder.dims(1920/2, 1080/2);
+        builder.hint(WindowHint::Resizable(false));
+        builder.build();
+
+        context().framework().set_screen(TestScreen::new());
         context().do_loop()
+    }
+}
+
+
+pub struct TestScreen {
+    pub text: String,
+}
+
+impl TestScreen {
+    pub fn new() -> Self {
+        TestScreen {
+            text: "SomeTExt".to_string(),
+        }
+    }
+}
+
+impl ScreenTrait for TestScreen {
+    unsafe fn event(&mut self, event: &Event) {
+        match event {
+            Event::Render(_) => {
+                context().fonts().get_font("main").draw_string(30.0, &self.text, (200.0, 100.0), 0xffffffff);
+                context().fonts().get_font("main").draw_string(30.0, &self.text, (200.0, 300.0), 0xffffffff);
+            }
+            Event::MouseClick(_, _) => {}
+            Event::Keyboard(_, _, _) => {}
+            _ => {}
+        }
+    }
+
+    unsafe fn register_elements(&mut self) -> Vec<Element> {
+        vec![
+            Element::new(Bounds::xywh(5.0, 100.0, 100.0, 100.0), true, |el, event| {
+                match event {
+                    Event::Render(_) => {
+                        let mouse = context().window().mouse();
+                        let (width, height) = context().fonts().get_font("main").draw_string(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
+                        el.bounds().set_width(width);
+                        el.bounds().set_height(height);
+                        let hovering = el.hovering();
+                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    }
+                    _ => {}
+                }
+            }, vec![Element::new(Bounds::xywh(0.0, 0.0, 10.0, 10.0), false, |el, event| {
+                match event {
+                    Event::Render(_) => {
+                        // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);
+                        let hovering = el.hovering();
+                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    },
+                    _ => {}
+                }
+            }, vec![])]),
+
+            Element::new(Bounds::xywh(200.0, 400.0, 100.0, 100.0), true, |el, event| {
+                match event {
+                    Event::Render(_) => {
+                        let mouse = context().window().mouse();
+                        let (width, height) = context().fonts().get_font("main").draw_string(40.0, format!("{:?}", mouse.is_pressed(MouseButton::Button1)), el.bounds(), 0xffffffff);
+                        el.bounds().set_width(width);
+                        el.bounds().set_height(height);
+                        let hovering = el.hovering();
+                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    }
+                    Event::MouseClick(_, action) => {
+                        match action {
+                            Action::Press => {
+                                if el.hovering() {
+                                    context().framework().set_screen(RustUI::components::framework::screen::DefaultScreen::new());
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
+            }, vec![]),
+        ]
     }
 }

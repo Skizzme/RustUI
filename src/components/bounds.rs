@@ -38,6 +38,9 @@ impl Bounds {
         obj
     }
 
+    pub fn pos(&self) -> Pos {
+        Pos::new(self.x, self.y)
+    }
     pub fn x(&self) -> f32 { self.x }
     pub fn y(&self) -> f32 { self.y }
     pub fn width(&self) -> f32 { self.width }
@@ -49,6 +52,10 @@ impl Bounds {
     pub fn center_x(&self) -> f32 { self.x + self.width / 2.0 }
     pub fn center_y(&self) -> f32 { self.y + self.height / 2.0 }
 
+    pub fn set_pos(&mut self, pos: &Pos) {
+        self.x = pos.x;
+        self.y = pos.y;
+    }
     pub fn set_x(&mut self, x: f32) { self.x = x; }
     pub fn set_y(&mut self, y: f32) { self.y = y; }
     pub fn set_width(&mut self, width: f32) { self.width = width; }

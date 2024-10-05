@@ -1,8 +1,12 @@
 use std::collections::HashMap;
+use std::ops::AddAssign;
 
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
+use crate::components::context::context;
+use crate::gl_binds::gl11::Translatef;
 
-use crate::gl_binds::gl11::types::GLenum;
+use crate::gl_binds::gl11::types::{GLdouble, GLenum};
+use crate::gl_binds::gl20::Translated;
 
 unsafe fn enable_disable(state: GLenum, value: bool) {
     match value {
@@ -16,23 +20,32 @@ pub enum State {
     Depth(bool),
     Texture2D(bool),
     Blend(bool),
+    Translate(f32, f32),
 }
 
 impl State {
     pub unsafe fn apply(&self) {
-        match self {
-            State::Depth(v) => enable_disable(DEPTH, *v),
-            State::Texture2D(v) => enable_disable(TEXTURE_2D, *v),
-            State::Blend(v) => enable_disable(BLEND, *v),
+        match *self {
+            State::Depth(v) => enable_disable(DEPTH, v),
+            State::Texture2D(v) => enable_disable(TEXTURE_2D, v),
+            State::Blend(v) => enable_disable(BLEND, v),
+            State::Translate(x, y) => {
+                context().window().mouse.pos += (-x, -y);
+                Translatef(x, y, 0.0);
+            },
         }
         // println!("applied {:?}", self);
     }
 
     pub unsafe fn unapply(&self) {
-        match self {
-            State::Depth(v) => enable_disable(DEPTH, !*v),
-            State::Texture2D(v) => enable_disable(TEXTURE_2D, !*v),
-            State::Blend(v) => enable_disable(BLEND, !*v),
+        match *self {
+            State::Depth(v) => enable_disable(DEPTH, !v),
+            State::Texture2D(v) => enable_disable(TEXTURE_2D, !v),
+            State::Blend(v) => enable_disable(BLEND, !v),
+            State::Translate(x, y) => {
+                context().window().mouse.pos += (x, y);
+                Translatef(-x, -y, 0.0);
+            }
         }
         // println!("unapplied {:?}", self);
     }
@@ -50,6 +63,10 @@ impl State {
             State::Blend(v1) => match other {
                 State::Blend(v2) => v1 == v2,
                 _ => false
+            },
+            State::Translate(x1, y1) => match other {
+                State::Translate(x2, y2) => x1 == x2 && y1 == y2,
+                _ => false,
             }
         }
     }
@@ -59,6 +76,7 @@ impl State {
             State::Depth(_) => 0,
             State::Texture2D(_) => 1,
             State::Blend(_) => 2,
+            State::Translate(_, _) => 3,
         }
     }
 }

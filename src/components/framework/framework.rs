@@ -11,10 +11,10 @@ pub struct Framework {
 impl Framework {
     pub unsafe fn new() -> Self {
         let mut fr = Framework {
-            current_screen: Box::new(DefaultScreen {text: "framework".to_string()}),
+            current_screen: Box::new(DefaultScreen::new()),
             elements: vec![],
         };
-        fr.set_screen(DefaultScreen{text: "framework".to_string()});
+        fr.set_screen(DefaultScreen::new());
         fr
     }
     fn reset(&mut self) {

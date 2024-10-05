@@ -5,7 +5,7 @@ use glfw::{Action, MouseButton, WindowEvent};
 use crate::components::position::Pos;
 
 pub struct Mouse {
-    pub(super) pos: Pos,
+    pub(crate) pos: Pos,
     last_pos: Pos,
     click_pos: Pos,
     pub(super) delta: Pos,

@@ -2,7 +2,7 @@ use std::ptr::addr_of_mut;
 use std::time::Instant;
 
 use gl::types::*;
-use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowMode};
+use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 
 use crate::components::bounds::Bounds;
 use crate::components::framework::event::{Event, RenderPass};
@@ -34,12 +34,14 @@ pub struct UIContext {
     renderer: Renderer,
     font_manager: FontManager,
     framework: Framework,
+
+    close_requested: bool,
 }
 
 impl UIContext {
-    pub unsafe fn create_instance(width: i32, height: i32, title: impl ToString, mode: WindowMode) {
+    pub unsafe fn create_instance(builder: ContextBuilder) {
         let mut glfw = glfw::init(fail_on_errors!()).unwrap();
-        let (mut p_window, events) = glfw.create_window(width as u32, height as u32, title.to_string().as_str(), mode).expect("Failed to make window");
+        let (mut p_window, events) = glfw.create_window(builder.width as u32, builder.height as u32, builder.title.as_str(), builder.mode).expect("Failed to make window");
 
         p_window.make_current();
         p_window.set_all_polling(true);
@@ -53,18 +55,19 @@ impl UIContext {
             glfw,
             p_window,
             events,
-            framebuffer: Framebuffer::new(RGBA, width, height).expect("Failed to create main framebuffer"),
+            framebuffer: Framebuffer::new(RGBA, builder.width, builder.height).expect("Failed to create main framebuffer"),
             last_frame: Instant::now(),
-            window: Window::new(width, height),
+            window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
             font_manager: FontManager::new(""),
             framework: Framework::new(),
+            close_requested: false,
         });
         context().fonts().set_font_bytes("main", include_bytes!("../assets/fonts/ProductSans.ttf").to_vec());
     }
 
     pub unsafe fn do_loop(&mut self) {
-        loop {
+        while !self.close_requested {
             self.handle();
 
             self.glfw.set_swap_interval(SwapInterval::Sync(1));
@@ -114,8 +117,15 @@ impl UIContext {
         loop {
             match self.events.receive() {
                 Some((_, event)) => {
+                    match &event {
+                        WindowEvent::Close => self.close_requested = true,
+                        WindowEvent::MouseButton(button, action, mods) => {
+                            self.framework.event(Event::MouseClick(*button, *action))
+                        }
+                        _ => {}
+                    }
                     self.window.handle(&event);
-                    self.framework.event(Event::GlfwRaw(event));
+                    // self.framework.event(Event::GlfwRaw(event));
                 }
                 None => break
             }
@@ -131,6 +141,42 @@ impl UIContext {
         &mut self.window
     }
     pub fn framework(&mut self) -> &mut Framework { &mut self.framework }
+}
+
+pub struct ContextBuilder<'a> {
+    hints: Vec<WindowHint>,
+    width: i32, height: i32,
+    title: String,
+    glfw: Glfw,
+    mode: WindowMode<'a>,
+}
+
+impl<'a> ContextBuilder<'a> {
+    pub fn new() -> ContextBuilder<'a> {
+        ContextBuilder {
+            hints: vec![],
+            width: 400,
+            height: 300,
+            title: "".to_string(),
+            glfw: glfw::init(fail_on_errors!()).unwrap(),
+            mode: WindowMode::Windowed,
+        }
+    }
+
+    pub fn title(&mut self, title: impl ToString) { self.title = title.to_string(); }
+    pub fn dims(&mut self, width: i32, height: i32) {
+        self.width = width;
+        self.height = height;
+    }
+
+    pub fn hints(&mut self, mut hints: Vec<WindowHint>) { self.hints.append(&mut hints); }
+    pub fn hint(&mut self, hint: WindowHint) { self.hints.push(hint); }
+
+    pub fn mode(&mut self, mode: WindowMode<'a>) { self.mode = mode; }
+
+    pub unsafe fn build(self) {
+        UIContext::create_instance(self);
+    }
 }
 
 pub unsafe fn check_error(th: &str) {
