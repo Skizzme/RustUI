@@ -1,6 +1,4 @@
-use std::cell::RefCell;
 use std::path;
-use std::rc::Rc;
 
 use gl::*;
 
@@ -10,7 +8,6 @@ use crate::components::render::color::ToColor;
 use crate::components::render::stack::Stack;
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::shader::Shader;
-use crate::gl_binds::gl11::types::GLenum;
 use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2f};
 
 /// The global renderer to render basically everything non-text related
@@ -65,8 +62,8 @@ impl Renderer {
     }
 
     /// Draws a nice rounded rectangle using texture shaders
-    pub unsafe fn draw_rounded_rect(&mut self, mut bounds: impl Into<Bounds>, radius: f32, color: impl ToColor) {
-        let mut bounds = bounds.into() + Bounds::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
+    pub unsafe fn draw_rounded_rect(&mut self, bounds: impl Into<Bounds>, radius: f32, color: impl ToColor) {
+        let bounds = bounds.into() + Bounds::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
         self.stack.begin();
         self.stack.push(Blend(true));
         self.stack.push(Texture2D(true));

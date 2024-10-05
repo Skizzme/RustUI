@@ -1,4 +1,5 @@
 use std::ops::{Add, Sub};
+use crate::components::bounds::Bounds;
 
 #[derive(Clone, Debug, Copy,)]
 pub struct Pos {
@@ -38,4 +39,14 @@ impl Into<(f32, f32)> for Pos {
     fn into(self) -> (f32, f32) {
         (self.x, self.y)
     }
+}
+
+impl Into<Pos> for Bounds {
+    fn into(self) -> Pos { Pos::new(self.x(), self.y()) }
+}
+impl Into<Pos> for &Bounds {
+    fn into(self) -> Pos { Pos::new(self.x(), self.y()) }
+}
+impl Into<Pos> for &mut Bounds {
+    fn into(self) -> Pos { Pos::new(self.x(), self.y()) }
 }

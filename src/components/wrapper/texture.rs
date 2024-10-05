@@ -1,14 +1,10 @@
-use std::cell::RefCell;
 use std::mem::size_of_val;
 use std::ptr;
-use std::rc::Rc;
-use std::sync::Arc;
 
 use gl::*;
 use gl::types::*;
-use crate::components::context::context;
 
-use crate::components::render::renderer::Renderer;
+use crate::components::context::context;
 use crate::gl_binds::gl30::Color4d;
 
 #[derive(Debug, Clone)]

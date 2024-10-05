@@ -1,5 +1,5 @@
 use glfw::WindowEvent;
-use crate::components::position::Pos;
+
 use crate::components::wrapper::mouse::Mouse;
 
 pub struct Window {
@@ -26,7 +26,7 @@ impl Window {
             }
             _ => {}
         }
-        println!("{:?}", event);
+        // println!("{:?}", event);
     }
 
     pub fn width(&self) -> i32 {

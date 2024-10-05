@@ -1,28 +1,23 @@
 extern crate freetype;
 
-use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
-use std::rc::Rc;
-use std::sync::Arc;
 use std::sync::mpsc::channel;
 use std::time::Instant;
 
 use freetype::face::LoadFlag;
-use freetype::{GlyphMetrics, RenderMode};
-use freetype::ffi::FT_Size_Metrics;
+use freetype::RenderMode;
 use gl::*;
 use gl::types::GLdouble;
 
 use crate::asset_manager;
-use crate::components::context::{context};
-use crate::components::position::Pos;
 use crate::components::bounds::Bounds;
+use crate::components::context::context;
+use crate::components::position::Pos;
 use crate::components::render::color::ToColor;
-use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
@@ -80,7 +75,6 @@ impl Ord for CacheGlyph {
 
 pub struct FontManager {
     fonts: HashMap<String, Font>,
-    fonts_location: String,
     cache_location: String,
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     sdf_shader: Shader,
@@ -88,13 +82,12 @@ pub struct FontManager {
 }
 
 impl FontManager {
-    pub unsafe fn new(fonts_location: impl ToString, cache_location: impl ToString) -> Self {
+    pub unsafe fn new(cache_location: impl ToString) -> Self {
         let st = Instant::now();
         let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
-            fonts_location: fonts_location.to_string(),
             cache_location: cache_location.to_string(),
             mem_atlas_cache: HashMap::new(),
             sdf_shader: s,
@@ -202,7 +195,6 @@ impl Font {
             let batch_size = total_length / thread_count;
             let offset = j*batch_size;
             let t_sender = sender.clone();
-            let st = Instant::now();
             let t_bytes = font_bytes.clone();
             let thread = std::thread::spawn(move || {
                 let lib = freetype::Library::init().unwrap();
@@ -417,6 +409,7 @@ impl<'a> FontRenderer<'a> {
     }
 
     /// The method to be called to a render a string using immediate GL
+    /// Returns width, height
     pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
         // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
         let (x, y) = pos.into().xy();

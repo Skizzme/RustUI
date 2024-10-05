@@ -1,10 +1,7 @@
-use gl::TEXTURE2;
-
-use crate::components::bounds::Bounds;
 use crate::components::context::context;
 use crate::components::render::stack::State::Blend;
 use crate::components::wrapper::framebuffer::Framebuffer;
-use crate::gl_binds::gl30::{ActiveTexture, BLEND, Disable, Enable, RGBA, TEXTURE0, TEXTURE1};
+use crate::gl_binds::gl30::{BLEND, Disable, Enable};
 
 /// Creates a mask based off of brightness in the mask framebuffer, applied onto the draw framebuffer
 ///

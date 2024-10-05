@@ -14,10 +14,9 @@
 //         .unwrap();
 // }
 
-use std::time::Instant;
-
 use glfw::WindowMode;
 use winapi::um::wincon::FreeConsole;
+
 use RustUI::components::context::{context, UIContext};
 
 fn main() {

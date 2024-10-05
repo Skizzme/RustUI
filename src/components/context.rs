@@ -1,10 +1,12 @@
-use std::fs;
+use std::ptr::addr_of_mut;
 use std::time::Instant;
+
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowMode};
-use crate::components::framework::event::Event;
-use crate::components::framework::framework::Framework;
+
 use crate::components::bounds::Bounds;
+use crate::components::framework::event::{Event, RenderPass};
+use crate::components::framework::framework::Framework;
 use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::window::Window;
@@ -55,7 +57,7 @@ impl UIContext {
             last_frame: Instant::now(),
             window: Window::new(width, height),
             renderer: Renderer::new(),
-            font_manager: FontManager::new("src/assets/fonts", ""),
+            font_manager: FontManager::new(""),
             framework: Framework::new(),
         });
         context().fonts().set_font_bytes("main", include_bytes!("../assets/fonts/ProductSans.ttf").to_vec());
@@ -73,7 +75,7 @@ impl UIContext {
         self.handle_events();
 
         self.pre_render();
-        self.framework.current_screen.event(Event::Render(self.last_frame.elapsed().as_secs_f32()));
+        self.framework.event(Event::Render(RenderPass::Main));
         self.last_frame = Instant::now();
         check_error("render");
         self.post_render();
@@ -99,7 +101,7 @@ impl UIContext {
         check_error("post");
         self.framebuffer.unbind();
         self.framebuffer.bind_texture();
-        self.renderer.draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);;
+        self.renderer.draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
         self.framebuffer.unbind();
 
         self.renderer.end_frame();
@@ -123,9 +125,10 @@ impl UIContext {
     pub fn fonts(&mut self) -> &mut FontManager {
         &mut self.font_manager
     }
-    pub fn window(&self) -> &Window {
-        &self.window
+    pub fn window(&mut self) -> &mut Window {
+        &mut self.window
     }
+    pub fn framework(&mut self) -> &mut Framework { &mut self.framework }
 }
 
 pub unsafe fn check_error(th: &str) {

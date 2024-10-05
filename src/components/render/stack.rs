@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
+
 use crate::gl_binds::gl11::types::GLenum;
 
 unsafe fn enable_disable(state: GLenum, value: bool) {
@@ -130,9 +132,10 @@ impl Stack {
             state.apply();
         } else {
             let current = self.current.get(&id).unwrap();
-            if !current.state.same(&state.state) && current.level <= state.level {
+            // TODO state checks properly
+            // if !current.state.same(&state.state) && current.level <= state.level {
                 state.apply();
-            }
+            // }
         }
 
         self.stack.push(state)

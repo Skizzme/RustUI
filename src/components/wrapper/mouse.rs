@@ -1,5 +1,7 @@
 use std::collections::HashSet;
+
 use glfw::{Action, MouseButton, WindowEvent};
+
 use crate::components::position::Pos;
 
 pub struct Mouse {
@@ -17,7 +19,7 @@ impl Mouse {
 
     pub fn handle(&mut self, event: &WindowEvent) {
         match event {
-            WindowEvent::MouseButton(button, action, mods) => {
+            WindowEvent::MouseButton(button, action, _) => {
                 match action {
                     Action::Release => self.pressed.remove(button),
                     Action::Press | Action::Repeat => self.pressed.insert(button.clone()),
