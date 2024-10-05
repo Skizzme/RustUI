@@ -5,6 +5,7 @@ use gl::*;
 use gl::types::*;
 
 use crate::components::context::context;
+use crate::gl_binds::gl11::{EnableClientState, TexCoordPointer, TEXTURE_COORD_ARRAY, VertexPointer};
 use crate::gl_binds::gl30::Color4d;
 
 #[derive(Debug, Clone)]
@@ -34,7 +35,7 @@ impl Texture {
 
         // Make buffers
         // let vertices = [[-0.5f32, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5],];
-        let vertices = [[0.0, height as f32], [width as f32, height as f32], [width as f32, 0.0], [0.0, 0.0],];
+        let vertices = [[0.0, 50 as f32], [50 as f32, 50 as f32], [50 as f32, 0.0], [0.0, 0.0],];
 
         BindBuffer(ARRAY_BUFFER, vbo);
         BufferData(
@@ -43,7 +44,10 @@ impl Texture {
             vertices.as_ptr() as *const _,
             STATIC_DRAW
         );
+        EnableClientState(crate::gl_binds::gl11::VERTEX_ARRAY);
+        VertexPointer(2, crate::gl_binds::gl11::FLOAT, 4 * 2, ptr::null());
 
+        EnableClientState(TEXTURE_COORD_ARRAY);
         let uvs: [[f32; 2]; 4] = [[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]];
         BindBuffer(ARRAY_BUFFER, uvo);
         BufferData(
@@ -52,6 +56,7 @@ impl Texture {
             uvs.as_ptr() as *const _,
             STATIC_DRAW
         );
+        TexCoordPointer(2, crate::gl_binds::gl11::FLOAT, 4 * 2, ptr::null());
 
         let indices = [0, 1, 2, 0, 2, 3];
         BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
@@ -94,16 +99,19 @@ impl Texture {
     }
 
     pub unsafe fn render(&self) {
+        Enable(BLEND);
         Enable(TEXTURE_2D);
-        context().renderer().texture_shader.bind();
-        self.bind();
 
-        Color4d(1.0, 1.0, 1.0, 1.0);
+        context().renderer().texture_shader.bind();
+        ActiveTexture(crate::gl_binds::gl20::TEXTURE0);
+        self.bind();
         BindVertexArray(self.vao);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
         self.unbind();
         context().renderer().texture_shader.unbind();
+        BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
+        BindBuffer(ARRAY_BUFFER, 0);
     }
 
     pub unsafe fn draw(&self) {
@@ -117,15 +125,9 @@ impl Texture {
 
     pub unsafe fn bind(&self) {
         BindTexture(TEXTURE_2D, self.texture_id);
-        // BindVertexArray(self.vao);
-        // DrawElements(TRIANGLES, 6, UNSIGNED_BYTE, null());
-        // BindVertexArray(0);
     }
 
     pub unsafe fn unbind(&self) {
         BindTexture(TEXTURE_2D, 0);
-        // BindVertexArray(self.vao);
-        // DrawElements(TRIANGLES, 6, UNSIGNED_BYTE, null());
-        // BindVertexArray(0);
     }
 }

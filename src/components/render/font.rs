@@ -95,6 +95,10 @@ impl FontManager {
         }
     }
 
+    pub fn font(&self, name: impl ToString) -> Option<&Font> {
+        self.fonts.get(&name.to_string())
+    }
+
     /// Sets the byte-data for a font to be used by the loader so that fonts don't have to be files
     ///
     /// Should only be used on setup, and the memory will be freed once the font is loaded
@@ -142,7 +146,7 @@ impl FontManager {
     /// This should not be called every frame, but is just a way to create a fond renderer with the needed options
     ///
     /// `name` references the name specified when calling `set_font_bytes`
-    pub unsafe fn get_font(&mut self, name: &str) -> FontRenderer {
+    pub unsafe fn renderer(&mut self, name: &str) -> FontRenderer {
         if !self.fonts.contains_key(name) {
             self.load_font(name, false);
         }
