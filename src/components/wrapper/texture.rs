@@ -35,7 +35,7 @@ impl Texture {
 
         // Make buffers
         // let vertices = [[-0.5f32, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5],];
-        let vertices = [[0.0, 50 as f32], [50 as f32, 50 as f32], [50 as f32, 0.0], [0.0, 0.0],];
+        let vertices = [[10.0, height as f32 / 10.0], [width as f32 / 10.0, height as f32 / 10.0], [width as f32 / 10.0, 10.0], [10.0, 10.0],];
 
         BindBuffer(ARRAY_BUFFER, vbo);
         BufferData(

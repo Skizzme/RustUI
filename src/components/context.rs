@@ -3,6 +3,7 @@ use std::time::Instant;
 
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
+use image::open;
 
 use crate::components::bounds::Bounds;
 use crate::components::framework::event::{Event, RenderPass};
@@ -11,6 +12,7 @@ use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::window::Window;
 use crate::components::wrapper::framebuffer::Framebuffer;
+use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::{gl11, gl20, gl30};
 use crate::gl_binds::gl11::*;
 
@@ -36,10 +38,12 @@ pub struct UIContext {
     framework: Framework,
 
     close_requested: bool,
+    pub tex: Texture,
 }
 
 impl UIContext {
     pub unsafe fn create_instance(builder: ContextBuilder) {
+        let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
         let mut glfw = glfw::init(fail_on_errors!()).unwrap();
         let (mut p_window, events) = glfw.create_window(builder.width as u32, builder.height as u32, builder.title.as_str(), builder.mode).expect("Failed to make window");
 
@@ -62,6 +66,7 @@ impl UIContext {
             font_manager: FontManager::new(""),
             framework: Framework::new(),
             close_requested: false,
+            tex: Texture::create(img.width() as i32, img.height() as i32, &img.into_raw(), RGBA),
         });
         context().fonts().set_font_bytes("main", include_bytes!("../assets/fonts/ProductSans.ttf").to_vec());
     }

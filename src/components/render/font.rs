@@ -5,13 +5,14 @@ use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
+use std::ptr;
 use std::sync::mpsc::channel;
 use std::time::Instant;
 
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
 use gl::*;
-use gl::types::GLdouble;
+use gl::types::{GLdouble, GLsizeiptr};
 
 use crate::asset_manager;
 use crate::components::bounds::Bounds;
@@ -21,6 +22,7 @@ use crate::components::render::color::ToColor;
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
+use crate::gl_binds::gl11::{EnableClientState, TexCoordPointer, TEXTURE_COORD_ARRAY, VertexPointer};
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
 
 const FONT_RES: u32 = 48u32;
@@ -84,7 +86,7 @@ pub struct FontManager {
 impl FontManager {
     pub unsafe fn new(cache_location: impl ToString) -> Self {
         let st = Instant::now();
-        let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
+        let s = Shader::new(asset_manager::file_contents_str("shaders/sdf_instanced/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf_instanced/fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
@@ -412,6 +414,101 @@ impl<'a> FontRenderer<'a> {
         self.draw_string(size, string, (x-width/2.0, y), color)
     }
 
+
+    /// The method to be called to a render a string using immediate GL
+    /// Returns width, height
+    pub unsafe fn draw_string_instanced(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
+        // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        let (x, y) = pos.into().xy();
+        self.begin(size, x, y);
+        self.set_color(color);
+        // context().tex.bind();
+        for char in string.to_string().chars() {
+            let x = self.x;
+            let y = self.y;
+            let (c_w, _c_h, should_render) = self.get_dimensions(char);
+
+            let atlas_ref= self.font.atlas_tex.as_ref().unwrap().clone();
+
+            let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
+                None => {
+                    return (0.0, 0.0);
+                }
+                Some(glyph) => {
+                    glyph
+                }
+            };
+            let pos_y = y + self.get_height() - glyph.top as f32;
+
+            let (right, bottom) = match self.scale_mode {
+                ScaleMode::Normal => {
+                    (x+glyph.width as f32, pos_y+glyph.height as f32)
+                }
+                ScaleMode::Quality => {
+                    (self.get_scaled_value(x+glyph.width as f32, self.comb_scale_x), self.get_scaled_value(pos_y+glyph.height as f32, self.comb_scale_y))
+                }
+            };
+
+            let pos = Bounds::ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom);
+
+            let uv = Bounds::ltrb(glyph.atlas_x as f32 / atlas_ref.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas_ref.width as f32, glyph.height as f32 / atlas_ref.height as f32);
+
+            // context().renderer().draw_texture_rect_uv(pos, uv, 0xffffffff);
+
+            let mut vao = 0;
+            let mut vbo = 0;
+            let mut uvo = 0;
+            let mut ebo = 0;
+            GenVertexArrays(1, &mut vao);
+            GenBuffers(1, &mut vbo);
+            GenBuffers(1, &mut uvo);
+            GenBuffers(1, &mut ebo);
+            BindVertexArray(vao);
+
+            let vertices = [[pos.left(), pos.bottom()], [pos.right(), pos.bottom()], [pos.right(), pos.top()], [pos.left(), pos.top()]];
+            BindBuffer(ARRAY_BUFFER, vbo);
+            BufferData(
+                ARRAY_BUFFER,
+                size_of_val(vertices.as_slice()) as GLsizeiptr,
+                vertices.as_ptr() as *const _,
+                DYNAMIC_DRAW
+            );
+            EnableClientState(VERTEX_ARRAY);
+            VertexPointer(2, FLOAT, 2 * 4, ptr::null());
+
+            EnableClientState(TEXTURE_COORD_ARRAY);
+            let uvs: [[f32; 2]; 4] = [[uv.left(), uv.bottom()], [uv.right(), uv.bottom()], [uv.right(), uv.top()], [uv.left(), uv.top()]];
+            BindBuffer(ARRAY_BUFFER, uvo);
+            BufferData(
+                ARRAY_BUFFER,
+                size_of_val(uvs.as_slice()) as GLsizeiptr,
+                uvs.as_ptr() as *const _,
+                DYNAMIC_DRAW
+            );
+            TexCoordPointer(2, FLOAT, 2 * 4, ptr::null());
+
+            let indices = [0, 1, 2, 0, 2, 3];
+            BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
+            BufferData(
+                ELEMENT_ARRAY_BUFFER,
+                size_of_val(&indices) as isize,
+                indices.as_ptr().cast(),
+                DYNAMIC_DRAW
+            );
+
+            BindVertexArray(vao);
+            DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
+            BindVertexArray(0);
+
+            BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
+            BindBuffer(ARRAY_BUFFER, 0);
+
+            self.x += c_w;
+        }
+        self.end();
+        (self.line_width*self.scale, self.get_line_height()*self.scale)
+    }
+
     /// The method to be called to a render a string using immediate GL
     /// Returns width, height
     pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
@@ -542,9 +639,11 @@ impl<'a> FontRenderer<'a> {
                 (self.get_scaled_value(x+glyph.width as f32, scaled_x), self.get_scaled_value(pos_y+glyph.height as f32, scaled_y))
             }
         };
+        let uv = Bounds::ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
+        // println!("N: {} {:?}", char, uv);
         context().renderer().draw_texture_rect_uv(
             &Bounds::ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom),
-            &Bounds::ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32),
+            &uv,
             0xffffff,
         );
         // TODO make rendering use bearing x correctly
