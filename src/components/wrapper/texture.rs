@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use gl::*;
 use gl::types::*;
+use crate::components::context::context;
 
 use crate::components::render::renderer::{Renderer, RendererWrapped};
 use crate::gl_binds::gl30::Color4d;
@@ -13,7 +14,6 @@ use crate::gl_binds::gl30::Color4d;
 #[derive(Debug, Clone)]
 pub struct Texture {
     pub texture_id: GLuint,
-    pub renderer: Rc<RefCell<Renderer>>,
     pub width: i32,
     pub height: i32,
     pub vao: GLuint,
@@ -23,7 +23,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub unsafe fn create(renderer: Rc<RefCell<Renderer>>, width: i32, height: i32, bytes: &Vec<u8>, format: GLenum) -> Self {
+    pub unsafe fn create(width: i32, height: i32, bytes: &Vec<u8>, format: GLenum) -> Self {
         // let shader = Shader::new(asset_manager::file_contents_str ("shaders/test_n/vertex.glsl").unwrap(), asset_manager::file_contents_str ("shaders/test_n/fragment.glsl").unwrap());
 
         let mut vao = 0;
@@ -88,7 +88,6 @@ impl Texture {
         TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR as GLint);
         Texture {
             texture_id: tex_id,
-            renderer,
             width,
             height,
             vao,
@@ -100,7 +99,7 @@ impl Texture {
 
     pub unsafe fn render(&self) {
         Enable(TEXTURE_2D);
-        self.renderer.borrow_mut().texture_shader.bind();
+        context().renderer().texture_shader.bind();
         self.bind();
 
         Color4d(1.0, 1.0, 1.0, 1.0);
@@ -108,7 +107,7 @@ impl Texture {
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
         self.unbind();
-        self.renderer.borrow_mut().texture_shader.unbind();
+        context().renderer().texture_shader.unbind();
     }
 
     pub unsafe fn draw(&self) {

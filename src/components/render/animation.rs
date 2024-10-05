@@ -1,7 +1,5 @@
 use std::f64::consts::PI;
 
-use crate::components::window::Window;
-
 /// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
 pub enum AnimationType {
     Linear,
@@ -63,39 +61,41 @@ impl Animation {
             state: 0.0,
         }
     }
-
-    /// Updates the animation value for 1 call
-    ///
-    /// Should generally be called every frame
-    pub fn animate_target(&mut self, target: f64, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
-        self.set_target(target);
-
-        self.state += speed*screen.frame_delta;
-        if self.state > 1.0 {self.state = 1.0}
-
-        self.value = animation_type.get_value(self.state)*(self.target-self.starting)+self.starting;
-
-        self.value
-    }
-
-    pub fn animate(&mut self, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
-        self.animate_target(self.target, speed, animation_type, screen)
-    }
-
-    pub fn set_target(&mut self, target: f64) -> &mut Self {
-        if self.target != target {
-            self.target = target;
-            self.starting = self.value;
-            self.state = 0f64;
-        }
-        self
-    }
-
-
-    pub fn value(&self) -> f64 {
-        self.value
-    }
-    pub fn target(&self) -> f64 {
-        self.target
-    }
 }
+
+
+
+// Updates the animation value for 1 call
+//
+// Should generally be called every frame
+// pub fn animate_target(&mut self, target: f64, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
+//     self.set_target(target);
+//
+//     self.state += speed*screen.frame_delta;
+//     if self.state > 1.0 {self.state = 1.0}
+//
+//     self.value = animation_type.get_value(self.state)*(self.target-self.starting)+self.starting;
+//
+//     self.value
+// }
+//
+// pub fn animate(&mut self, speed: f64, animation_type: AnimationType, screen: &Window) -> f64 {
+//     self.animate_target(self.target, speed, animation_type, screen)
+// }
+//
+// pub fn set_target(&mut self, target: f64) -> &mut Self {
+//     if self.target != target {
+//         self.target = target;
+//         self.starting = self.value;
+//         self.state = 0f64;
+//     }
+//     self
+// }
+//
+//
+// pub fn value(&self) -> f64 {
+//     self.value
+// }
+// pub fn target(&self) -> f64 {
+//     self.target
+// }

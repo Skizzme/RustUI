@@ -4,8 +4,10 @@ use crate::gl_binds::gl11::types::GLenum;
 
 unsafe fn enable_disable(state: GLenum, value: bool) {
     if value {
+        println!("enable {}", state);
         Enable(state);
     } else {
+        println!("disable {}", state);
         Disable(state);
     }
 }
@@ -24,7 +26,7 @@ impl State {
             State::Texture2D(v) => enable_disable(TEXTURE_2D, *v),
             State::Blend(v) => enable_disable(BLEND, *v),
         }
-        println!("applied {:?}", self);
+        // println!("applied {:?}", self);
     }
 
     pub unsafe fn unapply(&self) {
@@ -33,7 +35,7 @@ impl State {
             State::Texture2D(v) => enable_disable(TEXTURE_2D, !*v),
             State::Blend(v) => enable_disable(BLEND, !*v),
         }
-        println!("unapplied {:?}", self);
+        // println!("unapplied {:?}", self);
     }
 
     pub fn same(&self, other: &State) -> bool {
@@ -110,7 +112,9 @@ impl Stack {
     }
 
     pub fn clear(&mut self) {
-        self.stack.clear()
+        self.stack.clear();
+        self.current.clear();
+        self.markers.clear();
     }
 
     pub fn begin(&mut self) {
@@ -125,11 +129,16 @@ impl Stack {
         let id = state.state.id();
         if !self.current.contains_key(&id) {
             self.current.insert(id, state.clone());
-        }
-        let current = self.current.get(&id).unwrap();
-        if !current.state.same(&state.state) && current.level <= state.level {
+            println!("apply {:?}", state.state);
             state.apply();
+        } else {
+            let current = self.current.get(&id).unwrap();
+            println!("{:?} {:?}", current.state, state.state);
+            if !current.state.same(&state.state) && current.level <= state.level {
+                state.apply();
+            }
         }
+
         self.stack.push(state)
     }
 
@@ -138,7 +147,9 @@ impl Stack {
         match self.markers.last() {
             Some(index) => {
                 for i in self.stack.len()..=*index {
-                    self.stack.remove(i).unapply();
+                    let mut state = self.stack.remove(i);
+                    state.unapply();
+                    self.current.remove(&state.state.id());
                 }
             }
             None => {
@@ -155,6 +166,8 @@ impl Stack {
             Some(mut state) => {
                 if state.applied() {
                     state.unapply();
+                    // TODO this is probably not proving the proper functionality
+                    self.current.remove(&state.state.id());
                 }
             }
         }

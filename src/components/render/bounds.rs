@@ -2,7 +2,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crate::components::render::color::ToColor;
 use crate::components::render::renderer::RendererWrapped;
-use crate::components::window::Window;
+// use crate::components::window::Window;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Bounds {
@@ -69,9 +69,9 @@ impl Div for Bounds {
 }
 
 impl Bounds {
-    pub unsafe fn draw_bounds(&self, window: &mut Window, color: impl ToColor) {
-        window.renderer.draw_rect_outline(self, 1.0, color);
-    }
+    // pub unsafe fn draw_bounds(&self, window: &mut Window, color: impl ToColor) {
+    //     window.renderer.draw_rect_outline(self, 1.0, color);
+    // }
 
     /// Creates a `Bounds` object from `Left, Top, Right, Bottom` parameters
     pub fn ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Bounds {

@@ -49,6 +49,10 @@ impl Renderer {
         }
     }
 
+    pub unsafe fn end_frame(&mut self) {
+        self.stack.clear();
+    }
+
     pub fn stack(&mut self) -> &mut Stack {
         &mut self.stack
     }
@@ -88,6 +92,7 @@ impl Renderer {
     pub unsafe fn draw_rect(&mut self, bounds: impl ToBounds, color: impl ToColor) {
         let bounds = bounds.to_bounds();
         self.stack.push(Texture2D(false));
+        self.stack.push(Blend(true));
 
         color.apply_color();
         Begin(QUADS);
@@ -97,7 +102,8 @@ impl Renderer {
         Vertex2f(bounds.left(), bounds.top());
         End();
 
-        self.stack.pop()
+        self.stack.pop();
+        self.stack.pop();
     }
 
     /// A rectangle where each corner's color can be different

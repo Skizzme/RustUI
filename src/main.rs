@@ -18,10 +18,7 @@ use std::time::Instant;
 
 use glfw::WindowMode;
 use winapi::um::wincon::FreeConsole;
-use RustUI::components::screen::ScreenTrait;
-
-use RustUI::components::window::Window;
-use RustUI::test_ui::default_screen::TestScreen;
+use RustUI::components::context::{context, UIContext};
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -32,21 +29,7 @@ fn main() {
     }
 
     unsafe {
-        let mut window = Window::create("Test", 1920/2, 1080/2, "src/assets/fonts/", "", Vec::new(), WindowMode::Windowed, 30);
-        let mut current_screen = TestScreen::new(&mut window);
-        let mut last_frame = Instant::now();
-        let mut frames = 0;
-        let mut last_fps = Instant::now();
-
-        while !window.p_window.should_close() {
-            window.frame(current_screen.base(), last_frame);
-            last_frame = Instant::now();
-            if last_fps.elapsed().as_secs_f32() > 1.0 {
-                println!("FPS {:?}", frames);
-                last_fps = Instant::now();
-                frames = 0;
-            }
-            frames += 1;
-        }
+        UIContext::create_instance(1920/2, 1080/2, "Test", WindowMode::Windowed);
+        context().do_loop()
     }
 }
