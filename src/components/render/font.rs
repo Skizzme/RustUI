@@ -23,6 +23,7 @@ use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::gl11::{EnableClientState, TexCoordPointer, TEXTURE_COORD_ARRAY, VertexPointer};
+use crate::gl_binds::gl11::types::{GLsizei, GLuint};
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
 
 const FONT_RES: u32 = 48u32;
@@ -419,11 +420,17 @@ impl<'a> FontRenderer<'a> {
     /// Returns width, height
     pub unsafe fn draw_string_instanced(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
         // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        let string = string.to_string();
+
+        // let vertices = [[10.0, height as f32 / 10.0], [width as f32 / 10.0, height as f32 / 10.0], [width as f32 / 10.0, 10.0], [10.0, 10.0],];
+
+        let mut vertices = vec![];
+        // let mut uvs = vec![];
         let (x, y) = pos.into().xy();
         self.begin(size, x, y);
         self.set_color(color);
         // context().tex.bind();
-        for char in string.to_string().chars() {
+        for char in string.chars() {
             let x = self.x;
             let y = self.y;
             let (c_w, _c_h, should_render) = self.get_dimensions(char);
@@ -450,61 +457,59 @@ impl<'a> FontRenderer<'a> {
             };
 
             let pos = Bounds::ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom);
-
             let uv = Bounds::ltrb(glyph.atlas_x as f32 / atlas_ref.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas_ref.width as f32, glyph.height as f32 / atlas_ref.height as f32);
 
-            // context().renderer().draw_texture_rect_uv(pos, uv, 0xffffffff);
+            vertices.push([pos.left(), pos.bottom(), uv.left(), uv.bottom()]);
+            vertices.push([pos.right(), pos.bottom(), uv.right(), uv.bottom()]);
+            vertices.push([pos.right(), pos.top(), uv.right(), uv.top()]);
+            vertices.push([pos.left(), pos.top(), uv.left(), uv.top()]);
 
-            let mut vao = 0;
-            let mut vbo = 0;
-            let mut uvo = 0;
-            let mut ebo = 0;
-            GenVertexArrays(1, &mut vao);
-            GenBuffers(1, &mut vbo);
-            GenBuffers(1, &mut uvo);
-            GenBuffers(1, &mut ebo);
-            BindVertexArray(vao);
-
-            let vertices = [[pos.left(), pos.bottom()], [pos.right(), pos.bottom()], [pos.right(), pos.top()], [pos.left(), pos.top()]];
-            BindBuffer(ARRAY_BUFFER, vbo);
-            BufferData(
-                ARRAY_BUFFER,
-                size_of_val(vertices.as_slice()) as GLsizeiptr,
-                vertices.as_ptr() as *const _,
-                DYNAMIC_DRAW
-            );
-            EnableClientState(VERTEX_ARRAY);
-            VertexPointer(2, FLOAT, 2 * 4, ptr::null());
-
-            EnableClientState(TEXTURE_COORD_ARRAY);
-            let uvs: [[f32; 2]; 4] = [[uv.left(), uv.bottom()], [uv.right(), uv.bottom()], [uv.right(), uv.top()], [uv.left(), uv.top()]];
-            BindBuffer(ARRAY_BUFFER, uvo);
-            BufferData(
-                ARRAY_BUFFER,
-                size_of_val(uvs.as_slice()) as GLsizeiptr,
-                uvs.as_ptr() as *const _,
-                DYNAMIC_DRAW
-            );
-            TexCoordPointer(2, FLOAT, 2 * 4, ptr::null());
-
-            let indices = [0, 1, 2, 0, 2, 3];
-            BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
-            BufferData(
-                ELEMENT_ARRAY_BUFFER,
-                size_of_val(&indices) as isize,
-                indices.as_ptr().cast(),
-                DYNAMIC_DRAW
-            );
-
-            BindVertexArray(vao);
-            DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
-            BindVertexArray(0);
-
-            BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
-            BindBuffer(ARRAY_BUFFER, 0);
+            // uvs.push([uv.left(), uv.bottom()]);
+            // uvs.push([uv.right(), uv.bottom()]);
+            // uvs.push([uv.right(), uv.top()]);
+            // uvs.push([uv.left(), uv.top()]);
 
             self.x += c_w;
         }
+
+        let mut vao = 0;
+        let mut instanced_vbo = 0;
+        let mut ebo = 0;
+        GenVertexArrays(1, &mut vao);
+        GenBuffers(1, &mut instanced_vbo);
+        GenBuffers(1, &mut ebo);
+        BindVertexArray(vao);
+
+        let indices = [0, 1, 2, 0, 2, 3];
+        BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
+        BufferData(
+            ELEMENT_ARRAY_BUFFER,
+            size_of_val(&indices) as isize,
+            indices.as_ptr().cast(),
+            DYNAMIC_DRAW
+        );
+
+        BindBuffer(ARRAY_BUFFER, instanced_vbo);
+
+        BufferData(
+            ARRAY_BUFFER,
+            size_of_val(vertices.as_slice()) as GLsizeiptr,
+            vertices.as_ptr() as *const _,
+            DYNAMIC_DRAW
+        );
+
+        let v_id = context().fonts().sdf_shader.get_uniform_location("u_instance") as GLuint;
+        EnableVertexAttribArray(v_id);
+        VertexAttribPointer(v_id, 4, FLOAT, FALSE, 4 * 4, ptr::null());
+        VertexAttribDivisor(v_id, 0);
+
+        BindVertexArray(vao);
+        DrawElementsInstanced(TRIANGLES, 6, UNSIGNED_INT, ptr::null(), string.len() as GLsizei);
+        BindVertexArray(0);
+
+        BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
+        BindBuffer(ARRAY_BUFFER, 0);
+
         self.end();
         (self.line_width*self.scale, self.get_line_height()*self.scale)
     }
