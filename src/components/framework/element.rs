@@ -69,7 +69,7 @@ impl Element {
                                 true
                             } else { false },
                         Action::Press =>
-                            if self.hovering {
+                            if self.hovering && self.draggable {
                                 self.dragging = (true, mouse.pos().clone() - self.bounds.pos());
                                 true
                             } else { false },
@@ -97,7 +97,7 @@ impl ElementBuilder {
         }
     }
 
-    pub fn handler<H: FnMut(&mut Self, &Event) + 'static>(&mut self, handler: H) { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); }
+    pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(&mut self, handler: H) { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); }
     pub fn child(&mut self, child: Element) { self.element.children.push(child); }
     pub fn bounds(&mut self, bounds: Bounds) { self.element.bounds = bounds; }
     pub fn draggable(&mut self, draggable: bool) { self.element.draggable = draggable; }

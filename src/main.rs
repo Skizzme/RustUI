@@ -19,7 +19,7 @@ use winapi::um::wincon::FreeConsole;
 use RustUI::components::bounds::Bounds;
 
 use RustUI::components::context::{context, ContextBuilder, UIContext};
-use RustUI::components::framework::element::Element;
+use RustUI::components::framework::element::{Element, ElementBuilder};
 use RustUI::components::framework::event::Event;
 use RustUI::components::framework::screen::ScreenTrait;
 
@@ -70,53 +70,40 @@ impl ScreenTrait for TestScreen {
     }
 
     unsafe fn register_elements(&mut self) -> Vec<Element> {
-        vec![
-            Element::new(Bounds::xywh(5.0, 100.0, 100.0, 100.0), true, |el, event| {
-                match event {
-                    Event::Render(_) => {
-                        let mouse = context().window().mouse();
-                        let (width, height) = context().fonts().get_font("main").draw_string(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
-                        el.bounds().set_width(width);
-                        el.bounds().set_height(height);
-                        let hovering = el.hovering();
-                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
-                    }
-                    _ => {}
-                }
-            }, vec![Element::new(Bounds::xywh(0.0, 0.0, 10.0, 10.0), false, |el, event| {
-                match event {
-                    Event::Render(_) => {
-                        // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);
-                        let hovering = el.hovering();
-                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
-                    },
-                    _ => {}
-                }
-            }, vec![])]),
+        let mut el_1 = ElementBuilder::new();
 
-            Element::new(Bounds::xywh(200.0, 400.0, 100.0, 100.0), true, |el, event| {
-                match event {
-                    Event::Render(_) => {
-                        let mouse = context().window().mouse();
-                        let (width, height) = context().fonts().get_font("main").draw_string(40.0, format!("{:?}", mouse.is_pressed(MouseButton::Button1)), el.bounds(), 0xffffffff);
-                        el.bounds().set_width(width);
-                        el.bounds().set_height(height);
-                        let hovering = el.hovering();
-                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
-                    }
-                    Event::MouseClick(_, action) => {
-                        match action {
-                            Action::Press => {
-                                if el.hovering() {
-                                    context().framework().set_screen(RustUI::components::framework::screen::DefaultScreen::new());
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    _ => {}
+        el_1.bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0));
+        el_1.draggable(true);
+        el_1.handler(|el, event| {
+            match event {
+                Event::Render(_) => {
+                    let mouse = context().window().mouse();
+                    let (width, height) = context().fonts().get_font("main").draw_string(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
+                    el.bounds().set_width(width);
+                    el.bounds().set_height(height);
+                    let hovering = el.hovering();
+                    el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
                 }
-            }, vec![]),
-        ]
+                _ => {}
+            }
+        });
+
+        let mut el_1_c = ElementBuilder::new();
+        el_1_c.bounds(Bounds::xywh(0.0, 0.0, 10.0, 10.0));
+        el_1_c.draggable(false);
+        el_1_c.handler(|el, event| {
+            match event {
+                Event::Render(_) => {
+                    // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);
+                    let hovering = el.hovering();
+                    el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                },
+                _ => {}
+            }
+        });
+
+        el_1.child(el_1_c.build());
+
+        vec![el_1.build()]
     }
 }
