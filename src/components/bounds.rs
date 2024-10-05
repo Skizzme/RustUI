@@ -1,4 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
+use crate::components::context::context;
+use crate::components::position::Pos;
+use crate::components::render::color::ToColor;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Bounds {
@@ -8,54 +11,10 @@ pub struct Bounds {
     height: f32,
 }
 
-impl Into<Bounds> for &Bounds {
-    fn into(self) -> Bounds { self.clone() }
-}
-
-impl Sub for Bounds {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self::Output {
-        Bounds { x: self.x - other.x, y: self.y - other.y, width: self.width - other.width, height: self.height - other.height, }
-    }
-}
-
-impl Add for Bounds {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self::Output {
-        Bounds { x: self.x + other.x, y: self.y + other.y, width: self.width + other.width, height: self.height + other.height, }
-    }
-}
-
-impl Mul for Bounds {
-    type Output = Self;
-
-    fn mul(self, other: Self) -> Self::Output {
-        Bounds { x: self.x * other.x, y: self.y * other.y, width: self.width * other.width, height: self.height * other.height, }
-    }
-}
-
-impl Mul<f32> for Bounds {
-    type Output = Self;
-
-    fn mul(self, other: f32) -> Self::Output {
-        Bounds { x: self.x * other, y: self.y * other, width: self.width * other, height: self.height * other, }
-    }
-}
-
-impl Div for Bounds {
-    type Output = Self;
-
-    fn div(self, other: Self) -> Self::Output {
-        Bounds { x: self.x / other.x, y: self.y / other.y, width: self.width / other.width, height: self.height / other.height, }
-    }
-}
-
 impl Bounds {
-    // pub unsafe fn draw_bounds(&self, window: &mut Window, color: impl ToColor) {
-    //     window.renderer.draw_rect_outline(self, 1.0, color);
-    // }
+    pub unsafe fn draw_bounds(&self, color: impl ToColor) {
+        context().renderer().draw_rect_outline(self, 1.0, color);
+    }
 
     /// Creates a `Bounds` object from `Left, Top, Right, Bottom` parameters
     pub fn ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Bounds {
@@ -103,5 +62,49 @@ impl Bounds {
     pub fn set_top(&mut self, top: f32) {
         self.height += self.y - top; // Increases height, since setting the top of the bounds means the bottom shouldn't move
         self.y = top;
+    }
+}
+
+impl Into<Bounds> for &Bounds {
+    fn into(self) -> Bounds { self.clone() }
+}
+
+impl Sub for Bounds {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Bounds { x: self.x - other.x, y: self.y - other.y, width: self.width - other.width, height: self.height - other.height, }
+    }
+}
+
+impl Add for Bounds {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self::Output {
+        Bounds { x: self.x + other.x, y: self.y + other.y, width: self.width + other.width, height: self.height + other.height, }
+    }
+}
+
+impl Mul for Bounds {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        Bounds { x: self.x * other.x, y: self.y * other.y, width: self.width * other.width, height: self.height * other.height, }
+    }
+}
+
+impl Mul<f32> for Bounds {
+    type Output = Self;
+
+    fn mul(self, other: f32) -> Self::Output {
+        Bounds { x: self.x * other, y: self.y * other, width: self.width * other, height: self.height * other, }
+    }
+}
+
+impl Div for Bounds {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self::Output {
+        Bounds { x: self.x / other.x, y: self.y / other.y, width: self.width / other.width, height: self.height / other.height, }
     }
 }

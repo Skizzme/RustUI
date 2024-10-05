@@ -13,6 +13,10 @@ impl Pos {
     pub fn x(&self) -> f32 { self.x }
     pub fn y(&self) -> f32 { self.y }
     pub fn xy(&self) -> (f32,f32) { (self.x, self.y) }
+
+    pub fn intersects(&self, bounds: &Bounds) -> bool {
+        self.x >= bounds.left() && self.y >= bounds.top() && self.x <= bounds.right() && self.y <= bounds.bottom()
+    }
 }
 
 impl Add for Pos {

@@ -73,6 +73,7 @@ impl UIContext {
 
     pub unsafe fn handle(&mut self) {
         self.handle_events();
+        self.window.mouse.frame();
 
         self.pre_render();
         self.framework.event(Event::Render(RenderPass::Main));
@@ -114,6 +115,7 @@ impl UIContext {
             match self.events.receive() {
                 Some((_, event)) => {
                     self.window.handle(&event);
+                    self.framework.event(Event::GlfwRaw(event));
                 }
                 None => break
             }

@@ -99,7 +99,6 @@ impl Color {
 
 pub trait ToColor {
     fn to_color(&self) -> Color;
-
     unsafe fn apply_color(&self) {
         self.to_color().apply();
     }
