@@ -5,7 +5,8 @@ use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::Path;
-use std::ptr;
+use std::{hash, ptr};
+use std::hash::{Hash, Hasher};
 use std::sync::mpsc::channel;
 use std::time::Instant;
 
@@ -18,7 +19,7 @@ use crate::asset_manager;
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
 use crate::components::position::Pos;
-use crate::components::render::color::ToColor;
+use crate::components::render::color::{Color, ToColor};
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
@@ -82,6 +83,7 @@ pub struct FontManager {
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     sdf_shader: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
+    pub cached_inst: HashMap<u64, (u32, Instant)>, // TODO clearing this
 }
 
 impl FontManager {
@@ -95,6 +97,7 @@ impl FontManager {
             mem_atlas_cache: HashMap::new(),
             sdf_shader: s,
             font_byte_library: HashMap::new(),
+            cached_inst: HashMap::new(),
         }
     }
 
@@ -415,96 +418,158 @@ impl<'a> FontRenderer<'a> {
         self.draw_string(size, string, (x-width/2.0, y), color)
     }
 
+    unsafe fn get_or_cache_inst(&mut self, size: f32, string: String, pos: Pos) -> u32 {
+        let mut hasher = hash::DefaultHasher::new();
+        hasher.write(&size.to_be_bytes());
+        hasher.write(string.as_bytes());
+        pos.hash(&mut hasher);
+
+        let hashed = hasher.finish();
+        let mut map = &mut context().fonts().cached_inst;
+        if !map.contains_key(&hashed) {
+            let mut vertices: Vec<[f32; 2]> = vec![];
+            let mut uvs: Vec<[f32; 2]> = vec![];
+            let mut indices: Vec<u32> = vec![];
+            let (x, y) = pos.xy();
+            self.begin(size, x, y);
+
+            let st = Instant::now();
+            let atlas = self.font.atlas_tex.as_ref().unwrap();
+
+            for char in string.chars() {
+                if char == '\n' {
+                    match self.scale_mode {
+                        ScaleMode::Normal => {
+                            self.y += self.get_line_height() * self.comb_scale_y;
+                        }
+                        ScaleMode::Quality => {
+                            self.y += self.get_scaled_value(self.get_line_height(), self.comb_scale_y);
+                        }
+                    }
+                    self.line_width = 0.0;
+                    self.x = self.start_x;
+                    continue;
+                }
+
+                let (c_w, _c_h, should_render) = self.get_dimensions(char);
+
+                let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
+                    None => {
+                        continue
+                        // return 0;
+                        // return (0.0, 0.0);
+                    }
+                    Some(glyph) => {
+                        glyph
+                    }
+                };
+                let pos_y = self.y + self.get_height() - glyph.top as f32;
+
+                let (right, bottom) = match self.scale_mode {
+                    ScaleMode::Normal => {
+                        (self.x+glyph.width as f32, pos_y+glyph.height as f32)
+                    }
+                    ScaleMode::Quality => {
+                        (self.get_scaled_value(self.x+glyph.width as f32, self.comb_scale_x), self.get_scaled_value(pos_y+glyph.height as f32, self.comb_scale_y))
+                    }
+                };
+
+                let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x as f32, pos_y, right, bottom);
+                let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
+
+                vertices.push([p_left, p_bottom]);
+                vertices.push([p_right, p_bottom]);
+                vertices.push([p_right, p_top]);
+                vertices.push([p_left, p_top]);
+
+                uvs.push([uv_left, uv_bottom]);
+                uvs.push([uv_right, uv_bottom]);
+                uvs.push([uv_right, uv_top]);
+                uvs.push([uv_left, uv_top]);
+
+                let base = vertices.len() as u32 - 4;
+
+                indices.push(base+0);
+                indices.push(base+1);
+                indices.push(base+2);
+                indices.push(base+0);
+                indices.push(base+2);
+                indices.push(base+3);
+
+                self.x += c_w;
+            }
+
+            let st = Instant::now();
+            let mut vao = 0;
+            let mut vbo = 0;
+            let mut uvo = 0;
+            let mut ebo = 0;
+            GenVertexArrays(1, &mut vao);
+            BindVertexArray(vao);
+
+            GenBuffers(1, &mut vbo);
+            BindBuffer(ARRAY_BUFFER, vbo);
+            BufferData(
+                ARRAY_BUFFER,
+                (vertices.len() * std::mem::size_of::<[f32; 2]>()) as GLsizeiptr,
+                vertices.as_ptr() as *const _,
+                DYNAMIC_DRAW,
+            );
+            EnableClientState(VERTEX_ARRAY);
+            VertexPointer(2, FLOAT, 0, ptr::null());
+
+            // Create and bind the UV buffer
+            GenBuffers(1, &mut uvo);
+            BindBuffer(ARRAY_BUFFER, uvo);
+            BufferData(
+                ARRAY_BUFFER,
+                (uvs.len() * std::mem::size_of::<[f32; 2]>()) as GLsizeiptr,
+                uvs.as_ptr() as *const _,
+                DYNAMIC_DRAW,
+            );
+            EnableClientState(TEXTURE_COORD_ARRAY);
+            TexCoordPointer(2, FLOAT, 0, ptr::null());
+
+            // Create and bind the element buffer
+            GenBuffers(1, &mut ebo);
+            BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
+            BufferData(
+                ELEMENT_ARRAY_BUFFER,
+                (indices.len() * std::mem::size_of::<u32>()) as GLsizeiptr,
+                indices.as_ptr() as *const _,
+                DYNAMIC_DRAW,
+            );
+
+            map.insert(hashed, (vao as u32, Instant::now()));
+        }
+        map.get_mut(&hashed).unwrap().1 = Instant::now();
+        map.get(&hashed).unwrap().0
+    }
 
     /// The method to be called to a render a string using immediate GL
     /// Returns width, height
     pub unsafe fn draw_string_instanced(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
         // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
+        let st = Instant::now();
         let string = string.to_string();
+        let pos = pos.into();
+        println!("{:?}", st.elapsed());
 
         // let vertices = [[10.0, height as f32 / 10.0], [width as f32 / 10.0, height as f32 / 10.0], [width as f32 / 10.0, 10.0], [10.0, 10.0],];
 
-        let mut vertices = vec![];
-        // let mut uvs = vec![];
-        let (x, y) = pos.into().xy();
+        let st = Instant::now();
+        let (x, y) = pos.xy();
         self.begin(size, x, y);
         self.set_color(color);
-        // context().tex.bind();
-        for char in string.chars() {
-            let x = self.x;
-            let y = self.y;
-            let (c_w, _c_h, should_render) = self.get_dimensions(char);
+        let len = string.len();
+        let vao = self.get_or_cache_inst(size, string, pos);
+        let atlas = self.font.atlas_tex.as_ref().unwrap();
 
-            let atlas_ref= self.font.atlas_tex.as_ref().unwrap().clone();
-
-            let glyph: &Glyph = match self.font.glyphs.get(char as usize) {
-                None => {
-                    return (0.0, 0.0);
-                }
-                Some(glyph) => {
-                    glyph
-                }
-            };
-            let pos_y = y + self.get_height() - glyph.top as f32;
-
-            let (right, bottom) = match self.scale_mode {
-                ScaleMode::Normal => {
-                    (x+glyph.width as f32, pos_y+glyph.height as f32)
-                }
-                ScaleMode::Quality => {
-                    (self.get_scaled_value(x+glyph.width as f32, self.comb_scale_x), self.get_scaled_value(pos_y+glyph.height as f32, self.comb_scale_y))
-                }
-            };
-
-            let pos = Bounds::ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom);
-            let uv = Bounds::ltrb(glyph.atlas_x as f32 / atlas_ref.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas_ref.width as f32, glyph.height as f32 / atlas_ref.height as f32);
-
-            vertices.push([pos.left(), pos.bottom(), uv.left(), uv.bottom()]);
-            vertices.push([pos.right(), pos.bottom(), uv.right(), uv.bottom()]);
-            vertices.push([pos.right(), pos.top(), uv.right(), uv.top()]);
-            vertices.push([pos.left(), pos.top(), uv.left(), uv.top()]);
-
-            // uvs.push([uv.left(), uv.bottom()]);
-            // uvs.push([uv.right(), uv.bottom()]);
-            // uvs.push([uv.right(), uv.top()]);
-            // uvs.push([uv.left(), uv.top()]);
-
-            self.x += c_w;
-        }
-
-        let mut vao = 0;
-        let mut instanced_vbo = 0;
-        let mut ebo = 0;
-        GenVertexArrays(1, &mut vao);
-        GenBuffers(1, &mut instanced_vbo);
-        GenBuffers(1, &mut ebo);
-        BindVertexArray(vao);
-
-        let indices = [0, 1, 2, 0, 2, 3];
-        BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
-        BufferData(
-            ELEMENT_ARRAY_BUFFER,
-            size_of_val(&indices) as isize,
-            indices.as_ptr().cast(),
-            DYNAMIC_DRAW
-        );
-
-        BindBuffer(ARRAY_BUFFER, instanced_vbo);
-
-        BufferData(
-            ARRAY_BUFFER,
-            size_of_val(vertices.as_slice()) as GLsizeiptr,
-            vertices.as_ptr() as *const _,
-            DYNAMIC_DRAW
-        );
-
-        let v_id = context().fonts().sdf_shader.get_uniform_location("u_instance") as GLuint;
-        EnableVertexAttribArray(v_id);
-        VertexAttribPointer(v_id, 4, FLOAT, FALSE, 4 * 4, ptr::null());
-        VertexAttribDivisor(v_id, 0);
+        ActiveTexture(TEXTURE0);
+        atlas.bind();
 
         BindVertexArray(vao);
-        DrawElementsInstanced(TRIANGLES, 6, UNSIGNED_INT, ptr::null(), string.len() as GLsizei);
+        DrawElements(TRIANGLES, (len * 6) as GLsizei, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
 
         BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
@@ -536,21 +601,22 @@ impl<'a> FontRenderer<'a> {
                 continue;
             }
 
-            if char == '\t' {
-                self.x += self.get_width(size, " ".to_string())*self.tab_length as f32;
-                continue;
-            }
-
+            // if char == '\t' {
+            //     self.x += self.get_width(size, " ".to_string())*self.tab_length as f32;
+            //     continue;
+            // }
+            //
             let (c_w, _c_h, should_render) = self.get_dimensions(char);
-            if should_render == 2 {
-                break;
-            }
-
-            if should_render <= 1 {
-                if should_render == 0 {
+            // if should_render == 2 {
+            //     break;
+            // }
+            //
+            // if should_render <= 1 {
+            //     if should_render == 0 {
+            {
                     let atlas_ref= self.font.atlas_tex.as_ref().unwrap().clone();
                     self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
-                }
+                // }
 
                 self.line_width += c_w;
                 match self.scale_mode {

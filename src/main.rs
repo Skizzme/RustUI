@@ -14,13 +14,14 @@
 //         .unwrap();
 // }
 
-use std::ptr;
+use std::{fs, ptr};
 use std::time::Instant;
 use gl::{ActiveTexture, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawElements, ELEMENT_ARRAY_BUFFER, GenBuffers, GenVertexArrays, STATIC_DRAW, TRIANGLES, UNSIGNED_INT, VertexArrayElementBuffer, VertexArrayVertexBuffer};
 use gl::types::GLsizeiptr;
 use glfw::{Action, MouseButton, WindowHint, WindowMode};
 use image::open;
 use winapi::um::wincon::FreeConsole;
+use rand::{random, Rng, thread_rng};
 use RustUI::components::bounds::Bounds;
 
 use RustUI::components::context::{context, ContextBuilder, UIContext};
@@ -59,8 +60,9 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
+        let mut t = fs::read_to_string("test_3.js").unwrap();
         TestScreen {
-            text: "SomeTExt".to_string(),
+            text: t,
         }
     }
 }
@@ -70,8 +72,12 @@ impl ScreenTrait for TestScreen {
         match event {
             Event::Render(_) => {
                 context().tex.render();
+                let st = Instant::now();
                 context().fonts().renderer("main").draw_string_instanced(30.0, &self.text, (200.0, 100.0), 0xffffffff);
-                context().fonts().renderer("main").draw_string(30.0, &self.text, (200.0, 300.0), 0xffffffff);
+                println!("Instanced: {:?}", st.elapsed());
+                // let st = Instant::now();
+                // context().fonts().renderer("main").draw_string(30.0, &self.text, (200.0, 300.0), 0xffffffff);
+                // println!("Direct: {:?}", st.elapsed());
             }
             Event::MouseClick(_, _) => {}
             Event::Keyboard(_, _, _) => {}

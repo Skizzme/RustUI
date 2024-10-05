@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, Sub};
 use crate::components::bounds::Bounds;
 
@@ -5,6 +6,13 @@ use crate::components::bounds::Bounds;
 pub struct Pos {
     pub(crate) x: f32,
     pub(crate) y: f32,
+}
+
+impl Hash for Pos {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write(&self.x.to_be_bytes());
+        state.write(&self.y.to_be_bytes());
+    }
 }
 
 impl Pos {

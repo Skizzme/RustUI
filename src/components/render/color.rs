@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use crate::gl_binds::gl30::Color4f;
 
 /// A struct to convert a color to all necessary forms
@@ -9,6 +10,15 @@ pub struct Color {
     green: f32,
     blue: f32,
     alpha: f32,
+}
+
+impl Hash for Color {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write(&self.red.to_be_bytes());
+        state.write(&self.green.to_be_bytes());
+        state.write(&self.blue.to_be_bytes());
+        state.write(&self.alpha.to_be_bytes());
+    }
 }
 
 impl Color {
