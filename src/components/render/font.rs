@@ -510,7 +510,7 @@ impl FontRenderer {
 
                 self.x += c_w;
             }
-            self.end(true);
+            self.end();
 
             let mut vao = VertexArray::new();
             vao.bind();
@@ -571,7 +571,7 @@ impl FontRenderer {
         BindVertexArray(0);
 
         Texture::unbind();
-        self.end(true);
+        self.end();
         (self.line_width*self.scale, self.get_line_height()*self.scale)
     }
 
@@ -625,7 +625,7 @@ impl FontRenderer {
                 }
             // }
         }
-        self.end(false);
+        self.end();
         (self.line_width*self.scale, self.get_line_height()*self.scale)
     }
 
@@ -766,13 +766,8 @@ impl FontRenderer {
         context().renderer().stack().end();
     }
 
-    pub unsafe fn end(&self, instanced_shader: bool) {
-        if instanced_shader {
-            context().fonts().sdf_shader_i.unbind();
-        } else {
-            context().fonts().sdf_shader.unbind();
-        }
-
+    pub unsafe fn end(&self) {
+        Shader::unbind();
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();
         Texture::unbind();

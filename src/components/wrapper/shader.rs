@@ -80,7 +80,7 @@ impl Shader {
     /// Unbinds this program
     ///
     /// In other words, binds program ID 0
-    pub unsafe fn unbind(&self) {
+    pub unsafe fn unbind() {
         UseProgram(0);
     }
 

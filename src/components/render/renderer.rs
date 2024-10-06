@@ -75,7 +75,7 @@ impl Renderer {
 
         self.draw_texture_rect(&bounds, 0xffffffff);
 
-        self.rounded_rect_shader.unbind();
+        Shader::unbind();
 
         self.stack.end();
     }

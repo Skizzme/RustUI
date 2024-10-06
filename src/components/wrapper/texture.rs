@@ -5,6 +5,7 @@ use gl::*;
 use gl::types::*;
 
 use crate::components::context::context;
+use crate::components::wrapper::shader::Shader;
 use crate::gl_binds::gl11::{EnableClientState, TexCoordPointer, TEXTURE_COORD_ARRAY, VertexPointer};
 use crate::gl_binds::gl30::Color4d;
 
@@ -104,12 +105,14 @@ impl Texture {
 
         context().renderer().texture_shader.bind();
         ActiveTexture(crate::gl_binds::gl20::TEXTURE0);
+
         self.bind();
         BindVertexArray(self.vao);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
         Texture::unbind();
-        context().renderer().texture_shader.unbind();
+
+        Shader::unbind();
         BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
         BindBuffer(ARRAY_BUFFER, 0);
     }
