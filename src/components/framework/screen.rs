@@ -5,8 +5,8 @@ use crate::components::framework::element::Element;
 use crate::components::framework::event::Event;
 
 pub trait ScreenTrait {
-    unsafe fn event(&mut self, event: &Event);
-    unsafe fn register_elements(&mut self) -> Vec<Element>;
+    unsafe fn handle(&mut self, event: &Event);
+    unsafe fn init(&mut self) -> Vec<Element>;
 }
 
 pub struct DefaultScreen;
@@ -18,7 +18,7 @@ impl DefaultScreen {
 }
 
 impl ScreenTrait for DefaultScreen {
-    unsafe fn event(&mut self, event: &Event) {
+    unsafe fn handle(&mut self, event: &Event) {
         match event {
             Event::Render(_) => {}
             Event::MouseClick(_, _) => {}
@@ -27,7 +27,7 @@ impl ScreenTrait for DefaultScreen {
         }
     }
 
-    unsafe fn register_elements(&mut self) -> Vec<Element> {
+    unsafe fn init(&mut self) -> Vec<Element> {
         vec![]
     }
 }

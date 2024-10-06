@@ -30,6 +30,7 @@ pub struct UIContext {
     p_window: PWindow,
     events: GlfwReceiver<(f64, WindowEvent)>,
     framebuffer: Framebuffer,
+    frames: (u32, u32, Instant),
     last_frame: Instant,
 
     window: Window,
@@ -44,7 +45,7 @@ pub struct UIContext {
 impl UIContext {
     pub unsafe fn create_instance(builder: ContextBuilder) {
         let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
-        let mut glfw = glfw::init(fail_on_errors!()).unwrap();
+        let mut glfw = builder.glfw;
         let (mut p_window, events) = glfw.create_window(builder.width as u32, builder.height as u32, builder.title.as_str(), builder.mode).expect("Failed to make window");
 
         p_window.make_current();
@@ -60,6 +61,7 @@ impl UIContext {
             p_window,
             events,
             framebuffer: Framebuffer::new(RGBA, builder.width, builder.height).expect("Failed to create main framebuffer"),
+            frames: (0, 0, Instant::now()),
             last_frame: Instant::now(),
             window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
@@ -73,13 +75,14 @@ impl UIContext {
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            self.handle();
+            self.frame();
 
-            self.glfw.set_swap_interval(SwapInterval::Sync(1));
+            // Finish();
+            // self.glfw.set_swap_interval(SwapInterval::Sync(1));
         }
     }
 
-    pub unsafe fn handle(&mut self) {
+    pub unsafe fn frame(&mut self) {
         self.handle_events();
         self.window.mouse.frame();
 
@@ -88,7 +91,16 @@ impl UIContext {
         self.last_frame = Instant::now();
         check_error("render");
         self.post_render();
+
+        self.font_manager.cleanup();
+        self.frames.0 += 1;
+        if self.frames.2.elapsed().as_secs_f32() >= 1.0 {
+            self.frames.1 = self.frames.0;
+            self.frames.0 = 0;
+            self.frames.2 = Instant::now();
+        }
     }
+
 
     unsafe fn pre_render(&mut self) {
         Viewport(0, 0, context().window().width as GLsizei, context().window().height as GLsizei);
@@ -146,6 +158,9 @@ impl UIContext {
         &mut self.window
     }
     pub fn framework(&mut self) -> &mut Framework { &mut self.framework }
+    pub fn fps(&self) -> u32 {
+        self.frames.1
+    }
 }
 
 pub struct ContextBuilder<'a> {

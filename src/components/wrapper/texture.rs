@@ -108,7 +108,7 @@ impl Texture {
         BindVertexArray(self.vao);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
-        self.unbind();
+        Texture::unbind();
         context().renderer().texture_shader.unbind();
         BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
         BindBuffer(ARRAY_BUFFER, 0);
@@ -120,14 +120,14 @@ impl Texture {
         BindVertexArray(self.vao);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
-        self.unbind();
+        Texture::unbind();
     }
 
     pub unsafe fn bind(&self) {
         BindTexture(TEXTURE_2D, self.texture_id);
     }
 
-    pub unsafe fn unbind(&self) {
+    pub unsafe fn unbind() {
         BindTexture(TEXTURE_2D, 0);
     }
 }

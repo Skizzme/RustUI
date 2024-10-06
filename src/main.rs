@@ -28,8 +28,9 @@ use RustUI::components::context::{context, ContextBuilder, UIContext};
 use RustUI::components::framework::element::{Element, ElementBuilder};
 use RustUI::components::framework::event::Event;
 use RustUI::components::framework::screen::ScreenTrait;
+use RustUI::components::render::font::FontRenderer;
 use RustUI::components::wrapper::texture::Texture;
-use RustUI::gl_binds::gl11::{BLEND, EnableClientState, FLOAT, RGBA, TexCoordPointer, TEXTURE_COORD_ARRAY, VERTEX_ARRAY, VertexPointer};
+use RustUI::gl_binds::gl11::{BLEND, EnableClientState, Finish, FLOAT, RGBA, TexCoordPointer, TEXTURE_COORD_ARRAY, VERTEX_ARRAY, VertexPointer};
 use RustUI::gl_binds::gl20::{EnableVertexAttribArray, FALSE, TEXTURE0, TEXTURE_2D, TEXTURE_COORD_ARRAY_BUFFER_BINDING, VertexAttribPointer};
 use RustUI::gl_binds::gl30::Enable;
 
@@ -56,28 +57,31 @@ fn main() {
 
 pub struct TestScreen {
     pub text: String,
+    fr: FontRenderer,
 }
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let mut t = fs::read_to_string("test_2.js").unwrap();
+        let mut t = fs::read_to_string("test.js").unwrap();
         TestScreen {
             text: t,
+            fr: context().fonts().renderer("main"),
         }
     }
 }
 
 impl ScreenTrait for TestScreen {
-    unsafe fn event(&mut self, event: &Event) {
+    unsafe fn handle(&mut self, event: &Event) {
         match event {
             Event::Render(_) => {
-                context().fonts().renderer("main").draw_string(30.0, "something", (0.0, 100.0), 0xffffffff);
+                self.fr.draw_string(30.0, "something", (0.0, 100.0), 0xffffffff);
                 context().tex.render();
-                let st = Instant::now();
-                context().fonts().renderer("main").draw_string_instanced(30.0, &self.text, (200.0, 100.0), 0xffffffff);
-                println!("Instanced: {:?}", st.elapsed());
                 // let st = Instant::now();
-                // context().fonts().renderer("main").draw_string(30.0, &self.text, (200.0, 300.0), 0xffffffff);
+                self.fr.draw_string_inst(30.0, format!("{:?}", context().fps()), (200.0, 100.0), 0xffffffff);
+                // Finish();
+                // println!("Instanced: {:?}", st.elapsed());
+                // let st = Instant::now();
+                context().fonts().renderer("main").draw_string_inst(30.0, &self.text, (200.0, 300.0), 0xffffffff);
                 // println!("Direct: {:?}", st.elapsed());
             }
             Event::MouseClick(_, _) => {}
@@ -86,7 +90,7 @@ impl ScreenTrait for TestScreen {
         }
     }
 
-    unsafe fn register_elements(&mut self) -> Vec<Element> {
+    unsafe fn init(&mut self) -> Vec<Element> {
         let mut el_1 = ElementBuilder::new();
 
         el_1.bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0));
@@ -95,7 +99,7 @@ impl ScreenTrait for TestScreen {
             match event {
                 Event::Render(_) => {
                     let mouse = context().window().mouse();
-                    let (width, height) = context().fonts().renderer("main").draw_string(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
+                    let (width, height) = context().fonts().renderer("main").draw_string_inst(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
                     el.bounds().set_width(width);
                     el.bounds().set_height(height);
                     let hovering = el.hovering();

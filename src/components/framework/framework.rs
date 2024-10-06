@@ -26,7 +26,7 @@ impl Framework {
     }
 
     pub unsafe fn event(&mut self, event: Event) {
-        self.current_screen.event(&event);
+        self.current_screen.handle(&event);
         for e in &mut self.elements {
             e.handle(&event);
         }
@@ -35,7 +35,7 @@ impl Framework {
     pub unsafe fn set_screen<S>(&mut self, screen: S) where S: ScreenTrait + 'static {
         self.reset();
         self.current_screen = Box::new(screen);
-        self.elements = self.current_screen.register_elements();
+        self.elements = self.current_screen.init();
         println!("{}", self.elements.len());
     }
 }
