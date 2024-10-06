@@ -26,9 +26,10 @@ use rand::{random, Rng, thread_rng};
 use RustUI::components::bounds::Bounds;
 
 use RustUI::components::context::{context, ContextBuilder, UIContext};
-use RustUI::components::framework::element::{Element, ElementBuilder};
+use RustUI::components::framework::element::{Element, ElementBuilder, UIHandler};
 use RustUI::components::framework::event::Event;
 use RustUI::components::framework::screen::ScreenTrait;
+use RustUI::components::position::Pos;
 use RustUI::components::render::font::FontRenderer;
 use RustUI::components::wrapper::texture::Texture;
 use RustUI::gl_binds::gl11::{BLEND, EnableClientState, Finish, FLOAT, RGBA, TexCoordPointer, TEXTURE_COORD_ARRAY, VERTEX_ARRAY, VertexPointer};
@@ -59,6 +60,7 @@ fn main() {
 pub struct TestScreen {
     pub text: String,
     fr: FontRenderer,
+    previous_pos: Pos,
 }
 
 impl TestScreen {
@@ -67,6 +69,7 @@ impl TestScreen {
         TestScreen {
             text: t,
             fr: context().fonts().renderer("main"),
+            previous_pos: Pos::new(0.0,0.0),
         }
     }
 }
@@ -76,14 +79,9 @@ impl ScreenTrait for TestScreen {
         match event {
             Event::Render(_) => {
                 self.fr.draw_string(30.0, "something", (0.0, 100.0), 0xffffffff);
-                context().tex.render();
-                // let st = Instant::now();
                 self.fr.draw_string_inst(30.0, format!("{:?}", context().fps()), (200.0, 100.0), 0xffffffff);
-                // Finish();
-                // println!("Instanced: {:?}", st.elapsed());
-                // let st = Instant::now();
+
                 context().fonts().renderer("main").draw_string_inst(30.0, &self.text, (200.0, 300.0), 0xffffffff);
-                // println!("Direct: {:?}", st.elapsed());
             }
             Event::MouseClick(_, _) => {}
             Event::Keyboard(_, _, _) => {}
@@ -91,7 +89,7 @@ impl ScreenTrait for TestScreen {
         }
     }
 
-    unsafe fn init(&mut self) -> Vec<Element> {
+    unsafe fn init(&mut self) -> Vec<Box<dyn UIHandler>> {
         let mut el_1 = ElementBuilder::new();
 
         el_1.bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0));
@@ -135,6 +133,12 @@ impl ScreenTrait for TestScreen {
 
         el_1.child(el_1_c.build());
 
-        vec![el_1.build()]
+        vec![Box::new(el_1.build())]
+    }
+
+    unsafe fn should_render(&mut self) -> bool {
+        let res = context().window().mouse().pos().xy() != self.previous_pos.xy();
+        self.previous_pos = *context().window().mouse().pos();
+        res
     }
 }

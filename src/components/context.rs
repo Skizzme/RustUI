@@ -33,6 +33,7 @@ pub struct UIContext {
     events: GlfwReceiver<(f64, WindowEvent)>,
     framebuffer: Framebuffer,
     frames: (u32, u32, Instant),
+    last_render: Instant,
     content_scale: (f32, f32),
     last_frame: Instant,
 
@@ -42,12 +43,10 @@ pub struct UIContext {
     framework: Framework,
 
     close_requested: bool,
-    pub tex: Texture,
 }
 
 impl UIContext {
     pub unsafe fn create_instance(builder: ContextBuilder) {
-        let img = open("C:\\Users\\farre\\Pictures\\an event about to occur.png").unwrap().into_rgba8();
         let mut glfw = builder.glfw;
         let (mut p_window, events) = glfw.create_window(builder.width as u32, builder.height as u32, builder.title.as_str(), builder.mode).expect("Failed to make window");
 
@@ -65,6 +64,7 @@ impl UIContext {
             events,
             framebuffer: Framebuffer::new(RGBA, builder.width, builder.height).expect("Failed to create main framebuffer"),
             frames: (0, 0, Instant::now()),
+            last_render: Instant::now(),
             content_scale: (1.0, 1.0),
             last_frame: Instant::now(),
             window: Window::new(builder.width, builder.height),
@@ -72,7 +72,6 @@ impl UIContext {
             font_manager: FontManager::new(""),
             framework: Framework::new(),
             close_requested: false,
-            tex: Texture::create(img.width() as i32, img.height() as i32, &img.into_raw(), RGBA),
         });
         context().fonts().set_font_bytes("main", include_bytes!("../assets/fonts/ProductSans.ttf").to_vec());
     }
@@ -81,9 +80,11 @@ impl UIContext {
         while !self.close_requested {
             self.frame();
 
-            // thread::sleep(Duration::from_millis(1000));
+            if self.last_render.elapsed().as_secs_f32() > 1.0 {
+                thread::sleep(Duration::from_millis(50));
+            }
             // Finish();
-            self.glfw.set_swap_interval(SwapInterval::Adaptive);
+            self.glfw.set_swap_interval(SwapInterval::Sync(1));
         }
     }
 
@@ -91,6 +92,18 @@ impl UIContext {
         self.handle_events();
         self.window.mouse.frame();
 
+        if self.should_render() {
+            self.render();
+            self.last_render = Instant::now();
+        }
+    }
+
+    pub unsafe fn should_render(&mut self) -> bool {
+        self.framework.event(Event::PreRender);
+        self.framework.should_render()
+    }
+
+    pub unsafe fn render(&mut self) {
         self.pre_render();
         self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
         self.framework.event(Event::Render(RenderPass::Main));
@@ -133,8 +146,7 @@ impl UIContext {
         self.framebuffer.unbind();
 
         self.renderer.end_frame();
-        self.p_window.swap_buffers();
-    }
+        self.p_window.swap_buffers(); }
 
     pub unsafe fn handle_events(&mut self) {
         self.glfw.poll_events();
@@ -156,28 +168,22 @@ impl UIContext {
                         _ => {}
                     }
                     self.window.handle(&event);
-                    // self.framework.event(Event::GlfwRaw(event));
                 }
                 None => break
             }
         }
     }
+
     pub fn renderer(&mut self) -> &mut Renderer {
         &mut self.renderer
     }
-    pub fn fonts(&mut self) -> &mut FontManager {
-        &mut self.font_manager
-    }
+    pub fn fonts(&mut self) -> &mut FontManager { &mut self.font_manager }
     pub fn window(&mut self) -> &mut Window {
         &mut self.window
     }
     pub fn framework(&mut self) -> &mut Framework { &mut self.framework }
-    pub fn fps(&self) -> u32 {
-        self.frames.1
-    }
-    pub fn p_window(&mut self) -> &mut PWindow {
-        &mut self.p_window
-    }
+    pub fn fps(&self) -> u32 { self.frames.1 }
+    pub fn p_window(&mut self) -> &mut PWindow { &mut self.p_window }
 }
 
 pub struct ContextBuilder<'a> {

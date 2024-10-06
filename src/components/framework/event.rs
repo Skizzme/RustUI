@@ -2,6 +2,7 @@ use glfw::{Action, Key, Modifiers, MouseButton, WindowEvent};
 
 #[derive(Debug)]
 pub enum Event {
+    PreRender,
     Render(RenderPass),
     MouseClick(MouseButton, Action),
     Keyboard(Key, Action, Modifiers),

@@ -1,11 +1,11 @@
 use glfw::WindowEvent;
-use crate::components::framework::element::Element;
+use crate::components::framework::element::{Element, UIHandler};
 use crate::components::framework::event::Event;
 use crate::components::framework::screen::{DefaultScreen, ScreenTrait};
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
-    elements: Vec<Element>,
+    elements: Vec<Box<dyn UIHandler>>,
 }
 
 impl Framework {
@@ -17,6 +17,19 @@ impl Framework {
         fr.set_screen(DefaultScreen::new());
         fr
     }
+
+    pub unsafe fn should_render(&mut self) -> bool {
+        let mut res = self.current_screen.should_render();
+        for e in &mut self.elements {
+            if res {
+                break;
+            }
+            res = e.should_render();
+        }
+
+        res
+    }
+
     fn reset(&mut self) {
         self.elements = Vec::new();
     }

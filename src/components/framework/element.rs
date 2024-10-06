@@ -8,20 +8,30 @@ use crate::components::framework::event::Event;
 use crate::components::position::Pos;
 use crate::components::render::stack::State;
 
+pub trait UIHandler {
+    unsafe fn handle(&mut self, event: &Event) -> bool;
+    unsafe fn should_render(&mut self) -> bool;
+}
+
 pub struct Element {
     bounds: Bounds,
+    last_bounds: Bounds,
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
+    should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self) -> bool>>>,
     hovering: bool,
-    children: Vec<Element>,
+    children: Vec<Box<dyn UIHandler>>,
     pub draggable: bool,
     dragging: (bool, Pos),
 }
 
 impl Element {
-    pub fn new<B: Into<Bounds>, H: FnMut(&mut Self, &Event) + 'static>(bounds: B, draggable: bool, handler: H, children: Vec<Element>) -> Element {
+    pub fn new<B: Into<Bounds>, H: FnMut(&mut Self, &Event) + 'static>(bounds: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>) -> Element {
+        let b = bounds.into();
         Element {
-            bounds: bounds.into(),
+            bounds: b.clone(),
+            last_bounds: b,
             handler: Arc::new(Mutex::new(Box::new(handler))),
+            should_render_fn: Arc::new(Mutex::new(Box::new((|el| false)))),
             hovering: false,
             children,
             draggable,
@@ -31,17 +41,30 @@ impl Element {
     pub fn bounds(&mut self) -> &mut Bounds {
         &mut self.bounds
     }
+    pub fn hovering(&self) -> bool {
+        self.hovering
+    }
+}
 
-    pub unsafe fn handle(&mut self, event: &Event) -> bool {
-        let mouse = context().window().mouse();
+impl UIHandler for Element {
+    unsafe fn handle(&mut self, event: &Event) -> bool {
         let mut handled = false;
-        self.hovering = mouse.pos().intersects(self.bounds());
+        let mouse = context().window().mouse();
+        self.last_bounds = self.bounds;
+        match event {
+            Event::PreRender => {
+                self.hovering = mouse.pos().intersects(self.bounds());
 
-        if self.dragging.0 {
-            // Set the dragging offset
-            let new = mouse.pos().clone() - self.dragging.1;
-            self.bounds().set_pos(&new);
-            handled = true;
+                if self.dragging.0 {
+                    // Set the dragging offset
+                    let new = mouse.pos().clone() - self.dragging.1;
+                    self.bounds().set_pos(&new);
+                    handled = true;
+                }
+            }
+            Event::Render(_) => {
+            }
+            _ => {}
         }
 
         // Arc mutex so that can be called with self ref
@@ -81,8 +104,22 @@ impl Element {
         };
         handled
     }
-    pub fn hovering(&self) -> bool {
-        self.hovering
+
+    unsafe fn should_render(&mut self) -> bool {
+        let mut result = self.bounds != self.last_bounds;
+
+        if !result {
+            let mut fn_ref = self.should_render_fn.clone();
+            result = (fn_ref.lock().unwrap())(self);
+        }
+        for c in &mut self.children {
+            if result {
+                break;
+            }
+            result = c.should_render();
+        }
+
+        result
     }
 }
 
@@ -98,7 +135,8 @@ impl ElementBuilder {
     }
 
     pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(&mut self, handler: H) { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); }
-    pub fn child(&mut self, child: Element) { self.element.children.push(child); }
+    pub fn should_render<H: FnMut(&mut Element) -> bool + 'static>(&mut self, should_render: H) { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); }
+    pub fn child<C: UIHandler + 'static>(&mut self, child: C) { self.element.children.push(Box::new(child)); }
     pub fn bounds(&mut self, bounds: Bounds) { self.element.bounds = bounds; }
     pub fn draggable(&mut self, draggable: bool) { self.element.draggable = draggable; }
 
