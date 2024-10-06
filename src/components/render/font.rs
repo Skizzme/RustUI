@@ -502,23 +502,18 @@ let st = Instant::now();
                 self.x += c_w;
             }
 
-        self.end(true);
+        // self.end(true);
         println!("LOP {:?}", st.elapsed());
             let st = Instant::now();
             let mut vao = 0;
             let mut vbo = 0;
-            let mut ebo = 0;
+
             GenVertexArrays(1, &mut vao);
             BindVertexArray(vao);
 
-            GenBuffers(1, &mut vbo);
-            BindBuffer(ARRAY_BUFFER, vbo);
-            BufferData(
-                ARRAY_BUFFER,
-                (vertices.len() * size_of::<[f32; 4]>()) as GLsizeiptr,
-                vertices.as_ptr() as *const _,
-                DYNAMIC_DRAW,
-            );
+            let mut vert = BufferBuilder::new(ARRAY_BUFFER);
+            vert.set_values(vertices);
+            vert.build();
             EnableClientState(VERTEX_ARRAY);
             VertexPointer(4, FLOAT, 0, ptr::null());
 
