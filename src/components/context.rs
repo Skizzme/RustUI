@@ -1,5 +1,6 @@
 use std::ptr::addr_of_mut;
-use std::time::Instant;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
@@ -10,6 +11,7 @@ use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::framework::Framework;
 use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
+use crate::components::render::stack::State;
 use crate::components::window::Window;
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::components::wrapper::texture::Texture;
@@ -31,6 +33,7 @@ pub struct UIContext {
     events: GlfwReceiver<(f64, WindowEvent)>,
     framebuffer: Framebuffer,
     frames: (u32, u32, Instant),
+    content_scale: (f32, f32),
     last_frame: Instant,
 
     window: Window,
@@ -62,6 +65,7 @@ impl UIContext {
             events,
             framebuffer: Framebuffer::new(RGBA, builder.width, builder.height).expect("Failed to create main framebuffer"),
             frames: (0, 0, Instant::now()),
+            content_scale: (1.0, 1.0),
             last_frame: Instant::now(),
             window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
@@ -77,8 +81,9 @@ impl UIContext {
         while !self.close_requested {
             self.frame();
 
+            // thread::sleep(Duration::from_millis(1000));
             // Finish();
-            // self.glfw.set_swap_interval(SwapInterval::Sync(1));
+            self.glfw.set_swap_interval(SwapInterval::Adaptive);
         }
     }
 
@@ -87,7 +92,9 @@ impl UIContext {
         self.window.mouse.frame();
 
         self.pre_render();
+        self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
         self.framework.event(Event::Render(RenderPass::Main));
+        self.renderer.stack().pop();
         self.last_frame = Instant::now();
         check_error("render");
         self.post_render();
@@ -139,6 +146,13 @@ impl UIContext {
                         WindowEvent::MouseButton(button, action, mods) => {
                             self.framework.event(Event::MouseClick(*button, *action))
                         }
+                        WindowEvent::ContentScale(x, y) => {
+                            self.p_window.set_size((self.window.width as f32 * (x / self.content_scale.0)) as i32, (self.window.height as f32 * (y / self.content_scale.1)) as i32);
+                            self.content_scale = (*x, *y)
+                        }
+                        WindowEvent::FileDrop(fl) => {
+                            println!("{:?}", fl);
+                        }
                         _ => {}
                     }
                     self.window.handle(&event);
@@ -160,6 +174,9 @@ impl UIContext {
     pub fn framework(&mut self) -> &mut Framework { &mut self.framework }
     pub fn fps(&self) -> u32 {
         self.frames.1
+    }
+    pub fn p_window(&mut self) -> &mut PWindow {
+        &mut self.p_window
     }
 }
 

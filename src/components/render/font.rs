@@ -85,7 +85,7 @@ pub struct FontManager {
     sdf_shader: Shader,
     sdf_shader_i: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
-    pub cached_inst: HashMap<u64, (VertexArray, u32)>,
+    pub cached_inst: HashMap<u64, (VertexArray, f32, f32, u32)>,
 }
 
 impl FontManager {
@@ -107,7 +107,7 @@ impl FontManager {
 
     pub unsafe fn cleanup(&mut self) {
         let mut remove = vec![];
-        for (hash, (vao, frames_elapsed)) in &mut self.cached_inst {
+        for (hash, (vao, width, height, frames_elapsed)) in &mut self.cached_inst {
             if *frames_elapsed > 10 {
                 remove.push(*hash);
             } else {
@@ -115,7 +115,7 @@ impl FontManager {
             }
         }
         remove.iter().for_each(|key| unsafe {
-            let (vao, _) = self.cached_inst.remove(&key).unwrap();
+            let (vao, width, height, _) = self.cached_inst.remove(&key).unwrap();
             vao.delete();
         });
     }
@@ -437,7 +437,7 @@ impl FontRenderer {
         self.draw_string(size, string, (x-width/2.0, y), color)
     }
 
-    unsafe fn get_or_cache_inst(&mut self, size: f32, string: String, pos: Pos) -> u32 {
+    unsafe fn get_or_cache_inst(&mut self, size: f32, string: String, pos: Pos) -> (u32, f32, f32) {
         let mut hasher = hash::DefaultHasher::new();
         hasher.write(&size.to_be_bytes());
         hasher.write(string.as_bytes());
@@ -509,6 +509,7 @@ impl FontRenderer {
                 indices.push(base+3);
 
                 self.x += c_w;
+                self.line_width += c_w;
             }
             self.end();
 
@@ -539,10 +540,11 @@ impl FontRenderer {
             vao.add_buffer(vert);
             vao.add_buffer(element_buf);
 
-            map.insert(hashed, (vao, 0));
+            map.insert(hashed, (vao, self.line_width*self.scale, self.get_line_height()*self.scale, 0));
         }
-        map.get_mut(&hashed).unwrap().1 = 0;
-        map.get(&hashed).unwrap().0.gl_ref()
+        map.get_mut(&hashed).unwrap().3 = 0;
+        let (vao, width, height, _) = map.get(&hashed).unwrap();
+        (vao.gl_ref(), *width, *height)
     }
 
     /// The method to be called to a render a string using modern GL
@@ -558,7 +560,7 @@ impl FontRenderer {
         let (x, y) = pos.xy();
         let len = string.len();
 
-        let vao = self.get_or_cache_inst(size, string, pos);
+        let (vao, width, height) = self.get_or_cache_inst(size, string, pos);
         self.begin(size, x, y, true);
         self.set_color(color);
         let atlas = self.font().atlas_tex.as_ref().unwrap();
@@ -572,7 +574,7 @@ impl FontRenderer {
 
         Texture::unbind();
         self.end();
-        (self.line_width*self.scale, self.get_line_height()*self.scale)
+        (width, height)
     }
 
     /// The method to be called to a render a string using immediate GL
@@ -598,21 +600,21 @@ impl FontRenderer {
                 continue;
             }
 
-            // if char == '\t' {
-            //     self.x += self.get_width(size, " ".to_string())*self.tab_length as f32;
-            //     continue;
-            // }
+            if char == '\t' {
+                self.x += self.get_width(size, " ".to_string())*self.tab_length as f32;
+                continue;
+            }
 
             let (c_w, _c_h, should_render) = self.get_dimensions(char);
-            // if should_render == 2 {
-            //     break;
-            // }
+            if should_render == 2 {
+                break;
+            }
 
-            // if should_render <= 1 {
-            //     if should_render == 0 {
+            if should_render <= 1 {
+                if should_render == 0 {
                     let atlas_ref= self.font().atlas_tex.as_ref().unwrap().clone();
                     self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
-                // }
+                }
 
                 self.line_width += c_w;
                 match self.scale_mode {
@@ -623,7 +625,7 @@ impl FontRenderer {
                         self.x += self.get_scaled_value(c_w, self.comb_scale_x);
                     }
                 }
-            // }
+            }
         }
         self.end();
         (self.line_width*self.scale, self.get_line_height()*self.scale)

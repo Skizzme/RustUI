@@ -15,10 +15,11 @@
 // }
 
 use std::{fs, ptr};
+use std::os::raw::c_int;
 use std::time::Instant;
 use gl::{ActiveTexture, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawElements, ELEMENT_ARRAY_BUFFER, GenBuffers, GenVertexArrays, STATIC_DRAW, TRIANGLES, UNSIGNED_INT, VertexArrayElementBuffer, VertexArrayVertexBuffer};
 use gl::types::GLsizeiptr;
-use glfw::{Action, MouseButton, WindowHint, WindowMode};
+use glfw::{Action, Cursor, ffi, MouseButton, StandardCursor, WindowHint, WindowMode};
 use image::open;
 use winapi::um::wincon::FreeConsole;
 use rand::{random, Rng, thread_rng};
@@ -115,10 +116,19 @@ impl ScreenTrait for TestScreen {
         el_1_c.handler(|el, event| {
             match event {
                 Event::Render(_) => {
-                    // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);
+                    // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
                     let hovering = el.hovering();
                     el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
                 },
+                Event::MouseClick(button, action) => {
+                    if el.hovering() && *action == Action::Press {
+                        let v = !context().p_window().uses_raw_mouse_motion();
+                        println!("change {}", v);
+                        context().p_window().set_raw_mouse_motion(v);
+                        // let v = !context().p_window().is_decorated();
+                        // context().p_window().set_decorated(v);
+                    }
+                }
                 _ => {}
             }
         });

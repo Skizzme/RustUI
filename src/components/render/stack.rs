@@ -3,7 +3,7 @@ use std::ops::AddAssign;
 
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
 use crate::components::context::context;
-use crate::gl_binds::gl11::Translatef;
+use crate::gl_binds::gl11::{Scalef, Translatef};
 
 use crate::gl_binds::gl11::types::{GLdouble, GLenum};
 use crate::gl_binds::gl20::Translated;
@@ -21,6 +21,7 @@ pub enum State {
     Texture2D(bool),
     Blend(bool),
     Translate(f32, f32),
+    Scale(f32, f32),
 }
 
 impl State {
@@ -33,6 +34,9 @@ impl State {
                 context().window().mouse.pos += (-x, -y);
                 Translatef(x, y, 0.0);
             },
+            State::Scale(x, y) => {
+                Scalef(x, y, 1.0);
+            }
         }
         // println!("applied {:?}", self);
     }
@@ -45,6 +49,9 @@ impl State {
             State::Translate(x, y) => {
                 context().window().mouse.pos += (x, y);
                 Translatef(-x, -y, 0.0);
+            }
+            State::Scale(x, y) => {
+                Scalef(1.0/x, 1.0/y, 1.0);
             }
         }
         // println!("unapplied {:?}", self);
@@ -67,7 +74,11 @@ impl State {
             State::Translate(x1, y1) => match other {
                 State::Translate(x2, y2) => x1 == x2 && y1 == y2,
                 _ => false,
-            }
+            },
+            State::Scale(x1, y1) => match other {
+                State::Scale(x2, y2) => x1 == x2 && y1 == y2,
+                _ => false,
+            },
         }
     }
 
@@ -77,6 +88,7 @@ impl State {
             State::Texture2D(_) => 1,
             State::Blend(_) => 2,
             State::Translate(_, _) => 3,
+            State::Scale(_, _) => 4,
         }
     }
 }
