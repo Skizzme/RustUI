@@ -60,7 +60,7 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let mut t = fs::read_to_string("test_3.js").unwrap();
+        let mut t = fs::read_to_string("test_2.js").unwrap();
         TestScreen {
             text: t,
         }
@@ -71,6 +71,7 @@ impl ScreenTrait for TestScreen {
     unsafe fn event(&mut self, event: &Event) {
         match event {
             Event::Render(_) => {
+                context().fonts().renderer("main").draw_string(30.0, "something", (0.0, 100.0), 0xffffffff);
                 context().tex.render();
                 let st = Instant::now();
                 context().fonts().renderer("main").draw_string_instanced(30.0, &self.text, (200.0, 100.0), 0xffffffff);

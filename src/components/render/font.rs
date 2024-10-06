@@ -21,6 +21,7 @@ use crate::components::context::context;
 use crate::components::position::Pos;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::stack::State::{Blend, Texture2D};
+use crate::components::wrapper::buffer::BufferBuilder;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::gl11::{EnableClientState, TexCoordPointer, TEXTURE_COORD_ARRAY, VertexPointer};
@@ -82,6 +83,7 @@ pub struct FontManager {
     cache_location: String,
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     sdf_shader: Shader,
+    sdf_shader_i: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
     pub cached_inst: HashMap<u64, (u32, Instant)>, // TODO clearing this
 }
@@ -89,13 +91,15 @@ pub struct FontManager {
 impl FontManager {
     pub unsafe fn new(cache_location: impl ToString) -> Self {
         let st = Instant::now();
-        let s = Shader::new(asset_manager::file_contents_str("shaders/sdf_instanced/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf_instanced/fragment.glsl").unwrap());
+        let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
+        let s_instanced = Shader::new(asset_manager::file_contents_str("shaders/sdf_instanced/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf_instanced/fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
             cache_location: cache_location.to_string(),
             mem_atlas_cache: HashMap::new(),
             sdf_shader: s,
+            sdf_shader_i: s_instanced,
             font_byte_library: HashMap::new(),
             cached_inst: HashMap::new(),
         }
@@ -419,23 +423,23 @@ impl<'a> FontRenderer<'a> {
     }
 
     unsafe fn get_or_cache_inst(&mut self, size: f32, string: String, pos: Pos) -> u32 {
-        let mut hasher = hash::DefaultHasher::new();
-        hasher.write(&size.to_be_bytes());
-        hasher.write(string.as_bytes());
-        pos.hash(&mut hasher);
-
-        let hashed = hasher.finish();
-        let mut map = &mut context().fonts().cached_inst;
-        if !map.contains_key(&hashed) {
-            let mut vertices: Vec<[f32; 2]> = vec![];
-            let mut uvs: Vec<[f32; 2]> = vec![];
-            let mut indices: Vec<u32> = vec![];
+        // let mut hasher = hash::DefaultHasher::new();
+        // hasher.write(&size.to_be_bytes());
+        // hasher.write(string.as_bytes());
+        // pos.hash(&mut hasher);
+        //
+        // let hashed = hasher.finish();
+        // let mut map = &mut context().fonts().cached_inst;
+        // if !map.contains_key(&hashed) {
+            let mut vertices: Vec<[f32; 4]> = Vec::with_capacity(string.len());
+            // let mut uvs: Vec<[f32; 2]> = vec![];
+            let mut indices: Vec<u32> = Vec::with_capacity(string.len());
             let (x, y) = pos.xy();
-            self.begin(size, x, y);
+            self.begin(size, x, y, true);
 
             let st = Instant::now();
             let atlas = self.font.atlas_tex.as_ref().unwrap();
-
+let st = Instant::now();
             for char in string.chars() {
                 if char == '\n' {
                     match self.scale_mode {
@@ -473,19 +477,18 @@ impl<'a> FontRenderer<'a> {
                         (self.get_scaled_value(self.x+glyph.width as f32, self.comb_scale_x), self.get_scaled_value(pos_y+glyph.height as f32, self.comb_scale_y))
                     }
                 };
-
                 let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x as f32, pos_y, right, bottom);
                 let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
 
-                vertices.push([p_left, p_bottom]);
-                vertices.push([p_right, p_bottom]);
-                vertices.push([p_right, p_top]);
-                vertices.push([p_left, p_top]);
+                vertices.push([p_left, p_bottom, uv_left, uv_bottom]);
+                vertices.push([p_right, p_bottom, uv_right, uv_bottom]);
+                vertices.push([p_right, p_top, uv_right, uv_top]);
+                vertices.push([p_left, p_top, uv_left, uv_top]);
 
-                uvs.push([uv_left, uv_bottom]);
-                uvs.push([uv_right, uv_bottom]);
-                uvs.push([uv_right, uv_top]);
-                uvs.push([uv_left, uv_top]);
+                // uvs.push([uv_left, uv_bottom]);
+                // uvs.push([uv_right, uv_bottom]);
+                // uvs.push([uv_right, uv_top]);
+                // uvs.push([uv_left, uv_top]);
 
                 let base = vertices.len() as u32 - 4;
 
@@ -499,10 +502,11 @@ impl<'a> FontRenderer<'a> {
                 self.x += c_w;
             }
 
+        self.end(true);
+        println!("LOP {:?}", st.elapsed());
             let st = Instant::now();
             let mut vao = 0;
             let mut vbo = 0;
-            let mut uvo = 0;
             let mut ebo = 0;
             GenVertexArrays(1, &mut vao);
             BindVertexArray(vao);
@@ -511,39 +515,23 @@ impl<'a> FontRenderer<'a> {
             BindBuffer(ARRAY_BUFFER, vbo);
             BufferData(
                 ARRAY_BUFFER,
-                (vertices.len() * std::mem::size_of::<[f32; 2]>()) as GLsizeiptr,
+                (vertices.len() * size_of::<[f32; 4]>()) as GLsizeiptr,
                 vertices.as_ptr() as *const _,
                 DYNAMIC_DRAW,
             );
             EnableClientState(VERTEX_ARRAY);
-            VertexPointer(2, FLOAT, 0, ptr::null());
-
-            // Create and bind the UV buffer
-            GenBuffers(1, &mut uvo);
-            BindBuffer(ARRAY_BUFFER, uvo);
-            BufferData(
-                ARRAY_BUFFER,
-                (uvs.len() * std::mem::size_of::<[f32; 2]>()) as GLsizeiptr,
-                uvs.as_ptr() as *const _,
-                DYNAMIC_DRAW,
-            );
-            EnableClientState(TEXTURE_COORD_ARRAY);
-            TexCoordPointer(2, FLOAT, 0, ptr::null());
+            VertexPointer(4, FLOAT, 0, ptr::null());
 
             // Create and bind the element buffer
-            GenBuffers(1, &mut ebo);
-            BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
-            BufferData(
-                ELEMENT_ARRAY_BUFFER,
-                (indices.len() * std::mem::size_of::<u32>()) as GLsizeiptr,
-                indices.as_ptr() as *const _,
-                DYNAMIC_DRAW,
-            );
+            let mut element_buf = BufferBuilder::new(ELEMENT_ARRAY_BUFFER);
+            element_buf.set_values(indices);
+            element_buf.build();
 
-            map.insert(hashed, (vao as u32, Instant::now()));
-        }
-        map.get_mut(&hashed).unwrap().1 = Instant::now();
-        map.get(&hashed).unwrap().0
+        vao
+        //     map.insert(hashed, (vao as u32, Instant::now()));
+        // }
+        // map.get_mut(&hashed).unwrap().1 = Instant::now();
+        // map.get(&hashed).unwrap().0
     }
 
     /// The method to be called to a render a string using immediate GL
@@ -559,10 +547,12 @@ impl<'a> FontRenderer<'a> {
 
         let st = Instant::now();
         let (x, y) = pos.xy();
-        self.begin(size, x, y);
+        self.begin(size, x, y, true);
         self.set_color(color);
         let len = string.len();
+        let st = Instant::now();
         let vao = self.get_or_cache_inst(size, string, pos);
+        println!("CAC {:?}", st.elapsed());
         let atlas = self.font.atlas_tex.as_ref().unwrap();
 
         ActiveTexture(TEXTURE0);
@@ -575,7 +565,7 @@ impl<'a> FontRenderer<'a> {
         BindBuffer(ELEMENT_ARRAY_BUFFER, 0);
         BindBuffer(ARRAY_BUFFER, 0);
 
-        self.end();
+        self.end(true);
         (self.line_width*self.scale, self.get_line_height()*self.scale)
     }
 
@@ -584,7 +574,7 @@ impl<'a> FontRenderer<'a> {
     pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
         // let str_height = self.font.glyphs.get('H' as usize).unwrap().top as f32;
         let (x, y) = pos.into().xy();
-        self.begin(size, x, y);
+        self.begin(size, x, y, false);
         self.set_color(color);
         for char in string.to_string().chars() {
             if char == '\n' {
@@ -601,22 +591,21 @@ impl<'a> FontRenderer<'a> {
                 continue;
             }
 
-            // if char == '\t' {
-            //     self.x += self.get_width(size, " ".to_string())*self.tab_length as f32;
-            //     continue;
-            // }
-            //
+            if char == '\t' {
+                self.x += self.get_width(size, " ".to_string())*self.tab_length as f32;
+                continue;
+            }
+
             let (c_w, _c_h, should_render) = self.get_dimensions(char);
-            // if should_render == 2 {
-            //     break;
-            // }
-            //
-            // if should_render <= 1 {
-            //     if should_render == 0 {
-            {
+            if should_render == 2 {
+                break;
+            }
+
+            if should_render <= 1 {
+                if should_render == 0 {
                     let atlas_ref= self.font.atlas_tex.as_ref().unwrap().clone();
                     self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
-                // }
+                }
 
                 self.line_width += c_w;
                 match self.scale_mode {
@@ -629,7 +618,7 @@ impl<'a> FontRenderer<'a> {
                 }
             }
         }
-        self.end();
+        self.end(false);
         (self.line_width*self.scale, self.get_line_height()*self.scale)
     }
 
@@ -725,7 +714,7 @@ impl<'a> FontRenderer<'a> {
     }
 
     /// Sets this FontRenderer up for immediate GL drawing, setting shader uniforms, x and y offsets, scaling etc
-    pub unsafe fn begin(&mut self, size: f32, x: f32, y: f32) {
+    pub unsafe fn begin(&mut self, size: f32, x: f32, y: f32, instanced_shader: bool) {
         self.scale = match self.scale_mode {
             ScaleMode::Normal => {size/FONT_RES as f32}
             ScaleMode::Quality => {size.ceil()/FONT_RES as f32}
@@ -751,20 +740,31 @@ impl<'a> FontRenderer<'a> {
 
         self.line_width = 0f32;
 
-        context().fonts().sdf_shader.bind();
         atlas.bind();
         // was 0.25 / ... but .35 seems better?
         //(0.30 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4) // original smoothing
         let smoothing = (0.35 / (size / 6.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.25);
-        context().fonts().sdf_shader.u_put_float("u_smoothing", vec![smoothing]);
-        context().fonts().sdf_shader.u_put_float("atlas_width", vec![atlas.width as f32]);
-        context().fonts().sdf_shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
+        if instanced_shader {
+            context().fonts().sdf_shader_i.bind();
+            context().fonts().sdf_shader_i.u_put_float("u_smoothing", vec![smoothing]);
+            context().fonts().sdf_shader_i.u_put_float("atlas_width", vec![atlas.width as f32]);
+            context().fonts().sdf_shader_i.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
+        } else {
+            context().fonts().sdf_shader.bind();
+            context().fonts().sdf_shader.u_put_float("u_smoothing", vec![smoothing]);
+            context().fonts().sdf_shader.u_put_float("atlas_width", vec![atlas.width as f32]);
+            context().fonts().sdf_shader.u_put_float("i_scale", vec![1.0/self.comb_scale_x]);
+        }
 
         context().renderer().stack().end();
     }
 
-    pub unsafe fn end(&self) {
-        context().fonts().sdf_shader.unbind();
+    pub unsafe fn end(&self, instanced_shader: bool) {
+        if instanced_shader {
+            context().fonts().sdf_shader_i.unbind();
+        } else {
+            context().fonts().sdf_shader.unbind();
+        }
 
         BindTexture(TEXTURE_2D, 0);
         PopMatrix();
