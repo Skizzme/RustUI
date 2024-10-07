@@ -9,10 +9,12 @@ pub enum Event {
     GlfwRaw(WindowEvent),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Hash, PartialEq, Clone)]
 pub enum RenderPass {
     Main,
-    Blur,
-    Bloom,
-    Custom(u32),
+    Post,
+    Custom(String),
+}
+
+impl Eq for RenderPass {
 }

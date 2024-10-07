@@ -13,7 +13,7 @@ use crate::components::render::font::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State;
 use crate::components::window::Window;
-use crate::components::wrapper::framebuffer::Framebuffer;
+use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::{gl11, gl20, gl30};
 use crate::gl_binds::gl11::*;
@@ -31,7 +31,7 @@ pub struct UIContext {
     glfw: Glfw,
     p_window: PWindow,
     events: GlfwReceiver<(f64, WindowEvent)>,
-    framebuffer: Framebuffer,
+    framebuffer: u32,
     frames: (u32, u32, Instant),
     last_render: Instant,
     content_scale: (f32, f32),
@@ -41,6 +41,7 @@ pub struct UIContext {
     renderer: Renderer,
     font_manager: FontManager,
     framework: Framework,
+    fb_manager: FramebufferManager,
 
     close_requested: bool,
 }
@@ -58,11 +59,12 @@ impl UIContext {
         gl20::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
+        let mut fb_manager = FramebufferManager::new();
         CONTEXT = Some(UIContext {
             glfw,
             p_window,
             events,
-            framebuffer: Framebuffer::new(RGBA, builder.width, builder.height).expect("Failed to create main framebuffer"),
+            framebuffer: 0,
             frames: (0, 0, Instant::now()),
             last_render: Instant::now(),
             content_scale: (1.0, 1.0),
@@ -70,15 +72,19 @@ impl UIContext {
             window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
             font_manager: FontManager::new(""),
-            framework: Framework::new(),
+            framework: Framework::new(&mut fb_manager),
+            fb_manager,
             close_requested: false,
         });
+        context().framebuffer = context().fb_manager.create_fb(RGBA).unwrap();
         context().fonts().set_font_bytes("main", include_bytes!("../assets/fonts/ProductSans.ttf").to_vec());
     }
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            self.frame();
+            if !self.frame() {
+                thread::sleep(Duration::from_secs_f32(1.0/60.0));
+            }
 
             if self.last_render.elapsed().as_secs_f32() > 1.0 {
                 thread::sleep(Duration::from_millis(50));
@@ -88,14 +94,16 @@ impl UIContext {
         }
     }
 
-    pub unsafe fn frame(&mut self) {
+    pub unsafe fn frame(&mut self) -> bool {
         self.handle_events();
         self.window.mouse.frame();
 
-        if self.should_render() {
+        let should_render = self.should_render();
+        if should_render {
             self.render();
             self.last_render = Instant::now();
         }
+        should_render
     }
 
     pub unsafe fn should_render(&mut self) -> bool {
@@ -121,7 +129,6 @@ impl UIContext {
         }
     }
 
-
     unsafe fn pre_render(&mut self) {
         Viewport(0, 0, context().window().width as GLsizei, context().window().height as GLsizei);
 
@@ -134,16 +141,16 @@ impl UIContext {
 
         Clear(COLOR_BUFFER_BIT);
         BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-        self.framebuffer.bind();
-        self.framebuffer.clear();
+        self.main_fb().bind();
+        self.main_fb().clear();
     }
 
     unsafe fn post_render(&mut self) {
         check_error("post");
-        self.framebuffer.unbind();
-        self.framebuffer.bind_texture();
+        self.main_fb().unbind();
+        self.main_fb().bind_texture();
         self.renderer.draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
-        self.framebuffer.unbind();
+        self.main_fb().unbind();
 
         self.renderer.end_frame();
         self.p_window.swap_buffers(); }
@@ -184,6 +191,8 @@ impl UIContext {
     pub fn framework(&mut self) -> &mut Framework { &mut self.framework }
     pub fn fps(&self) -> u32 { self.frames.1 }
     pub fn p_window(&mut self) -> &mut PWindow { &mut self.p_window }
+    pub fn fb_manager(&mut self) -> &mut FramebufferManager { &mut self.fb_manager }
+    pub unsafe fn main_fb(&mut self) -> &mut Framebuffer { &mut self.fb_manager.fb(self.framebuffer) }
 }
 
 pub struct ContextBuilder<'a> {
