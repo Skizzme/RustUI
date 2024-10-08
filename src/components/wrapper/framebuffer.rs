@@ -98,8 +98,8 @@ impl Framebuffer {
     }
 
     pub unsafe fn clear(&self) {
-        Clear(COLOR_BUFFER_BIT);
         ClearColor(0.0, 0.0, 0.0, 0.0);
+        Clear(COLOR_BUFFER_BIT);
         Clear(DEPTH_BUFFER_BIT);
         Clear(STENCIL_BUFFER_BIT);
         BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
@@ -118,26 +118,21 @@ impl Framebuffer {
     }
 
     pub unsafe fn copy(&self, target_fb: u32) {
-        // context().renderer().stack().push(State::Blend(true));
         BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
         BindFramebuffer(DRAW_FRAMEBUFFER, target_fb);
         BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
         BindFramebuffer(FRAMEBUFFER, target_fb);
-        // self.bind_texture();
-        // context().renderer().draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
-        // self.unbind_texture();
-        // context().renderer().stack().pop();
+    }
+
+    pub unsafe fn copy_from_parent(&self) {
+        BindFramebuffer(READ_FRAMEBUFFER, self.parent_framebuffer as u32);
+        BindFramebuffer(DRAW_FRAMEBUFFER, self.framebuffer_id);
+        BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
+        BindFramebuffer(FRAMEBUFFER, self.framebuffer_id);
     }
 
     pub unsafe fn copy_to_parent(&self) {
-        // context().renderer().stack().push(State::Blend(true));
-        BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
-        BindFramebuffer(DRAW_FRAMEBUFFER, self.parent_framebuffer as u32);
-        BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
-        // self.bind_texture();
-        // context().renderer().draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
-        // self.unbind_texture();
-        // context().renderer().stack().pop();
+        self.copy(self.parent_framebuffer as u32);
     }
 
     pub unsafe fn delete(&self) {

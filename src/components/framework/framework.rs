@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::Instant;
 use glfw::WindowEvent;
 use crate::components::bounds::Bounds;
@@ -14,6 +15,7 @@ use crate::gl_binds::gl30::{BindFramebuffer, FRAMEBUFFER};
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
     screen_fb: u32,
+    passes_fb: HashMap<RenderPass, u32>,
     layers: Vec<Layer>,
     first_render: bool,
 }
@@ -23,10 +25,10 @@ impl Framework {
         let mut fr = Framework {
             current_screen: Box::new(DefaultScreen::new()),
             screen_fb: 0,
+            passes_fb: HashMap::new(),
             layers: vec![],
             first_render: true,
         };
-        fr.screen_fb = fb_manager.create_fb_dims(RGBA, width, height).unwrap();
         fr.set_screen(DefaultScreen::new());
         fr
     }
@@ -73,12 +75,22 @@ impl Framework {
         &mut self.current_screen
     }
 
+    pub unsafe fn pass_fb(&mut self, pass: &RenderPass) -> &mut Framebuffer {
+        if !self.passes_fb.contains_key(&pass) {
+            self.passes_fb.insert(pass.clone(), context().fb_manager().create_fb(RGBA).unwrap());
+        }
+        context().fb_manager().fb(*self.passes_fb.get(&pass).unwrap())
+    }
+
     pub unsafe fn event(&mut self, event: Event) {
-        match event {
-            Event::Render(_) => {
+        match &event {
+            Event::Render(pass) => {
+                if self.screen_fb == 0 {
+                    self.screen_fb = context().fb_manager().create_fb(RGBA).unwrap();
+                }
                 let fb = context().fb_manager().fb(self.screen_fb);
+                let parent = fb.bind();
                 if self.current_screen.should_render() || self.first_render {
-                    let parent = fb.bind();
                     fb.clear();
                     if parent != 0 {
                         context().fb_manager().fb(parent as u32).copy(fb.id());

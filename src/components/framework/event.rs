@@ -13,6 +13,7 @@ pub enum Event {
 #[derive(Debug, Hash, PartialEq, Clone)]
 pub enum RenderPass {
     Main,
+    Blur,
     Post,
     Custom(String),
 }
@@ -23,6 +24,7 @@ impl RenderPass {
     pub fn all() -> Vec<RenderPass> {
         vec![
             RenderPass::Main,
+            RenderPass::Blur,
             RenderPass::Post,
         ]
     }

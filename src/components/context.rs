@@ -14,9 +14,11 @@ use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State;
 use crate::components::window::Window;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
+use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::{gl11, gl20, gl30};
 use crate::gl_binds::gl11::*;
+use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0, TEXTURE1, TEXTURE16, TEXTURE2};
 
 static mut CONTEXT: Option<UIContext> = None;
 
@@ -119,9 +121,88 @@ impl UIContext {
         self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
         context().window().mouse.pos /= (self.content_scale.0, self.content_scale.1);
 
-        if self.framework.should_render_pass(&RenderPass::Main) {
-            self.framework.event(Event::Render(RenderPass::Main));
+        // let st = Instant::now();
+        for pass in RenderPass::all() {
+            // if pass != RenderPass::Main {
+            //     continue
+            // }
+            self.framework.pass_fb(&pass).bind();
+            if self.framework.should_render_pass(&pass) {
+                self.framework.pass_fb(&pass).clear();
+                // self.framework.pass_fb(&pass).copy_from_parent();
+                self.framework.event(Event::Render(pass.clone()));
+            }
+
+            match pass {
+                RenderPass::Main => {}
+                RenderPass::Blur => {
+                    if self.renderer.blur_fb == 0 {
+                        self.renderer.blur_fb = self.fb_manager.create_fb(RGBA).unwrap();
+                    }
+                    {
+                        let blur_fb = self.fb_manager.fb(self.renderer.blur_fb);
+                        blur_fb.bind();
+                        blur_fb.clear();
+                        blur_fb.copy_from_parent();
+                    }
+                    let mut last_fb_tex = self.framework.pass_fb(&pass).texture_id();
+                    let shader = &mut self.renderer.blur_shaders.0;
+                    shader.bind();
+                    shader.u_put_float("offset", vec![1.0, 1.0]);
+                    shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
+                    shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
+                    shader.u_put_int("texture", vec![0]);
+                    shader.u_put_float("noise", vec![0.2]);
+                    shader.u_put_int("check", vec![1]);
+                    shader.u_put_int("check_texture", vec![16]);
+
+                    for i in 0..1 {
+                        ActiveTexture(TEXTURE16);
+                        self.main_fb().bind_texture();
+                        ActiveTexture(TEXTURE0);
+                        BindTexture(TEXTURE_2D, last_fb_tex);
+                        self.renderer.draw_screen_rect_flipped();
+                        last_fb_tex = self.main_fb().texture_id();
+                    }
+
+                    Shader::unbind();
+                    self.fb_manager.fb(self.renderer.blur_fb).unbind();
+                    self.fb_manager.fb(self.renderer.blur_fb).bind_texture();
+                    self.renderer.draw_screen_rect_flipped();
+                    Texture::unbind();
+                    self.fb_manager.fb(self.renderer.blur_fb).copy_to_parent();
+                }
+                RenderPass::Post => {}
+                RenderPass::Custom(_) => {}
+            }
+
+            self.framework.pass_fb(&pass).unbind();
+
+            self.renderer.blend_shader.bind();
+            self.renderer.blend_shader.u_put_int("u_top_tex", vec![1]);
+            self.renderer.blend_shader.u_put_int("u_bottom_text", vec![2]);
+
+            ActiveTexture(TEXTURE2);
+            self.main_fb().bind_texture();
+
+            ActiveTexture(TEXTURE1);
+            self.framework.pass_fb(&pass).bind_texture();
+
+            ActiveTexture(TEXTURE0);
+            Texture::unbind();
+            self.renderer.draw_screen_rect_flipped();
+            Shader::unbind();
+
+            // self.framework.pass_fb(&pass).copy_to_parent();
         }
+        // for pass in RenderPass::all().iter().rev() {
+        //     Enable(BLEND);
+        //     self.framework.pass_fb(pass).bind_texture();
+        //     self.renderer.draw_screen_rect_flipped();
+        // }
+        // Texture::unbind();
+        // Finish();
+        // println!("render took {:?}", st.elapsed());
 
         context().window().mouse.pos *= (self.content_scale.0, self.content_scale.1);
         self.renderer.stack().pop();
@@ -159,7 +240,7 @@ impl UIContext {
         check_error("post");
         self.main_fb().unbind();
         self.main_fb().bind_texture();
-        self.renderer.draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        self.renderer.draw_screen_rect_flipped();
         self.main_fb().unbind();
 
         self.renderer.end_frame();

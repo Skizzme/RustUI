@@ -4,6 +4,7 @@ use gl::*;
 
 use crate::asset_manager::file_contents_str;
 use crate::components::bounds::Bounds;
+use crate::components::context::context;
 use crate::components::render::color::ToColor;
 use crate::components::render::stack::Stack;
 use crate::components::render::stack::State::{Blend, Texture2D};
@@ -19,29 +20,33 @@ pub struct Renderer {
     pub texture_shader: Shader,
     pub mask_shader: Shader,
     pub circle_shader: Shader,
+    pub blend_shader: Shader,
+    /// up, down
+    pub blur_shaders: (Shader, Shader),
+    pub blur_fb: u32,
     stack: Stack
+}
+
+fn shader_file(path: impl ToString) -> String {
+    let path = path.to_string();
+    file_contents_str(path.replace("/", path::MAIN_SEPARATOR_STR)).expect(format!("Failed to read shader file ({})", path).as_str()).to_string()
 }
 
 impl Renderer {
 
     pub unsafe fn new() -> Self {
+        let default_vert = shader_file("shaders/vertex.glsl");
         Renderer {
-            rounded_rect_shader: Shader::new(
-                file_contents_str("shaders/rounded_rect/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (rounded_rect/vertex.glsl)"),
-                file_contents_str("shaders/rounded_rect/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (rounded_rect/fragment.glsl)"),
+            rounded_rect_shader: Shader::new(shader_file("shaders/rounded_rect/vertex.glsl"), shader_file("shaders/rounded_rect/fragment.glsl")),
+            texture_shader: Shader::new(shader_file("shaders/test_n/vertex.glsl"), shader_file("shaders/test_n/fragment.glsl")),
+            mask_shader: Shader::new(shader_file("shaders/mask/vertex.glsl"), shader_file("shaders/mask/fragment.glsl")),
+            circle_shader: Shader::new(shader_file("shaders/circle/vertex.glsl"), shader_file("shaders/circle/fragment.glsl")),
+            blur_shaders: (
+                Shader::new(default_vert.clone(), shader_file("shaders/blur/blur_up.frag")),
+                Shader::new(default_vert.clone(), shader_file("shaders/blur/blur_down.frag")),
             ),
-            texture_shader: Shader::new(
-                file_contents_str("shaders/test_n/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (test_n/vertex.glsl)"),
-                file_contents_str("shaders/test_n/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (test_n/fragment.glsl)"),
-            ),
-            mask_shader: Shader::new(
-                file_contents_str("shaders/mask/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/vertex.glsl)"),
-                file_contents_str("shaders/mask/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/fragment.glsl)"),
-            ),
-            circle_shader: Shader::new(
-                file_contents_str("shaders/circle/vertex.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/vertex.glsl)"),
-                file_contents_str("shaders/circle/fragment.glsl".replace("/", path::MAIN_SEPARATOR_STR)).expect("Failed to read shader file (mask/fragment.glsl)"),
-            ),
+            blend_shader: Shader::new(default_vert.clone(), shader_file("shaders/fb_blend.frag")),
+            blur_fb: 0,
             stack: Stack::new(),
         }
     }
@@ -182,5 +187,9 @@ impl Renderer {
         End();
 
         self.stack.pop()
+    }
+
+    pub unsafe fn draw_screen_rect_flipped(&mut self) {
+        self.draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);;
     }
 }

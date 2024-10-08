@@ -745,7 +745,7 @@ impl FontRenderer {
         self.comb_scale_x = self.scaled_factor_x*self.scale;
         self.comb_scale_y = self.scaled_factor_y*self.scale;
 
-        println!("fr {} {} {}", self.scaled_factor_x, self.comb_scale_x, self.scale);
+        // println!("fr {} {} {}", self.scaled_factor_x, self.comb_scale_x, self.scale);
         PushMatrix();
         Scalef(self.scale, self.scale, 1.0);
 

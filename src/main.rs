@@ -28,11 +28,12 @@ use RustUI::components::bounds::Bounds;
 
 use RustUI::components::context::{context, ContextBuilder, UIContext};
 use RustUI::components::framework::element::{Element, ElementBuilder, UIHandler};
-use RustUI::components::framework::event::Event;
+use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
 use RustUI::components::position::Pos;
 use RustUI::components::render::font::{FontRenderer, ScaleMode};
+use RustUI::components::wrapper::shader::Shader;
 use RustUI::components::wrapper::texture::Texture;
 use RustUI::gl_binds::gl11::{BLEND, EnableClientState, Finish, FLOAT, RGBA, TexCoordPointer, TEXTURE_COORD_ARRAY, VERTEX_ARRAY, VertexPointer};
 use RustUI::gl_binds::gl20::{EnableVertexAttribArray, FALSE, TEXTURE0, TEXTURE_2D, TEXTURE_COORD_ARRAY_BUFFER_BINDING, VertexAttribPointer};
@@ -83,7 +84,10 @@ impl TestScreen {
 impl ScreenTrait for TestScreen {
     unsafe fn handle(&mut self, event: &Event) {
         match event {
-            Event::Render(_) => {
+            Event::Render(pass) => {
+                if pass != &RenderPass::Main {
+                    return;
+                }
                 println!("render screen");
                 self.fr.draw_string_inst(30.0, "something", (0.0, 0.0), 0xffffffff);
                 self.fr.draw_string_inst(30.0, format!("{:?}", context().fps()), (200.0, 100.0), 0xffffffff);
@@ -109,7 +113,10 @@ impl ScreenTrait for TestScreen {
         let tex_cl = self.previous_tex.clone();
         el_1.handler(move |el, event| {
             match event {
-                Event::Render(_) => {
+                Event::Render(pass) => {
+                    if pass != &RenderPass::Main {
+                        return;
+                    }
                     let mouse = context().window().mouse();
                     let (width, height) = context().fonts().renderer("main").draw_string_inst(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
                     el.bounds().set_width(width);
