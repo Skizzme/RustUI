@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::ptr::null;
+use crate::components::bounds::Bounds;
 use crate::components::context::context;
+use crate::components::render::stack::State;
 
 use crate::gl_binds::gl30::*;
 use crate::gl_binds::gl30::types::{GLenum, GLint};
@@ -28,7 +30,11 @@ impl FramebufferManager {
 
     pub unsafe fn create_fb(&mut self, format: GLenum) -> Option<u32> {
         let window = context().window();
-        match Framebuffer::new(format, window.width, window.height) {
+        self.create_fb_dims(format, window.width, window.height)
+    }
+
+    pub unsafe fn create_fb_dims(&mut self, format: GLenum, width: i32, height: i32,) -> Option<u32> {
+        match Framebuffer::new(format, width, height) {
             Ok(fb) => {
                 let id = fb.id();
                 self.framebuffers.insert(id, fb);
@@ -75,9 +81,10 @@ impl Framebuffer {
         }
     }
 
-    pub unsafe fn bind(&mut self) {
+    pub unsafe fn bind(&mut self) -> i32 {
         GetIntegerv(FRAMEBUFFER_BINDING, &mut self.parent_framebuffer);
         BindFramebuffer(FRAMEBUFFER, self.framebuffer_id);
+        self.parent_framebuffer
     }
 
     pub unsafe fn resize(&mut self, width: i32, height: i32) {
@@ -104,6 +111,14 @@ impl Framebuffer {
 
     pub unsafe fn unbind_texture(&self) {
         BindTexture(TEXTURE_2D, 0);
+    }
+
+    pub unsafe fn draw(&self) {
+        // context().renderer().stack().push(State::Blend(true));
+        self.bind_texture();
+        context().renderer().draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        self.unbind_texture();
+        // context().renderer().stack().pop();
     }
 
     pub unsafe fn delete(&self) {

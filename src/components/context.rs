@@ -72,7 +72,7 @@ impl UIContext {
             window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
             font_manager: FontManager::new(""),
-            framework: Framework::new(&mut fb_manager),
+            framework: Framework::new(&mut fb_manager, builder.width, builder.height),
             fb_manager,
             close_requested: false,
         });
@@ -98,23 +98,28 @@ impl UIContext {
         self.handle_events();
         self.window.mouse.frame();
 
+        self.framework.event(Event::PreRender);
         let should_render = self.should_render();
         if should_render {
             self.render();
             self.last_render = Instant::now();
         }
+        self.framework.event(Event::PostRender);
         should_render
     }
 
     pub unsafe fn should_render(&mut self) -> bool {
-        self.framework.event(Event::PreRender);
-        self.framework.should_render()
+        self.framework.should_render_all()
     }
 
     pub unsafe fn render(&mut self) {
         self.pre_render();
         self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
-        self.framework.event(Event::Render(RenderPass::Main));
+
+        if self.framework.should_render_pass(&RenderPass::Main) {
+            self.framework.event(Event::Render(RenderPass::Main));
+        }
+
         self.renderer.stack().pop();
         self.last_frame = Instant::now();
         check_error("render");
@@ -192,7 +197,7 @@ impl UIContext {
     pub fn fps(&self) -> u32 { self.frames.1 }
     pub fn p_window(&mut self) -> &mut PWindow { &mut self.p_window }
     pub fn fb_manager(&mut self) -> &mut FramebufferManager { &mut self.fb_manager }
-    pub unsafe fn main_fb(&mut self) -> &mut Framebuffer { &mut self.fb_manager.fb(self.framebuffer) }
+    pub unsafe fn main_fb(&mut self) -> &mut Framebuffer { self.fb_manager.fb(self.framebuffer) }
 }
 
 pub struct ContextBuilder<'a> {

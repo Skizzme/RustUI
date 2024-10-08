@@ -606,15 +606,15 @@ impl FontRenderer {
             }
 
             let (c_w, _c_h, should_render) = self.get_dimensions(char);
-            if should_render == 2 {
-                break;
-            }
+            // if should_render == 2 {
+            //     break;
+            // }
 
-            if should_render <= 1 {
-                if should_render == 0 {
+            // if should_render <= 1 {
+            //     if should_render == 0 {
                     let atlas_ref= self.font().atlas_tex.as_ref().unwrap().clone();
                     self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
-                }
+                // }
 
                 self.line_width += c_w;
                 match self.scale_mode {
@@ -625,7 +625,7 @@ impl FontRenderer {
                         self.x += self.get_scaled_value(c_w, self.comb_scale_x);
                     }
                 }
-            }
+            // }
         }
         self.end();
         (self.line_width*self.scale, self.get_line_height()*self.scale)

@@ -29,7 +29,7 @@ impl ScreenTrait for DefaultScreen {
         }
     }
 
-    unsafe fn init(&mut self) -> Vec<Box<dyn UIHandler>> {
+    unsafe fn init(&mut self) -> Vec<Layer> {
         vec![]
     }
 

@@ -4,6 +4,7 @@ use glfw::{Action, Key, Modifiers, MouseButton, WindowEvent};
 pub enum Event {
     PreRender,
     Render(RenderPass),
+    PostRender,
     MouseClick(MouseButton, Action),
     Keyboard(Key, Action, Modifiers),
     GlfwRaw(WindowEvent),
@@ -16,5 +17,13 @@ pub enum RenderPass {
     Custom(String),
 }
 
-impl Eq for RenderPass {
+impl Eq for RenderPass {}
+
+impl RenderPass {
+    pub fn all() -> Vec<RenderPass> {
+        vec![
+            RenderPass::Main,
+            RenderPass::Post,
+        ]
+    }
 }

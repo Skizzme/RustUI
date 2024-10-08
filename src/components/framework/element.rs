@@ -4,13 +4,13 @@ use glfw::ffi::MOUSE_BUTTON_1;
 use glfw::{Action, MouseButton};
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
-use crate::components::framework::event::Event;
+use crate::components::framework::event::{Event, RenderPass};
 use crate::components::position::Pos;
 use crate::components::render::stack::State;
 
 pub trait UIHandler {
     unsafe fn handle(&mut self, event: &Event) -> bool;
-    unsafe fn should_render(&mut self) -> bool;
+    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool;
 }
 
 pub struct Element {
@@ -105,7 +105,7 @@ impl UIHandler for Element {
         handled
     }
 
-    unsafe fn should_render(&mut self) -> bool {
+    unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
         let mut result = self.bounds != self.last_bounds;
 
         if !result {
@@ -116,7 +116,7 @@ impl UIHandler for Element {
             if result {
                 break;
             }
-            result = c.should_render();
+            result = c.should_render(rp);
         }
 
         result
