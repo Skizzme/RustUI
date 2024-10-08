@@ -1,8 +1,9 @@
 use std::collections::HashMap;
-use std::ops::AddAssign;
+use std::ops::{AddAssign, DivAssign, MulAssign};
 
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
 use crate::components::context::context;
+use crate::components::position::Pos;
 use crate::gl_binds::gl11::{Scalef, Translatef};
 
 use crate::gl_binds::gl11::types::{GLdouble, GLenum};

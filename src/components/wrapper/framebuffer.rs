@@ -52,6 +52,8 @@ pub struct Framebuffer {
     framebuffer_id: u32,
     texture_id: u32,
     parent_framebuffer: i32,
+    width: i32,
+    height: i32,
     format: GLenum,
 }
 
@@ -77,7 +79,7 @@ impl Framebuffer {
         if status != FRAMEBUFFER_COMPLETE {
             Err(format!("Failed to create framebuffer object. Status: {}", status))
         } else {
-            Ok(Framebuffer { framebuffer_id: framebuffer, texture_id: tex, parent_framebuffer: 0, format, })
+            Ok(Framebuffer { framebuffer_id: framebuffer, texture_id: tex, parent_framebuffer: 0, width: window_width, height: window_height, format, })
         }
     }
 
@@ -88,6 +90,8 @@ impl Framebuffer {
     }
 
     pub unsafe fn resize(&mut self, width: i32, height: i32) {
+        self.width = width;
+        self.height = height;
         self.bind_texture();
         TexImage2D(TEXTURE_2D, 0, self.format as GLint, width, height, 0, self.format, UNSIGNED_BYTE, null());
         self.unbind_texture();
@@ -113,11 +117,26 @@ impl Framebuffer {
         BindTexture(TEXTURE_2D, 0);
     }
 
-    pub unsafe fn draw(&self) {
+    pub unsafe fn copy(&self, target_fb: u32) {
         // context().renderer().stack().push(State::Blend(true));
-        self.bind_texture();
-        context().renderer().draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
-        self.unbind_texture();
+        BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
+        BindFramebuffer(DRAW_FRAMEBUFFER, target_fb);
+        BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
+        BindFramebuffer(FRAMEBUFFER, target_fb);
+        // self.bind_texture();
+        // context().renderer().draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        // self.unbind_texture();
+        // context().renderer().stack().pop();
+    }
+
+    pub unsafe fn copy_to_parent(&self) {
+        // context().renderer().stack().push(State::Blend(true));
+        BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
+        BindFramebuffer(DRAW_FRAMEBUFFER, self.parent_framebuffer as u32);
+        BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
+        // self.bind_texture();
+        // context().renderer().draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        // self.unbind_texture();
         // context().renderer().stack().pop();
     }
 

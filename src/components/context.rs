@@ -114,13 +114,18 @@ impl UIContext {
 
     pub unsafe fn render(&mut self) {
         self.pre_render();
+        PushMatrix();
+        // Scalef(self.content_scale.0, self.content_scale.1, 1.0);
         self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
+        context().window().mouse.pos /= (self.content_scale.0, self.content_scale.1);
 
         if self.framework.should_render_pass(&RenderPass::Main) {
             self.framework.event(Event::Render(RenderPass::Main));
         }
 
+        context().window().mouse.pos *= (self.content_scale.0, self.content_scale.1);
         self.renderer.stack().pop();
+        PopMatrix();
         self.last_frame = Instant::now();
         check_error("render");
         self.post_render();
@@ -171,11 +176,16 @@ impl UIContext {
                             self.framework.event(Event::MouseClick(*button, *action))
                         }
                         WindowEvent::ContentScale(x, y) => {
+                            println!("xy {} {}", x, y);
                             self.p_window.set_size((self.window.width as f32 * (x / self.content_scale.0)) as i32, (self.window.height as f32 * (y / self.content_scale.1)) as i32);
                             self.content_scale = (*x, *y)
                         }
                         WindowEvent::FileDrop(fl) => {
                             println!("{:?}", fl);
+                        }
+                        WindowEvent::FramebufferSize(width, height) => {
+                            self.framework.on_resize();
+                            self.fb_manager().resize(*width, *height);
                         }
                         _ => {}
                     }

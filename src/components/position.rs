@@ -1,5 +1,5 @@
 use std::hash::{Hash, Hasher};
-use std::ops::{Add, AddAssign, Sub};
+use std::ops::{Add, AddAssign, DivAssign, MulAssign, Sub};
 use crate::components::bounds::Bounds;
 
 #[derive(Clone, Debug, Copy,)]
@@ -69,5 +69,17 @@ impl AddAssign<(f32, f32)> for Pos {
             x: self.x + rhs.0,
             y: self.y + rhs.1,
         }
+    }
+}
+
+impl MulAssign<(f32, f32)> for Pos {
+    fn mul_assign(&mut self, rhs: (f32, f32)) {
+        *self = Pos { x: self.x * rhs.0, y: self.y * rhs.1 }
+    }
+}
+
+impl DivAssign<(f32, f32)> for Pos {
+    fn div_assign(&mut self, rhs: (f32, f32)) {
+        *self = Pos { x: self.x / rhs.0, y: self.y / rhs.1 }
     }
 }

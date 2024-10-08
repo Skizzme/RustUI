@@ -1,3 +1,4 @@
+use std::time::Instant;
 use glfw::WindowEvent;
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
@@ -7,7 +8,7 @@ use crate::components::framework::layer::Layer;
 use crate::components::framework::screen::{DefaultScreen, ScreenTrait};
 use crate::components::render::stack::State;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
-use crate::gl_binds::gl11::{ALPHA, Enable, RGBA};
+use crate::gl_binds::gl11::{ALPHA, Enable, Finish, RGBA};
 use crate::gl_binds::gl30::{BindFramebuffer, FRAMEBUFFER};
 
 pub struct Framework {
@@ -28,6 +29,10 @@ impl Framework {
         fr.screen_fb = fb_manager.create_fb_dims(RGBA, width, height).unwrap();
         fr.set_screen(DefaultScreen::new());
         fr
+    }
+
+    pub unsafe fn on_resize(&mut self) {
+        self.first_render = true;
     }
 
     pub unsafe fn should_render(&mut self, layer: u32, render_pass: &RenderPass) -> bool {
@@ -76,7 +81,7 @@ impl Framework {
                     let parent = fb.bind();
                     fb.clear();
                     if parent != 0 {
-                        context().fb_manager().fb(parent as u32).draw();
+                        context().fb_manager().fb(parent as u32).copy(fb.id());
                     }
                     println!("red");
 
@@ -84,7 +89,7 @@ impl Framework {
 
                     fb.unbind();
                 }
-                fb.draw();
+                fb.copy_to_parent();
             },
             _ => self.current_screen.handle(&event),
         }
@@ -96,7 +101,7 @@ impl Framework {
                         let parent = layer_fb.bind();
                         layer_fb.clear();
                         if parent != 0 {
-                            context().fb_manager().fb(parent as u32).draw();
+                            context().fb_manager().fb(parent as u32).copy(layer_fb.id());
                         }
                     }
 
@@ -106,7 +111,7 @@ impl Framework {
 
                     let layer_fb = layer.fb(pass);
                     layer_fb.unbind();
-                    layer_fb.draw();
+                    layer_fb.copy_to_parent();
                 },
                 _ => {
                     for e in layer.elements() {
