@@ -25,7 +25,6 @@ void main() {
     sum += texture2D(texture, uv + vec2(0.0, -half_pixel.y * 2.0) * jitter);
     sum += texture2D(texture, uv + vec2(-half_pixel.x, -half_pixel.y) * jitter) * 2.0;
     gl_FragColor = vec4(
-        sum.rgb / 12.0 + mix(0.5 / 255.0, -0.5 / 255.0, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)),
-        mix(1.0, texture2D(check_texture, gl_TexCoord[0].xy).a, check)
+        sum.rgba / 12.0 + mix(0.5 / 255.0, -0.5 / 255.0, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5))
     );
 }

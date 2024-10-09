@@ -122,13 +122,15 @@ impl UIContext {
         context().window().mouse.pos /= (self.content_scale.0, self.content_scale.1);
 
         // let st = Instant::now();
-        for pass in RenderPass::all() {
+        let mut passes = RenderPass::all();
+        // passes.reverse();
+        for pass in passes {
             // if pass != RenderPass::Main {
             //     continue
             // }
-            self.framework.pass_fb(&pass).bind();
+            let (parent_fb, parent_tex) = self.framework.element_pass_fb(&pass).bind();
             if self.framework.should_render_pass(&pass) {
-                self.framework.pass_fb(&pass).clear();
+                self.framework.element_pass_fb(&pass).clear();
                 // self.framework.pass_fb(&pass).copy_from_parent();
                 self.framework.event(Event::Render(pass.clone()));
             }
@@ -139,13 +141,13 @@ impl UIContext {
                     if self.renderer.blur_fb == 0 {
                         self.renderer.blur_fb = self.fb_manager.create_fb(RGBA).unwrap();
                     }
+                    let (mut parent_fb, mut parent_tex) = (0,0);
                     {
                         let blur_fb = self.fb_manager.fb(self.renderer.blur_fb);
-                        blur_fb.bind();
+                        (parent_fb, parent_tex) = blur_fb.bind();
                         blur_fb.clear();
                         blur_fb.copy_from_parent();
                     }
-                    let mut last_fb_tex = self.framework.pass_fb(&pass).texture_id();
                     let shader = &mut self.renderer.blur_shaders.0;
                     shader.bind();
                     shader.u_put_float("offset", vec![1.0, 1.0]);
@@ -153,47 +155,31 @@ impl UIContext {
                     shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
                     shader.u_put_int("texture", vec![0]);
                     shader.u_put_float("noise", vec![0.2]);
-                    shader.u_put_int("check", vec![1]);
+                    shader.u_put_int("check", vec![0]);
                     shader.u_put_int("check_texture", vec![16]);
 
-                    for i in 0..1 {
+                    let mut last_tex = parent_tex;
+                    for i in 0..4 {
                         ActiveTexture(TEXTURE16);
                         self.main_fb().bind_texture();
                         ActiveTexture(TEXTURE0);
-                        BindTexture(TEXTURE_2D, last_fb_tex);
+                        BindTexture(TEXTURE_2D, last_tex as GLuint);
                         self.renderer.draw_screen_rect_flipped();
-                        last_fb_tex = self.main_fb().texture_id();
+                        last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
                     }
 
-                    Shader::unbind();
                     self.fb_manager.fb(self.renderer.blur_fb).unbind();
                     self.fb_manager.fb(self.renderer.blur_fb).bind_texture();
+                    Shader::unbind();
                     self.renderer.draw_screen_rect_flipped();
                     Texture::unbind();
-                    self.fb_manager.fb(self.renderer.blur_fb).copy_to_parent();
+                    // self.fb_manager.fb(self.renderer.blur_fb).copy_bind(parent_fb as u32, parent_tex as u32);
                 }
                 RenderPass::Post => {}
                 RenderPass::Custom(_) => {}
             }
-
-            self.framework.pass_fb(&pass).unbind();
-
-            self.renderer.blend_shader.bind();
-            self.renderer.blend_shader.u_put_int("u_top_tex", vec![1]);
-            self.renderer.blend_shader.u_put_int("u_bottom_text", vec![2]);
-
-            ActiveTexture(TEXTURE2);
-            self.main_fb().bind_texture();
-
-            ActiveTexture(TEXTURE1);
-            self.framework.pass_fb(&pass).bind_texture();
-
-            ActiveTexture(TEXTURE0);
-            Texture::unbind();
-            self.renderer.draw_screen_rect_flipped();
-            Shader::unbind();
-
-            // self.framework.pass_fb(&pass).copy_to_parent();
+            println!("main? {} {}", parent_fb, parent_tex);
+            self.framework.element_pass_fb(&pass).copy_bind(parent_fb as u32, parent_tex as u32);
         }
         // for pass in RenderPass::all().iter().rev() {
         //     Enable(BLEND);
@@ -223,7 +209,6 @@ impl UIContext {
     unsafe fn pre_render(&mut self) {
         Viewport(0, 0, context().window().width as GLsizei, context().window().height as GLsizei);
 
-        check_error("pre");
         Clear(DEPTH_BUFFER_BIT);
         MatrixMode(PROJECTION);
         LoadIdentity();
@@ -234,6 +219,7 @@ impl UIContext {
         BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
         self.main_fb().bind();
         self.main_fb().clear();
+        check_error("pre");
     }
 
     unsafe fn post_render(&mut self) {

@@ -88,12 +88,12 @@ impl ScreenTrait for TestScreen {
                 if pass != &RenderPass::Main {
                     return;
                 }
-                println!("render screen");
+                context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
                 self.fr.draw_string_inst(30.0, "something", (0.0, 0.0), 0xffffffff);
                 self.fr.draw_string_inst(30.0, format!("{:?}", context().fps()), (200.0, 100.0), 0xffffffff);
                 self.last_fps = context().fps();
 
-                context().fonts().renderer("main").draw_string_inst(44.0, &self.text, (10.0, 10.0), 0xffffffff);
+                context().fonts().renderer("main").draw_string_inst(44.0, &self.text, (10.0, 10.0), 0x90ffffff);
             }
             Event::PostRender => {
                 self.previous_pos = *context().window().mouse().pos();
@@ -114,15 +114,16 @@ impl ScreenTrait for TestScreen {
         el_1.handler(move |el, event| {
             match event {
                 Event::Render(pass) => {
-                    if pass != &RenderPass::Main {
+                    if pass == &RenderPass::Main {
                         return;
                     }
                     let mouse = context().window().mouse();
+                    // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
                     let (width, height) = context().fonts().renderer("main").draw_string_inst(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
                     el.bounds().set_width(width);
                     el.bounds().set_height(height);
                     let hovering = el.hovering();
-                    el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                     *tex_cl.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
                 }
@@ -137,14 +138,17 @@ impl ScreenTrait for TestScreen {
         });
 
         let mut el_1_c = ElementBuilder::new();
-        el_1_c.bounds(Bounds::xywh(0.0, 0.0, 10.0, 10.0));
+        el_1_c.bounds(Bounds::xywh(0.0, 0.0, 40.0, 40.0));
         el_1_c.draggable(false);
         el_1_c.handler(|el, event| {
             match event {
-                Event::Render(_) => {
+                Event::Render(pass) => {
                     // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
                     let hovering = el.hovering();
-                    el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    if pass == &RenderPass::Blur {
+                        // context().renderer().draw_rect(*el.bounds(), 0xffffffff);
+                        // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    }
                 },
                 Event::MouseClick(button, action) => {
                     if el.hovering() && *action == Action::Press {
