@@ -23,6 +23,8 @@ pub struct Renderer {
     pub blend_shader: Shader,
     /// up, down
     pub blur_shaders: (Shader, Shader),
+    /// up, down
+    pub bloom_shaders: (Shader, Shader),
     pub blur_fb: u32,
     stack: Stack
 }
@@ -44,6 +46,10 @@ impl Renderer {
             blur_shaders: (
                 Shader::new(default_vert.clone(), shader_file("shaders/blur/blur_up.frag")),
                 Shader::new(default_vert.clone(), shader_file("shaders/blur/blur_down.frag")),
+            ),
+            bloom_shaders: (
+                Shader::new(default_vert.clone(), shader_file("shaders/bloom/bloom_up.frag")),
+                Shader::new(default_vert.clone(), shader_file("shaders/bloom/bloom_down.frag")),
             ),
             blend_shader: Shader::new(default_vert.clone(), shader_file("shaders/fb_blend.frag")),
             blur_fb: 0,

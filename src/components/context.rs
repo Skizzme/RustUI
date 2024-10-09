@@ -130,53 +130,75 @@ impl UIContext {
             // }
             let (parent_fb, parent_tex) = self.framework.element_pass_fb(&pass).bind();
             if self.framework.should_render_pass(&pass) {
-                self.framework.element_pass_fb(&pass).clear();
+                Framebuffer::clear_current();
                 // self.framework.pass_fb(&pass).copy_from_parent();
                 self.framework.event(Event::Render(pass.clone()));
-            }
 
-            match pass {
-                RenderPass::Main => {}
-                RenderPass::Blur => {
-                    if self.renderer.blur_fb == 0 {
-                        self.renderer.blur_fb = self.fb_manager.create_fb(RGBA).unwrap();
-                    }
-                    let (mut parent_fb, mut parent_tex) = (0,0);
-                    {
-                        let blur_fb = self.fb_manager.fb(self.renderer.blur_fb);
-                        (parent_fb, parent_tex) = blur_fb.bind();
-                        blur_fb.clear();
-                        blur_fb.copy_from_parent();
-                    }
-                    let shader = &mut self.renderer.blur_shaders.0;
-                    shader.bind();
-                    shader.u_put_float("offset", vec![1.0, 1.0]);
-                    shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
-                    shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
-                    shader.u_put_int("texture", vec![0]);
-                    shader.u_put_float("noise", vec![0.2]);
-                    shader.u_put_int("check", vec![0]);
-                    shader.u_put_int("check_texture", vec![16]);
+                match pass {
+                    RenderPass::Main => {}
+                    RenderPass::Blur => {
+                        if self.renderer.blur_fb == 0 {
+                            self.renderer.blur_fb = self.fb_manager.create_fb(RGBA).unwrap();
+                        }
+                        let main_tex = self.main_fb().texture_id();
+                        let (mut parent_fb_2, mut parent_tex_2) = (0, 0);
+                        {
+                            let blur_fb = self.fb_manager.fb(self.renderer.blur_fb);
+                            (parent_fb_2, parent_tex_2) = blur_fb.bind();
+                            Framebuffer::clear_current();
+                            // blur_fb.copy_from_parent();
+                        }
+                        let shader = &mut self.renderer.blur_shaders.0;
+                        shader.bind();
+                        shader.u_put_float("offset", vec![1.0, 1.0]);
+                        shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
+                        shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
+                        shader.u_put_int("texture", vec![0]);
+                        shader.u_put_float("noise", vec![0.2]);
+                        shader.u_put_int("check", vec![1]);
+                        shader.u_put_int("check_texture", vec![1]);
 
-                    let mut last_tex = parent_tex;
-                    for i in 0..4 {
-                        ActiveTexture(TEXTURE16);
-                        self.main_fb().bind_texture();
-                        ActiveTexture(TEXTURE0);
-                        BindTexture(TEXTURE_2D, last_tex as GLuint);
-                        self.renderer.draw_screen_rect_flipped();
-                        last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
-                    }
+                        let mut last_tex = parent_tex_2;
+                        for i in 0..1 {
+                            ActiveTexture(TEXTURE1);
+                            BindTexture(TEXTURE_2D, main_tex);
+                            ActiveTexture(TEXTURE0);
+                            BindTexture(TEXTURE_2D, last_tex as GLuint);
+                            self.renderer.draw_screen_rect_flipped();
+                            last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
+                        }
+                        let shader = &mut self.renderer.blur_shaders.1;
+                        shader.bind();
+                        shader.u_put_float("offset", vec![1.0, 1.0]);
+                        shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
+                        shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
+                        shader.u_put_int("texture", vec![0]);
+                        shader.u_put_float("noise", vec![0.2]);
+                        shader.u_put_int("check", vec![1]);
+                        shader.u_put_int("check_texture", vec![1]);
 
-                    self.fb_manager.fb(self.renderer.blur_fb).unbind();
-                    self.fb_manager.fb(self.renderer.blur_fb).bind_texture();
-                    Shader::unbind();
-                    self.renderer.draw_screen_rect_flipped();
-                    Texture::unbind();
-                    // self.fb_manager.fb(self.renderer.blur_fb).copy_bind(parent_fb as u32, parent_tex as u32);
+                        let mut last_tex = parent_tex_2;
+                        for i in 0..1 {
+                            ActiveTexture(TEXTURE1);
+                            BindTexture(TEXTURE_2D, main_tex);
+                            ActiveTexture(TEXTURE0);
+                            BindTexture(TEXTURE_2D, last_tex as GLuint);
+                            self.renderer.draw_screen_rect_flipped();
+                            last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
+                        }
+
+                        self.fb_manager.fb(self.renderer.blur_fb).unbind();
+                        Framebuffer::clear_current(); // clear pass buffer
+                        self.fb_manager.fb(self.renderer.blur_fb).bind_texture();
+                        Shader::unbind();
+
+                        // self.renderer.draw_screen_rect_flipped();
+                        Texture::unbind();
+                        self.fb_manager.fb(self.renderer.blur_fb).copy_bind(parent_fb as u32, parent_tex as u32);
+                    }
+                    RenderPass::Post => {}
+                    RenderPass::Custom(_) => {}
                 }
-                RenderPass::Post => {}
-                RenderPass::Custom(_) => {}
             }
             println!("main? {} {}", parent_fb, parent_tex);
             self.framework.element_pass_fb(&pass).copy_bind(parent_fb as u32, parent_tex as u32);
@@ -218,7 +240,7 @@ impl UIContext {
         Clear(COLOR_BUFFER_BIT);
         BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
         self.main_fb().bind();
-        self.main_fb().clear();
+        Framebuffer::clear_current();
         check_error("pre");
     }
 

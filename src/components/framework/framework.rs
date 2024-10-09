@@ -94,7 +94,7 @@ impl Framework {
             Event::Render(pass) => {
                 let (parent_fb, parent_tex) = self.screen_pass_fb(pass).bind();
                 if self.current_screen.should_render() || self.first_render {
-                    self.screen_pass_fb(pass).clear();
+                    Framebuffer::clear_current();
                     // if parent != 0 {
                     //     context().fb_manager().fb(parent as u32).copy(fb.id());
                     // }
@@ -117,7 +117,7 @@ impl Framework {
                         let layer_fb = layer.fb(pass);
                         (parent_fb, parent_tex) = layer_fb.bind();
                         println!("layer: {} {}", parent_fb, parent_tex);
-                        layer_fb.clear();
+                        Framebuffer::clear_current();
                         // if parent != 0 {
                         //     context().fb_manager().fb(parent as u32).copy(layer_fb.id());
                         // }

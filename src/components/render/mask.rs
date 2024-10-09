@@ -24,7 +24,7 @@ impl FramebufferMask {
     /// Binds and clears the mask framebuffer to be drawn onto
     pub unsafe fn begin_mask(&mut self) {
         self.mask_framebuffer.bind();
-        self.mask_framebuffer.clear();
+        Framebuffer::clear_current();
         Disable(BLEND);
     }
 
@@ -36,7 +36,7 @@ impl FramebufferMask {
     /// Binds and clears the apply framebuffer to be drawn onto
     pub unsafe fn begin_draw(&mut self) {
         self.apply_framebuffer.bind();
-        self.apply_framebuffer.clear();
+        Framebuffer::clear_current();
         context().renderer().stack().push_l(Blend(false), 1);
     }
 

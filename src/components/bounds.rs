@@ -70,6 +70,13 @@ impl Bounds {
         self.height += self.y - top; // Increases height, since setting the top of the bounds means the bottom shouldn't move
         self.y = top;
     }
+
+    pub fn expand(&mut self, value: f32) {
+        self.x -= value;
+        self.y -= value;
+        self.width += value*2.0;
+        self.height += value*2.0;
+    }
 }
 
 impl Into<Bounds> for &Bounds {

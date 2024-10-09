@@ -105,7 +105,7 @@ impl Framebuffer {
         self.unbind_texture();
     }
 
-    pub unsafe fn clear(&self) {
+    pub unsafe fn clear_current() {
         ClearColor(0.0, 0.0, 0.0, 0.0);
         Clear(COLOR_BUFFER_BIT);
         Clear(DEPTH_BUFFER_BIT);

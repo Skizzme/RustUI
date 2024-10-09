@@ -114,7 +114,7 @@ impl ScreenTrait for TestScreen {
         el_1.handler(move |el, event| {
             match event {
                 Event::Render(pass) => {
-                    if pass == &RenderPass::Main {
+                    if pass != &RenderPass::Main {
                         return;
                     }
                     let mouse = context().window().mouse();
@@ -146,7 +146,10 @@ impl ScreenTrait for TestScreen {
                     // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
                     let hovering = el.hovering();
                     if pass == &RenderPass::Blur {
-                        // context().renderer().draw_rect(*el.bounds(), 0xffffffff);
+                        let mut shrunk = el.bounds().clone();
+                        shrunk.expand(-10.0);
+                        context().renderer().draw_rect(*el.bounds(), 0xffffffff);
+                        context().renderer().draw_rect(shrunk, 0xff10ff10);
                         // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
                     }
                 },
