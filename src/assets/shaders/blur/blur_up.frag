@@ -28,12 +28,12 @@ void main() {
     vec4 result = sum / 12;
 //    gl_FragColor = vec4(result.rgb * result.a + background.rgb * (1.0 - result.a), 1.0);
 //    gl_FragColor = vec4(result.a, 0.0, 0.0, 1.0);
-    gl_FragColor = vec4(result.rgb + background.rgb * (1.0 - result.a), 1.0);
+//    gl_FragColor = vec4(result.rgb + background.rgb * (1.0 - result.a), 1.0);
 //    gl_FragColor = vec4(mix(result.rgb, background.rgb, result.a), 1.0);
 //    gl_FragColor = vec4(sum.rgb / 12.0 + mix(0.5 / 255.0, -0.5 / 255.0, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)), mix(1.0, texture2D(check_texture, gl_TexCoord[0].xy).a, check));
 //    gl_FragColor = mix(sum.rgba / 12.0 + mix(0.5 / 255.0, -0.5 / 255.0, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)), background.rgba, 1.0-sum.a);
-//    gl_FragColor = vec4(
-//        sum.rgb / 12.0 + mix(0.5 / 255.0, -0.5 / 255.0, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)),
-//        sum.a / 12.0
-//    );
+    gl_FragColor = vec4(
+        sum.rgb / 12.0 + mix(0.5 / 255.0, -0.5 / 255.0, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)),
+        sum.a / 12.0
+    );
 }

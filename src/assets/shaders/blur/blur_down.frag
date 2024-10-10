@@ -23,5 +23,6 @@ void main() {
     sum += texture2D(texture, uv - vec2(half_pixel.x, -half_pixel.y) * jitter);
     vec4 result = sum / 8.0;
 //    gl_FragColor = vec4(sum.rgb / 8.0 + mix(0.5 / 255.0, -0.5 / 255.0, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)), 1.0);
-    gl_FragColor = vec4(result.rgb + background.rgb * (1.0 - result.a), 1.0);
+//    gl_FragColor = vec4(result.rgb + background.rgb * (1.0 - result.a), 1.0);
+    gl_FragColor = result;
 }

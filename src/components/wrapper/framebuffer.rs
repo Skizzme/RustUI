@@ -151,6 +151,32 @@ impl Framebuffer {
         // BindFramebuffer(FRAMEBUFFER, target_fb);
     }
 
+    pub unsafe fn copy_raw(&self, target_fb: u32, target_tex: u32) {
+        // Disable(BLEND);
+        // BindFramebuffer(FRAMEBUFFER, target_fb);
+        //
+        // context().renderer().blend_shader.bind();
+        // context().renderer().blend_shader.u_put_int("u_bottom_tex", vec![2]);
+        // context().renderer().blend_shader.u_put_int("u_top_tex", vec![1]);
+        //
+        // ActiveTexture(TEXTURE2);
+        // BindTexture(TEXTURE_2D, target_tex);
+        //
+        // ActiveTexture(TEXTURE1);
+        // BindTexture(TEXTURE_2D, self.texture_id);
+        //
+        // ActiveTexture(TEXTURE0);
+        // Texture::unbind();
+        // context().renderer().draw_screen_rect_flipped();
+        // Shader::unbind();
+        // Enable(BLEND);
+
+        BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
+        BindFramebuffer(DRAW_FRAMEBUFFER, target_fb);
+        BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
+        BindFramebuffer(FRAMEBUFFER, target_fb);
+    }
+
     pub unsafe fn copy_from_parent(&self) {
         BindFramebuffer(READ_FRAMEBUFFER, self.parent_framebuffer as u32);
         BindFramebuffer(DRAW_FRAMEBUFFER, self.framebuffer_id);

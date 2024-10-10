@@ -124,6 +124,7 @@ impl UIContext {
         // let st = Instant::now();
         let mut passes = RenderPass::all();
         // passes.reverse();
+        println!("Frame");
         for pass in passes {
             // if pass != RenderPass::Main {
             //     continue
@@ -199,6 +200,8 @@ impl UIContext {
                     RenderPass::Post => {}
                     RenderPass::Custom(_) => {}
                 }
+            } else {
+                println!("no pass")
             }
             println!("main? {} {}", parent_fb, parent_tex);
             self.framework.element_pass_fb(&pass).copy_bind(parent_fb as u32, parent_tex as u32);
