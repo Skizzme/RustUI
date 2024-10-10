@@ -24,5 +24,6 @@ void main() {
     smp4.rgb *= smp4.a;
     sum += smp4;
     vec4 result = sum / 8.0;
-    gl_FragColor = vec4(result.rgb / result.a + mix(NOISE, -NOISE, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)), result.a);
+    gl_FragColor = vec4(result.rgb / result.a, result.a);
+//    gl_FragColor = vec4(result.rgb / result.a + mix(NOISE, -NOISE, fract(sin(dot(uv.xy, vec2(12.9, 78.2))) * 43758.5)), result.a);
 }

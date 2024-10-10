@@ -149,7 +149,7 @@ impl UIContext {
                             Framebuffer::clear_current();
                             // blur_fb.copy_from_parent();
                         }
-                        let shader = &mut self.renderer.blur_shaders.0;
+                        let shader = &mut self.renderer.bloom_shaders.0;
                         shader.bind();
                         shader.u_put_float("offset", vec![1.0, 1.0]);
                         shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
@@ -168,7 +168,7 @@ impl UIContext {
                             self.renderer.draw_screen_rect_flipped();
                             last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
                         }
-                        let shader = &mut self.renderer.blur_shaders.1;
+                        let shader = &mut self.renderer.bloom_shaders.1;
                         shader.bind();
                         shader.u_put_float("offset", vec![1.0, 1.0]);
                         shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
@@ -195,7 +195,7 @@ impl UIContext {
 
                         // self.renderer.draw_screen_rect_flipped();
                         Texture::unbind();
-                        self.fb_manager.fb(self.renderer.blur_fb).copy_bind(parent_fb as u32, parent_tex as u32);
+                        self.fb_manager.fb(self.renderer.blur_fb).copy_bind(parent_fb_2 as u32, parent_tex_2 as u32);
                     }
                     RenderPass::Post => {}
                     RenderPass::Custom(_) => {}
