@@ -62,25 +62,25 @@ impl Element {
 
         let pos_c = pos.clone();
         let text_c = text.clone();
-        let mut builder = ElementBuilder::new();
-        builder.bounds(Bounds::xywh(pos.x, pos.y, 0.0, 0.0));
-        builder.handler(move |el, event| unsafe {
-            match event {
-                Event::Render(pass) => {
-                    match pass {
-                        RenderPass::Main => {
-                            let (width, height) = fr.draw_string_inst(size, &text_c, el.bounds.top_left(), color);;
-                            el.bounds().set_width(width);
-                            el.bounds().set_height(height);
+        let mut builder = ElementBuilder::new()
+            .bounds(Bounds::xywh(pos.x, pos.y, 0.0, 0.0))
+            .handler(move |el, event| unsafe {
+                match event {
+                    Event::Render(pass) => {
+                        match pass {
+                            RenderPass::Main => {
+                                let (width, height) = fr.draw_string_inst(size, &text_c, el.bounds.top_left(), color);;
+                                el.bounds().set_width(width);
+                                el.bounds().set_height(height);
+                            }
+                            _ => {}
                         }
-                        _ => {}
                     }
+                    _ => {}
                 }
-                _ => {}
-            }
-        });
-        builder.draggable(true);
-        builder.should_render(|_, _| true);
+            })
+            .draggable(true)
+            .should_render(|_, _| true);
 
         builder.build()
     }
@@ -210,15 +210,13 @@ impl ElementBuilder {
         }
     }
 
-    pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(&mut self, handler: H) { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); }
-    pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(&mut self, should_render: H) { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); }
-    pub fn child<C: UIHandler + 'static>(&mut self, child: C) { self.element.children.push(Box::new(child)); }
-    pub fn bounds(&mut self, bounds: Bounds) { self.element.bounds = bounds; }
-    pub fn draggable(&mut self, draggable: bool) { self.element.draggable = draggable; }
-    pub fn scrollable(&mut self, scrollable: bool) { self.element.scrollable = scrollable; }
-    pub fn animations(&mut self) -> &mut AnimationRegistry {
-        &mut self.element.animations
-    }
+    pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); self }
+    pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); self }
+    pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self { self.element.children.push(Box::new(child)); self }
+    pub fn bounds(mut self, bounds: Bounds) -> Self { self.element.bounds = bounds; self }
+    pub fn draggable(mut self, draggable: bool) -> Self { self.element.draggable = draggable; self }
+    pub fn scrollable(mut self, scrollable: bool) -> Self { self.element.scrollable = scrollable; self }
+    pub fn animations(&mut self) -> &mut AnimationRegistry { &mut self.element.animations }
     pub fn build(self) -> Element {
         self.element
     }

@@ -106,77 +106,75 @@ impl ScreenTrait for TestScreen {
 
     unsafe fn init(&mut self) -> Vec<Layer> {
         let mut layer_0 = Layer::new();
-        let mut el_1 = ElementBuilder::new();
-
-        el_1.bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0));
-        el_1.draggable(true);
-        let tex_cl = self.previous_tex.clone();
-        el_1.handler(move |el, event| {
-            match event {
-                Event::Render(pass) => {
-                    if pass != &RenderPass::Main {
-                        return;
-                    }
-                    let mouse = context().window().mouse();
-                    // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
-                    let (width, height) = context().fonts().renderer("main").draw_string_inst(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
-                    el.bounds().set_width(width);
-                    el.bounds().set_height(height);
-                    let hovering = el.hovering();
-                    // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
-
-                    *tex_cl.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
-                }
-                _ => {}
-            }
-        });
-        let tex_cl = self.previous_tex.clone();
-        el_1.should_render(move |_, rp| {
-            println!("el p check {:?}", rp);
-            if rp == &RenderPass::Main {
-                let mouse = context().window().mouse();
-                let res = tex_cl.lock().unwrap().clone() != format!("{:?}", mouse.pos()).to_string();
-                res
-            } else {
-                false
-            }
-        });
-
-        let mut el_1_c = ElementBuilder::new();
-        el_1_c.bounds(Bounds::xywh(0.0, 0.0, 40.0, 40.0));
-        el_1_c.draggable(false);
-        el_1_c.handler(|el, event| {
-            match event {
-                Event::Render(pass) => {
-                    // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
-                    let hovering = el.hovering();
-                    if pass == &RenderPass::Bloom {
-                        let mut shrunk = el.bounds().clone();
-                        shrunk.expand(-10.0);
-                        context().renderer().draw_rect(*el.bounds(), 0xffffffff);
-                        context().renderer().draw_rect(shrunk, 0xff10ff10);
+        let tex_cl1 = self.previous_tex.clone();
+        let tex_cl2 = self.previous_tex.clone();
+        let mut el_1 = ElementBuilder::new()
+            .bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0))
+            .draggable(true)
+            .handler(move |el, event| {
+                match event {
+                    Event::Render(pass) => {
+                        if pass != &RenderPass::Main {
+                            return;
+                        }
+                        let mouse = context().window().mouse();
+                        // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
+                        let (width, height) = context().fonts().renderer("main").draw_string_inst(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
+                        el.bounds().set_width(width);
+                        el.bounds().set_height(height);
+                        let hovering = el.hovering();
                         // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+
+                        *tex_cl1.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
                     }
-                },
-                Event::MouseClick(button, action) => {
-                    if el.hovering() && *action == Action::Press {
-                        let v = !context().p_window().uses_raw_mouse_motion();
-                        println!("change {}", v);
-                        context().p_window().set_raw_mouse_motion(v);
-                        // let v = !context().p_window().is_decorated();
-                        // context().p_window().set_decorated(v);
-                    }
+                    _ => {}
                 }
-                _ => {}
-            }
-        });
-        el_1_c.should_render(|_, _| {
-            println!("c el check");
-            false
-        });
+            })
+            .should_render(move |_, rp| {
+                println!("el p check {:?}", rp);
+                if rp == &RenderPass::Main {
+                    let mouse = context().window().mouse();
+                    let res = tex_cl2.lock().unwrap().clone() != format!("{:?}", mouse.pos()).to_string();
+                    res
+                } else {
+                    false
+                }
+            });
 
-        el_1.child(el_1_c.build());
+        let mut el_1_c = ElementBuilder::new()
+            .bounds(Bounds::xywh(0.0, 0.0, 40.0, 40.0))
+            .draggable(false)
+            .handler(|el, event| {
+                match event {
+                    Event::Render(pass) => {
+                        // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
+                        let hovering = el.hovering();
+                        if pass == &RenderPass::Bloom {
+                            let mut shrunk = el.bounds().clone();
+                            shrunk.expand(-10.0);
+                            context().renderer().draw_rect(*el.bounds(), 0xffffffff);
+                            context().renderer().draw_rect(shrunk, 0xff10ff10);
+                            // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                        }
+                    },
+                    Event::MouseClick(button, action) => {
+                        if el.hovering() && *action == Action::Press {
+                            let v = !context().p_window().uses_raw_mouse_motion();
+                            println!("change {}", v);
+                            context().p_window().set_raw_mouse_motion(v);
+                            // let v = !context().p_window().is_decorated();
+                            // context().p_window().set_decorated(v);
+                        }
+                    }
+                    _ => {}
+                }
+            })
+            .should_render(|_, _| {
+                println!("c el check");
+                false
+            });
 
+        let el_1 = el_1.child(el_1_c.build());
         layer_0.add_element(el_1.build());
 
         vec![layer_0]
