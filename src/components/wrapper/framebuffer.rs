@@ -97,6 +97,17 @@ impl Framebuffer {
         (self.parent_framebuffer, parent_tex)
     }
 
+    pub unsafe fn tex_filter(&mut self, mode: GLenum) {
+        BindTexture(TEXTURE_2D, self.texture_id);
+
+        TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, mode as GLint);
+        TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, mode as GLint);
+        TexParameterf(TEXTURE_2D, TEXTURE_WRAP_S, 10496.0);
+        TexParameterf(TEXTURE_2D, TEXTURE_WRAP_T, 10496.0);
+
+        Texture::unbind();
+    }
+
     pub unsafe fn resize(&mut self, width: i32, height: i32) {
         self.width = width;
         self.height = height;
@@ -125,6 +136,7 @@ impl Framebuffer {
         BindTexture(TEXTURE_2D, 0);
     }
 
+    /// Copy this framebuffer to target, leaving the target framebuffer bound
     pub unsafe fn copy_bind(&self, target_fb: u32, target_tex: u32) {
         Disable(BLEND);
         BindFramebuffer(FRAMEBUFFER, target_fb);

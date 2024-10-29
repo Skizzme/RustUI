@@ -2,13 +2,13 @@ use glfw::{Action, MouseButton};
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
 use crate::components::framework::element::{Element, UIHandler};
-use crate::components::framework::event::Event;
+use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::layer::Layer;
 
 pub trait ScreenTrait {
     unsafe fn handle(&mut self, event: &Event);
     unsafe fn init(&mut self) -> Vec<Layer>; // TODO change this to maybe use some sort of screen properties?
-    unsafe fn should_render(&mut self) -> bool;
+    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool;
 }
 
 pub struct DefaultScreen;
@@ -33,7 +33,7 @@ impl ScreenTrait for DefaultScreen {
         vec![]
     }
 
-    unsafe fn should_render(&mut self) -> bool {
+    unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
         true
     }
 }

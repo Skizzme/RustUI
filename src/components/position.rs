@@ -53,6 +53,18 @@ impl Into<(f32, f32)> for Pos {
     }
 }
 
+impl Into<Pos> for (f64, f64) {
+    fn into(self) -> Pos {
+        Pos {x: self.0 as f32, y: self.1 as f32 }
+    }
+}
+
+impl Into<(f64, f64)> for Pos {
+    fn into(self) -> (f64, f64) {
+        (self.x as f64, self.y as f64)
+    }
+}
+
 impl Into<Pos> for Bounds {
     fn into(self) -> Pos { Pos::new(self.x(), self.y()) }
 }

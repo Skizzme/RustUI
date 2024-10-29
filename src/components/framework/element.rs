@@ -1,11 +1,17 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::ops::Deref;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use glfw::ffi::MOUSE_BUTTON_1;
 use glfw::{Action, MouseButton};
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
+use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::position::Pos;
+use crate::components::render::color::{Color, ToColor};
+use crate::components::render::font::FontRenderer;
 use crate::components::render::stack::State;
 
 pub trait UIHandler {
@@ -17,11 +23,13 @@ pub struct Element {
     bounds: Bounds,
     last_bounds: Bounds,
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
-    should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self) -> bool>>>,
+    should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
     hovering: bool,
     children: Vec<Box<dyn UIHandler>>,
     pub draggable: bool,
     dragging: (bool, Pos),
+    has_rendered: bool,
+    animations: HashMap<u32, AnimationRef>,
 }
 
 impl Element {
@@ -31,12 +39,30 @@ impl Element {
             bounds: b.clone(),
             last_bounds: b,
             handler: Arc::new(Mutex::new(Box::new(handler))),
-            should_render_fn: Arc::new(Mutex::new(Box::new((|el| false)))),
+            should_render_fn: Arc::new(Mutex::new(Box::new((|_, _| false)))),
             hovering: false,
             children,
             draggable,
-            dragging: (false, Pos::new(0.0,0.0))
+            dragging: (false, Pos::new(0.0,0.0)),
+            has_rendered: false,
+            animations: HashMap::new(),
         }
+    }
+    pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> Element {
+        let pos = pos.into();
+        let text = text.to_string();
+        let color = color.to_color();
+
+        let pos_c = pos.clone();
+        let text_c = text.clone();
+        Element::new(
+            Bounds::xywh(pos.x, pos.y, 1.0, 1.0),
+            false,
+            move |el, event| unsafe {
+                fr.draw_string_inst(size, &text_c, pos_c, color);
+            },
+            vec![]
+        )
     }
     pub fn bounds(&mut self) -> &mut Bounds {
         &mut self.bounds
@@ -63,6 +89,9 @@ impl UIHandler for Element {
                 }
             }
             Event::Render(_) => {
+            }
+            Event::PostRender => {
+                self.has_rendered = true;
             }
             _ => {}
         }
@@ -106,20 +135,43 @@ impl UIHandler for Element {
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        let mut result = self.bounds != self.last_bounds;
-
-        if !result {
-            let mut fn_ref = self.should_render_fn.clone();
-            result = (fn_ref.lock().unwrap())(self);
+        if !self.has_rendered || self.bounds != self.last_bounds {
+            return true;
         }
+
+        let mut fn_ref = self.should_render_fn.clone();
+        // println!("check call");
+        if (fn_ref.lock().unwrap())(self, rp) {
+            return true;
+        }
+
         for c in &mut self.children {
-            if result {
-                break;
+            if c.should_render(rp) {
+                return true
             }
-            result = c.should_render(rp);
         }
 
-        result
+        false
+    }
+}
+
+impl AnimationRegistry for Element {
+    fn register(&mut self, animation: Animation) -> AnimationRef {
+        let rc = Rc::new(RefCell::new(animation));
+        self.animations.insert(rc.borrow().id(), rc.clone());
+        rc
+    }
+
+    fn unregister(&mut self, animation: AnimationRef) {
+        self.animations.remove(&animation.borrow().id());
+    }
+
+    fn get(&mut self, id: u32) -> Option<AnimationRef> {
+        self.animations.get(&id).and_then(|rc| Some(rc.clone()))
+    }
+
+    fn all(&self) -> Vec<AnimationRef> {
+        self.animations.values().map(|v| v.clone()).collect()
     }
 }
 
@@ -135,7 +187,7 @@ impl ElementBuilder {
     }
 
     pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(&mut self, handler: H) { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); }
-    pub fn should_render<H: FnMut(&mut Element) -> bool + 'static>(&mut self, should_render: H) { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); }
+    pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(&mut self, should_render: H) { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); }
     pub fn child<C: UIHandler + 'static>(&mut self, child: C) { self.element.children.push(Box::new(child)); }
     pub fn bounds(&mut self, bounds: Bounds) { self.element.bounds = bounds; }
     pub fn draggable(&mut self, draggable: bool) { self.element.draggable = draggable; }

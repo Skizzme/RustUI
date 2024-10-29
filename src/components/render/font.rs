@@ -452,7 +452,7 @@ impl FontRenderer {
 
             // Apply appropriate scale to the vertices etc for correct rendering
             self.begin(size, x, y, true);
-            println!("{} {} {}", self.get_line_height(), self.comb_scale_y, self.line_spacing);
+            // println!("{} {} {}", self.get_line_height(), self.comb_scale_y, self.line_spacing);
             // Calculate vertices and uv coords for every char
             for char in string.chars() {
                 if char == '\n' {

@@ -131,10 +131,15 @@ impl ScreenTrait for TestScreen {
             }
         });
         let tex_cl = self.previous_tex.clone();
-        el_1.should_render(move |_| {
-            let mouse = context().window().mouse();
-            let res = tex_cl.lock().unwrap().clone() != format!("{:?}", mouse.pos()).to_string();
-            res
+        el_1.should_render(move |_, rp| {
+            println!("el p check {:?}", rp);
+            if rp == &RenderPass::Main {
+                let mouse = context().window().mouse();
+                let res = tex_cl.lock().unwrap().clone() != format!("{:?}", mouse.pos()).to_string();
+                res
+            } else {
+                false
+            }
         });
 
         let mut el_1_c = ElementBuilder::new();
@@ -145,7 +150,7 @@ impl ScreenTrait for TestScreen {
                 Event::Render(pass) => {
                     // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
                     let hovering = el.hovering();
-                    if pass == &RenderPass::Blur {
+                    if pass == &RenderPass::Bloom {
                         let mut shrunk = el.bounds().clone();
                         shrunk.expand(-10.0);
                         context().renderer().draw_rect(*el.bounds(), 0xffffffff);
@@ -165,7 +170,10 @@ impl ScreenTrait for TestScreen {
                 _ => {}
             }
         });
-        el_1_c.should_render(|_| false);
+        el_1_c.should_render(|_, _| {
+            println!("c el check");
+            false
+        });
 
         el_1.child(el_1_c.build());
 
@@ -174,8 +182,12 @@ impl ScreenTrait for TestScreen {
         vec![layer_0]
     }
 
-    unsafe fn should_render(&mut self) -> bool {
-        let res = self.last_fps != context().fps();
-        res
+    unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
+        if rp == &RenderPass::Main {
+            let res = self.last_fps != context().fps();
+            res
+        } else {
+            false
+        }
     }
 }

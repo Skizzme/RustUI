@@ -1,4 +1,7 @@
+use std::cell::RefCell;
 use std::f64::consts::PI;
+use std::rc::Rc;
+use rand::random;
 
 /// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
 pub enum AnimationType {
@@ -46,6 +49,7 @@ impl AnimationType {
 /// An easy-to-use object to animate objects over time
 #[derive(Debug, Clone, Copy)]
 pub struct Animation {
+    id: u32,
     target: f64,
     starting: f64,
     value: f64,
@@ -55,14 +59,39 @@ pub struct Animation {
 impl Animation {
     pub fn new() -> Self {
         Animation {
+            id: random::<u32>(),
             target: 0.0,
             starting: 0.0,
             value: 0.0,
             state: 0.0,
         }
     }
+
+    pub fn id(&self) -> u32 {
+        self.id
+    }
+    pub fn target(&self) -> f64 {
+        self.target
+    }
+    pub fn starting(&self) -> f64 {
+        self.starting
+    }
+    pub fn value(&self) -> f64 {
+        self.value
+    }
+    pub fn state(&self) -> f64 {
+        self.state
+    }
 }
 
+pub type AnimationRef = Rc<RefCell<Animation>>;
+
+pub trait AnimationRegistry {
+    fn register(&mut self, animation: Animation) -> AnimationRef;
+    fn unregister(&mut self, animation: AnimationRef);
+    fn get(&mut self, id: u32) -> Option<AnimationRef>;
+    fn all(&self) -> Vec<AnimationRef>;
+}
 
 
 // Updates the animation value for 1 call

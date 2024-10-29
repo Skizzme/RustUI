@@ -1,4 +1,6 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::time::Instant;
 use glfw::WindowEvent;
 use crate::components::bounds::Bounds;
@@ -11,13 +13,14 @@ use crate::components::render::stack::State;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
 use crate::gl_binds::gl11::{ALPHA, Enable, Finish, RGBA};
 use crate::gl_binds::gl30::{BindFramebuffer, FRAMEBUFFER};
+use crate::components::framework::animation::Animation;
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
     screen_passes: HashMap<RenderPass, u32>,
     element_passes: HashMap<RenderPass, u32>,
     layers: Vec<Layer>,
-    first_render: bool,
+    created_at: Instant,
 }
 
 impl Framework {
@@ -27,14 +30,16 @@ impl Framework {
             screen_passes: HashMap::new(),
             element_passes: HashMap::new(),
             layers: vec![],
-            first_render: true,
+            created_at: Instant::now(),
         };
         fr.set_screen(DefaultScreen::new());
         fr
     }
 
+
+
     pub unsafe fn on_resize(&mut self) {
-        self.first_render = true;
+        self.created_at = Instant::now();
     }
 
     pub unsafe fn should_render(&mut self, layer: u32, render_pass: &RenderPass) -> bool {
@@ -42,7 +47,7 @@ impl Framework {
     }
 
     pub unsafe fn should_render_pass(&mut self, render_pass: &RenderPass) -> bool {
-        if self.first_render || self.current_screen.should_render() {
+        if self.created_at_elapsed() || self.current_screen.should_render(render_pass) {
             return true
         }
         for i in 0..self.layers.len() {
@@ -53,16 +58,23 @@ impl Framework {
         false
     }
 
+    fn created_at_elapsed(&self) -> bool {
+        self.created_at.elapsed().as_secs_f64() < 1.0 // TODO why is this necessary?
+    }
+
     pub unsafe fn should_render_all(&mut self) -> bool {
-        if self.first_render || self.current_screen.should_render() {
+        if self.created_at_elapsed() {
             return true
         }
-        for i in 0..self.layers.len() {
-            for rp in RenderPass::all() {
-                if self.should_render(i as u32, &rp) {
-                    return true
-                }
+        for rp in RenderPass::all() {
+            if self.should_render_pass(&rp) {
+                return true;
             }
+            // for i in 0..self.layers.len() {
+            //     if self.should_render(i as u32, &rp) {
+            //         return true
+            //     }
+            // }
         }
         false
     }
@@ -93,18 +105,17 @@ impl Framework {
         match &event {
             Event::Render(pass) => {
                 let (parent_fb, parent_tex) = self.screen_pass_fb(pass).bind();
-                if self.current_screen.should_render() || self.first_render {
+                if self.current_screen.should_render(pass) || self.created_at_elapsed() {
                     Framebuffer::clear_current();
                     // if parent != 0 {
                     //     context().fb_manager().fb(parent as u32).copy(fb.id());
                     // }
-                    println!("red");
 
                     self.current_screen.handle(&event);
 
                     self.screen_pass_fb(pass).unbind();
                 }
-                println!("parent {} {}", parent_fb, parent_tex);
+
                 self.screen_pass_fb(pass).copy_bind(parent_fb as u32, parent_tex as u32);
             },
             _ => self.current_screen.handle(&event),
@@ -112,21 +123,21 @@ impl Framework {
         for layer in &mut self.layers {
             match &event {
                 Event::Render(pass) => {
-                    let (mut parent_fb, mut parent_tex) = (0,0);
+                    let (mut parent_fb, mut parent_tex) = (0, 0);
                     {
                         let layer_fb = layer.fb(pass);
                         (parent_fb, parent_tex) = layer_fb.bind();
-                        println!("layer: {} {}", parent_fb, parent_tex);
+                    }
+
+                    if layer.should_render(pass) {
+                        // println!("did render layer {:?}", pass);
                         Framebuffer::clear_current();
-                        // if parent != 0 {
-                        //     context().fb_manager().fb(parent as u32).copy(layer_fb.id());
-                        // }
-                    }
 
-                    for e in layer.elements() {
-                        e.handle(&event);
-                    }
+                        for e in layer.elements() {
+                            e.handle(&event);
+                        }
 
+                    }
                     let layer_fb = layer.fb(pass);
                     layer_fb.unbind();
                     layer_fb.copy_bind(parent_fb as u32, parent_tex as u32);
@@ -138,10 +149,10 @@ impl Framework {
                 }
             }
         }
-        match &event {
-            Event::PostRender => self.first_render = false,
-            _ => {}
-        }
+        // match &event {
+        //     Event::PostRender => self.created_at_elapsed() = false,
+        //     _ => {}
+        // }
     }
 
     pub unsafe fn set_screen<S>(&mut self, screen: S) where S: ScreenTrait + 'static {
