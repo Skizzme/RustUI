@@ -13,7 +13,7 @@ use crate::components::render::stack::State;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
 use crate::gl_binds::gl11::{ALPHA, Enable, Finish, RGBA};
 use crate::gl_binds::gl30::{BindFramebuffer, FRAMEBUFFER};
-use crate::components::framework::animation::Animation;
+use crate::components::framework::animation::{Animation, AnimationRegistry};
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
@@ -21,6 +21,8 @@ pub struct Framework {
     element_passes: HashMap<RenderPass, u32>,
     layers: Vec<Layer>,
     created_at: Instant,
+    last_pre_render: Instant,
+    pre_delta: f32,
 }
 
 impl Framework {
@@ -31,12 +33,12 @@ impl Framework {
             element_passes: HashMap::new(),
             layers: vec![],
             created_at: Instant::now(),
+            last_pre_render: Instant::now(),
+            pre_delta: 0.0,
         };
         fr.set_screen(DefaultScreen::new());
         fr
     }
-
-
 
     pub unsafe fn on_resize(&mut self) {
         self.created_at = Instant::now();
@@ -103,6 +105,10 @@ impl Framework {
 
     pub unsafe fn event(&mut self, event: Event) {
         match &event {
+            Event::PreRender => {
+                self.pre_delta = self.last_pre_render.elapsed().as_secs_f64() as f32;
+                self.last_pre_render = Instant::now();
+            }
             Event::Render(pass) => {
                 let (parent_fb, parent_tex) = self.screen_pass_fb(pass).bind();
                 if self.current_screen.should_render(pass) || self.created_at_elapsed() {
@@ -145,6 +151,15 @@ impl Framework {
                 _ => {
                     for e in layer.elements() {
                         e.handle(&event);
+                        match event {
+                            Event::PostRender => {
+                                match e.animations() {
+                                    None => {}
+                                    Some(reg) => { reg.post(); }
+                                }
+                            },
+                            _ => {}
+                        }
                     }
                 }
             }
@@ -159,5 +174,8 @@ impl Framework {
         self.reset();
         self.current_screen = Box::new(screen);
         self.layers = self.current_screen.init();
+    }
+    pub fn pre_delta(&self) -> f32 {
+        self.pre_delta
     }
 }

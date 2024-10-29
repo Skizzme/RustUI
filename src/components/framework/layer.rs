@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::components::context::context;
+use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::element::{Element, UIHandler};
 use crate::components::framework::event::RenderPass;
 use crate::components::wrapper::framebuffer::Framebuffer;
@@ -28,7 +29,11 @@ impl Layer {
 
     pub unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
         for e in &mut self.elements {
-            if e.should_render(render_pass) {
+            let has_animated = match e.animations() {
+                None => false,
+                Some(reg) => reg.has_changed(),
+            };
+            if has_animated || e.should_render(render_pass) {
                 return true;
             }
         }

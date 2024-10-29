@@ -7,7 +7,7 @@ use glfw::ffi::MOUSE_BUTTON_1;
 use glfw::{Action, MouseButton};
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
-use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry};
+use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationRegTrait};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::position::Pos;
 use crate::components::render::color::{Color, ToColor};
@@ -17,6 +17,7 @@ use crate::components::render::stack::State;
 pub trait UIHandler {
     unsafe fn handle(&mut self, event: &Event) -> bool;
     unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool;
+    fn animations(&mut self) -> Option<&mut AnimationRegistry>;
 }
 
 pub struct Element {
@@ -27,9 +28,12 @@ pub struct Element {
     hovering: bool,
     children: Vec<Box<dyn UIHandler>>,
     pub draggable: bool,
+    pub scrollable: bool,
+    scroll: (f32, f32),
+    last_scroll: (f32, f32),
     dragging: (bool, Pos),
     has_rendered: bool,
-    animations: HashMap<u32, AnimationRef>,
+    animations: AnimationRegistry,
 }
 
 impl Element {
@@ -43,9 +47,12 @@ impl Element {
             hovering: false,
             children,
             draggable,
-            dragging: (false, Pos::new(0.0,0.0)),
+            scrollable: false,
+            scroll: (0.0, 0.0),
+            last_scroll: (0.0, 0.0),
+            dragging: (false, Pos::new(0.0, 0.0)),
             has_rendered: false,
-            animations: HashMap::new(),
+            animations: AnimationRegistry::new(),
         }
     }
     pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> Element {
@@ -55,14 +62,27 @@ impl Element {
 
         let pos_c = pos.clone();
         let text_c = text.clone();
-        Element::new(
-            Bounds::xywh(pos.x, pos.y, 1.0, 1.0),
-            false,
-            move |el, event| unsafe {
-                fr.draw_string_inst(size, &text_c, pos_c, color);
-            },
-            vec![]
-        )
+        let mut builder = ElementBuilder::new();
+        builder.bounds(Bounds::xywh(pos.x, pos.y, 0.0, 0.0));
+        builder.handler(move |el, event| unsafe {
+            match event {
+                Event::Render(pass) => {
+                    match pass {
+                        RenderPass::Main => {
+                            let (width, height) = fr.draw_string_inst(size, &text_c, el.bounds.top_left(), color);;
+                            el.bounds().set_width(width);
+                            el.bounds().set_height(height);
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        });
+        builder.draggable(true);
+        builder.should_render(|_, _| true);
+
+        builder.build()
     }
     pub fn bounds(&mut self) -> &mut Bounds {
         &mut self.bounds
@@ -70,13 +90,15 @@ impl Element {
     pub fn hovering(&self) -> bool {
         self.hovering
     }
+    pub fn scroll(&self) -> (f32, f32) {
+        self.scroll
+    }
 }
 
 impl UIHandler for Element {
     unsafe fn handle(&mut self, event: &Event) -> bool {
         let mut handled = false;
         let mouse = context().window().mouse();
-        self.last_bounds = self.bounds;
         match event {
             Event::PreRender => {
                 self.hovering = mouse.pos().intersects(self.bounds());
@@ -88,10 +110,16 @@ impl UIHandler for Element {
                     handled = true;
                 }
             }
-            Event::Render(_) => {
+            Event::Render(pass) => {
+                match pass {
+                    RenderPass::Main => self.bounds().draw_bounds(0xffffffff),
+                    _ => {}
+                }
             }
             Event::PostRender => {
                 self.has_rendered = true;
+                self.last_bounds = self.bounds.clone();
+                self.last_scroll = self.scroll();
             }
             _ => {}
         }
@@ -120,22 +148,34 @@ impl UIHandler for Element {
                                 self.dragging.0 = false;
                                 true
                             } else { false },
-                        Action::Press =>
+                        Action::Press => {
                             if self.hovering && self.draggable {
                                 self.dragging = (true, mouse.pos().clone() - self.bounds.pos());
                                 true
-                            } else { false },
+                            } else { false }
+                        },
                         _ => false,
                     }
                 } else { false }
             },
+            Event::Scroll(x, y) => {
+                if self.hovering {
+                    self.scroll.0 += *x;
+                    self.scroll.1 += *y;
+                    println!("{:?}", self.scroll);
+                    true
+                } else {
+                    false
+                }
+            }
             _ => false,
         };
         handled
     }
 
+
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        if !self.has_rendered || self.bounds != self.last_bounds {
+        if !self.has_rendered || self.bounds != self.last_bounds || self.last_scroll != self.scroll  {
             return true;
         }
 
@@ -153,25 +193,9 @@ impl UIHandler for Element {
 
         false
     }
-}
 
-impl AnimationRegistry for Element {
-    fn register(&mut self, animation: Animation) -> AnimationRef {
-        let rc = Rc::new(RefCell::new(animation));
-        self.animations.insert(rc.borrow().id(), rc.clone());
-        rc
-    }
-
-    fn unregister(&mut self, animation: AnimationRef) {
-        self.animations.remove(&animation.borrow().id());
-    }
-
-    fn get(&mut self, id: u32) -> Option<AnimationRef> {
-        self.animations.get(&id).and_then(|rc| Some(rc.clone()))
-    }
-
-    fn all(&self) -> Vec<AnimationRef> {
-        self.animations.values().map(|v| v.clone()).collect()
+    fn animations(&mut self) -> Option<&mut AnimationRegistry> {
+        Some(&mut self.animations)
     }
 }
 
@@ -191,7 +215,10 @@ impl ElementBuilder {
     pub fn child<C: UIHandler + 'static>(&mut self, child: C) { self.element.children.push(Box::new(child)); }
     pub fn bounds(&mut self, bounds: Bounds) { self.element.bounds = bounds; }
     pub fn draggable(&mut self, draggable: bool) { self.element.draggable = draggable; }
-
+    pub fn scrollable(&mut self, scrollable: bool) { self.element.scrollable = scrollable; }
+    pub fn animations(&mut self) -> &mut AnimationRegistry {
+        &mut self.element.animations
+    }
     pub fn build(self) -> Element {
         self.element
     }

@@ -37,7 +37,6 @@ pub struct UIContext {
     frames: (u32, u32, Instant),
     last_render: Instant,
     content_scale: (f32, f32),
-    last_frame: Instant,
 
     window: Window,
     renderer: Renderer,
@@ -70,7 +69,6 @@ impl UIContext {
             frames: (0, 0, Instant::now()),
             last_render: Instant::now(),
             content_scale: (1.0, 1.0),
-            last_frame: Instant::now(),
             window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
             font_manager: FontManager::new(""),
@@ -97,6 +95,7 @@ impl UIContext {
     }
 
     pub unsafe fn frame(&mut self) -> bool {
+
         self.handle_events();
         self.window.mouse.frame();
 
@@ -233,7 +232,6 @@ impl UIContext {
         self.renderer.stack().pop();
         PopMatrix();
         Finish();
-        self.last_frame = Instant::now();
         check_error("render");
         self.post_render();
 
@@ -278,6 +276,12 @@ impl UIContext {
             match self.events.receive() {
                 Some((_, event)) => {
                     match &event {
+                        WindowEvent::Scroll(x, y) => {
+                            self.framework.event(Event::Scroll((*x) as f32, (*y) as f32))
+                        }
+                        WindowEvent::CursorPos(x, y) => {
+                            self.framework.event(Event::PreRender);
+                        }
                         WindowEvent::Close => self.close_requested = true,
                         WindowEvent::MouseButton(button, action, mods) => {
                             self.framework.event(Event::MouseClick(*button, *action))

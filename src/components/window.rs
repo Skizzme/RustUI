@@ -1,4 +1,5 @@
 use glfw::WindowEvent;
+use crate::components::bounds::Bounds;
 
 use crate::components::wrapper::mouse::Mouse;
 
@@ -27,6 +28,11 @@ impl Window {
             _ => {}
         }
         // println!("{:?}", event);
+    }
+
+    /// Creates a bounds object of `(0.0,0.0,width,height)`
+    pub fn bounds(&self) -> Bounds {
+        Bounds::xywh(0.0, 0.0, self.width as f32, self.height as f32)
     }
 
     pub fn width(&self) -> i32 {

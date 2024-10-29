@@ -6,6 +6,7 @@ pub enum Event {
     Render(RenderPass),
     PostRender,
     MouseClick(MouseButton, Action),
+    Scroll(f32, f32),
     Keyboard(Key, Action, Modifiers),
     GlfwRaw(WindowEvent),
 }

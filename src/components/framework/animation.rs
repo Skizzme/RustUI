@@ -1,7 +1,10 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::rc::Rc;
 use rand::random;
+use crate::components::context::context;
+use crate::components::framework::element::Element;
 
 /// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
 pub enum AnimationType {
@@ -11,12 +14,12 @@ pub enum AnimationType {
     CubicOut,
     QuarticIn,
     QuarticOut,
-    Progressive(f64),
+    Progressive(f32),
     Sin,
 }
 
 impl AnimationType {
-    fn get_value(&self, state: f64) -> f64 {
+    fn get_value(&self, state: f32) -> f32 {
         match self {
             AnimationType::Linear => {
                 state
@@ -37,10 +40,10 @@ impl AnimationType {
                 (state - 1.0).powf(4.0)
             }
             AnimationType::Sin => {
-                (state * PI/2.0).sin()
+                (state * (PI/2.0) as f32).sin()
             }
             AnimationType::Progressive(speed) => {
-                2.0/(1.0+20f64.powf(-(20.0/speed)*state))-1.0
+                2.0/(1.0+20f32.powf(-(20.0/speed)*state))-1.0
             }
         }.clamp(0.0, 1.0)
     }
@@ -50,10 +53,11 @@ impl AnimationType {
 #[derive(Debug, Clone, Copy)]
 pub struct Animation {
     id: u32,
-    target: f64,
-    starting: f64,
-    value: f64,
-    state: f64,
+    target: f32,
+    starting: f32,
+    value: f32,
+    last_value: f32,
+    state: f32,
 }
 
 impl Animation {
@@ -63,34 +67,119 @@ impl Animation {
             target: 0.0,
             starting: 0.0,
             value: 0.0,
+            last_value: 0.0,
             state: 0.0,
         }
+    }
+
+    pub unsafe fn animate(&mut self, target: f32, mut speed: f32, animation_type: AnimationType) -> f32 {
+        if self.target != target {
+            self.target = target;
+            self.starting = self.value;
+            self.state = 0f32;
+        }
+
+        self.state += speed * context().framework().pre_delta();
+        // if self.state > 1.0 {self.state = 1.0}
+        self.state = self.state.clamp(0.0, 1.0);
+
+        self.value = animation_type.get_value(self.state)*(self.target-self.starting)+self.starting;
+
+        self.value
+    }
+
+    pub(super) fn has_changed(&self) -> bool {
+        self.last_value != self.value
+    }
+
+    pub(super) fn post(&mut self) {
+        self.last_value = self.value;
     }
 
     pub fn id(&self) -> u32 {
         self.id
     }
-    pub fn target(&self) -> f64 {
+    pub fn target(&self) -> f32 {
         self.target
     }
-    pub fn starting(&self) -> f64 {
+    pub fn starting(&self) -> f32 {
         self.starting
     }
-    pub fn value(&self) -> f64 {
+    pub fn value(&self) -> f32 {
         self.value
     }
-    pub fn state(&self) -> f64 {
+    pub fn state(&self) -> f32 {
         self.state
+    }
+}
+
+pub struct AnimationRegistry {
+    animations: HashMap<u32, AnimationRef>,
+}
+
+impl AnimationRegistry {
+    pub fn new() -> Self {
+        AnimationRegistry {
+            animations: HashMap::new(),
+        }
+    }
+
+    pub fn new_anim(&mut self) -> AnimationRef {
+        let rc = Rc::new(RefCell::new(Animation::new()));
+        self.animations.insert(rc.borrow().id(), rc.clone());
+        rc
+    }
+
+    pub fn register(&mut self, animation: AnimationRef) {
+        let id = animation.borrow().id;
+        self.animations.insert(id, animation);
+    }
+
+    // pub fn register_ref(&mut self, animation: AnimationRef) {
+    //     self.animations.insert(animation.borrow().id(), animation);
+    // }
+
+    pub fn unregister(&mut self, animation: &AnimationRef) {
+        self.animations.remove(&animation.borrow().id());
+    }
+
+    pub fn get(&mut self, id: u32) -> Option<AnimationRef> {
+        self.animations.get(&id).and_then(|rc| Some(rc.clone()))
+    }
+
+    pub fn all(&self) -> Vec<AnimationRef> {
+        self.animations.values().map(|v| v.clone()).collect()
+    }
+
+    pub fn has_changed(&self) -> bool {
+        let mut result = false; // so that all animations can be checked, meaning all queries are current
+        for anim in self.animations.values() {
+            if anim.borrow().has_changed() {
+                result = true;
+            }
+        }
+        result
+    }
+
+    pub fn post(&mut self) {
+        for anim in self.animations.values() {
+            anim.borrow_mut().post();
+        }
+    }
+}
+
+impl AnimationRegTrait for AnimationRegistry {
+    fn animations(&mut self) -> &mut AnimationRegistry {
+        self
     }
 }
 
 pub type AnimationRef = Rc<RefCell<Animation>>;
 
-pub trait AnimationRegistry {
-    fn register(&mut self, animation: Animation) -> AnimationRef;
-    fn unregister(&mut self, animation: AnimationRef);
-    fn get(&mut self, id: u32) -> Option<AnimationRef>;
-    fn all(&self) -> Vec<AnimationRef>;
+/// Keeps all relevant animations for something in one place,
+/// allowing the framework to determine whether to render or not
+pub trait AnimationRegTrait {
+    fn animations(&mut self) -> &mut AnimationRegistry;
 }
 
 
