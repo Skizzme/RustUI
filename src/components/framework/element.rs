@@ -84,6 +84,9 @@ impl Element {
 
         builder.build()
     }
+    pub fn set_bounds(&mut self, bounds: Bounds) {
+        self.bounds = bounds;
+    }
     pub fn bounds(&mut self) -> &mut Bounds {
         &mut self.bounds
     }
@@ -111,10 +114,10 @@ impl UIHandler for Element {
                 }
             }
             Event::Render(pass) => {
-                match pass {
-                    RenderPass::Main => self.bounds().draw_bounds(0xffffffff),
-                    _ => {}
-                }
+                // match pass {
+                //     RenderPass::Main => self.bounds().draw_bounds(0xffffffff),
+                //     _ => {}
+                // }
             }
             Event::PostRender => {
                 self.has_rendered = true;
@@ -136,7 +139,8 @@ impl UIHandler for Element {
                 return true;
             }
         }
-        context().renderer().stack().pop();
+        let popped = context().renderer().stack().pop();
+        // println!("popped {:?}", popped);
 
         // After letting child elements take priority, check if interaction on this object occurred
         handled = handled | match event {

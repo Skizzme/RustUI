@@ -8,6 +8,7 @@ pub enum Event {
     MouseClick(MouseButton, Action),
     Scroll(f32, f32),
     Keyboard(Key, Action, Modifiers),
+    Resize(f32, f32),
     GlfwRaw(WindowEvent),
 }
 

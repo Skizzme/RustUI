@@ -146,7 +146,7 @@ impl Renderer {
         Vertex2f(bounds.left(), bounds.bottom());
         End();
 
-        self.stack.pop()
+        self.stack.pop();
     }
 
     /// Draws a texture rectangle using normal UV coordinates
@@ -169,7 +169,7 @@ impl Renderer {
         Vertex2f(bounds.left(), bounds.top());
         End();
 
-        self.stack.pop()
+        self.stack.pop();
     }
 
     /// Draws a texture rectangle using specified UV coordinates
@@ -192,7 +192,7 @@ impl Renderer {
         Vertex2f(bounds.left(), bounds.top());
         End();
 
-        self.stack.pop()
+        // self.stack.pop();
     }
 
     pub unsafe fn draw_screen_rect_flipped(&mut self) {

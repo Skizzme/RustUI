@@ -95,7 +95,7 @@ impl State {
 }
 
 #[derive(Debug, Clone)]
-struct GlState {
+pub struct GlState {
     applied: bool,
     level: u8,
     state: State,
@@ -176,11 +176,15 @@ impl Stack {
     pub unsafe fn end(&mut self) {
         match self.markers.last() {
             Some(index) => {
-                for i in self.stack.len()..=*index {
-                    let mut state = self.stack.remove(i);
-                    state.unapply();
-                    self.current.remove(&state.state.id());
+                // println!("end mark {} {}", index, self.stack.len());
+                for i in 0..(self.stack.len()-index) {
+                    self.pop();
                 }
+                // for i in self.stack.len()..=*index {
+                //     let mut state = self.stack.remove(i);
+                //     state.unapply();
+                //     self.current.remove(&state.state.id());
+                // }
             }
             None => {
                 println!("markers is empty")
@@ -188,10 +192,11 @@ impl Stack {
         }
     }
 
-    pub unsafe fn pop(&mut self) {
+    pub unsafe fn pop(&mut self) -> Option<GlState> {
         match self.stack.pop() {
             None => {
-                println!("popped on empty stack")
+                println!("popped on empty stack");
+                None
             }
             Some(mut state) => {
                 if state.applied() {
@@ -199,6 +204,7 @@ impl Stack {
                     // TODO this is probably not proving the proper functionality
                     self.current.remove(&state.state.id());
                 }
+                Some(state)
             }
         }
     }

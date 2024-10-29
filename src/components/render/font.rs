@@ -772,6 +772,7 @@ impl FontRenderer {
     }
 
     pub unsafe fn end(&self) {
+        // context().renderer().stack().pop();
         context().renderer().stack().end();
         Shader::unbind();
         BindTexture(TEXTURE_2D, 0);
@@ -781,7 +782,8 @@ impl FontRenderer {
     }
 
     /// Returns the width, in pixels, of a string at a specific size
-    pub unsafe fn get_width(&self, size: f32, string: String) -> f32 {
+    pub unsafe fn get_width(&self, size: f32, string: impl ToString) -> f32 {
+        let string = string.to_string();
         let scale = size/FONT_RES as f32;
         let mut width = 0.0f32;
 

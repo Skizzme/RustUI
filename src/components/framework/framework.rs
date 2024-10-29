@@ -14,6 +14,7 @@ use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
 use crate::gl_binds::gl11::{ALPHA, Enable, Finish, RGBA};
 use crate::gl_binds::gl30::{BindFramebuffer, FRAMEBUFFER};
 use crate::components::framework::animation::{Animation, AnimationRegistry};
+use crate::components::framework::style::{Style, StyleRegistry};
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
@@ -22,6 +23,7 @@ pub struct Framework {
     layers: Vec<Layer>,
     created_at: Instant,
     last_pre_render: Instant,
+    style: StyleRegistry,
     pre_delta: f32,
 }
 
@@ -34,14 +36,24 @@ impl Framework {
             layers: vec![],
             created_at: Instant::now(),
             last_pre_render: Instant::now(),
+            style: StyleRegistry::new(),
             pre_delta: 0.0,
         };
         fr.set_screen(DefaultScreen::new());
         fr
     }
 
-    pub unsafe fn on_resize(&mut self) {
+    pub fn set_styles(&mut self, style: StyleRegistry) {
+        self.style = style;
+    }
+
+    pub fn style(&self) -> &StyleRegistry {
+        &self.style
+    }
+
+    pub unsafe fn on_resize(&mut self, width: f32, height: f32) {
         self.created_at = Instant::now();
+        self.event(Event::Resize(width as f32, height as f32));
     }
 
     pub unsafe fn should_render(&mut self, layer: u32, render_pass: &RenderPass) -> bool {
@@ -83,6 +95,7 @@ impl Framework {
 
     fn reset(&mut self) {
         self.layers = Vec::new();
+        self.created_at = Instant::now();
     }
 
     pub fn current_screen(&mut self) -> &mut Box<dyn ScreenTrait> {
@@ -126,6 +139,7 @@ impl Framework {
             },
             _ => self.current_screen.handle(&event),
         }
+        let force = self.created_at_elapsed();
         for layer in &mut self.layers {
             match &event {
                 Event::Render(pass) => {
@@ -135,7 +149,8 @@ impl Framework {
                         (parent_fb, parent_tex) = layer_fb.bind();
                     }
 
-                    if layer.should_render(pass) {
+                    // println!("{}", layer.should_render(pass));
+                    if layer.should_render(pass) || force {
                         // println!("did render layer {:?}", pass);
                         Framebuffer::clear_current();
 

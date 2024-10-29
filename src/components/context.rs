@@ -275,7 +275,12 @@ impl UIContext {
         loop {
             match self.events.receive() {
                 Some((_, event)) => {
+                    self.window.handle(&event);
                     match &event {
+                        WindowEvent::Size(width, height) => {
+                            self.fb_manager().resize(*width, *height);
+                            self.framework.on_resize(*width as f32, *height as f32);
+                        }
                         WindowEvent::Scroll(x, y) => {
                             self.framework.event(Event::Scroll((*x) as f32, (*y) as f32))
                         }
@@ -295,12 +300,9 @@ impl UIContext {
                             println!("{:?}", fl);
                         }
                         WindowEvent::FramebufferSize(width, height) => {
-                            self.framework.on_resize();
-                            self.fb_manager().resize(*width, *height);
                         }
                         _ => {}
                     }
-                    self.window.handle(&event);
                 }
                 None => break
             }

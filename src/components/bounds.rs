@@ -82,6 +82,15 @@ impl Bounds {
         self.width += value*2.0;
         self.height += value*2.0;
     }
+
+    pub fn shrink(&mut self, other: &Bounds) -> Bounds {
+        let mut this = self.clone();
+        this.set_x(this.x + other.x);
+        this.set_width(this.width - other.width - other.x);
+        this.set_y(this.y + other.y);
+        this.set_height(this.height - other.height - other.y);
+        this
+    }
 }
 
 impl Into<Bounds> for &Bounds {
