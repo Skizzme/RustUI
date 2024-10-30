@@ -102,6 +102,15 @@ impl Color {
         self
     }
 
+    pub fn mult_rgb(mut self, mult: f32) -> Color {
+        Color {
+            red: self.red * mult,
+            green: self.green * mult,
+            blue: self.blue * mult,
+            alpha: self.alpha,
+        }
+    }
+
     pub unsafe fn apply(&self) {
         Color4f(self.red, self.green, self.blue, self.alpha);
     }

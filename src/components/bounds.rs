@@ -39,8 +39,8 @@ impl Bounds {
     }
 
     pub fn top_left(&self) -> Pos { Pos::new( self.left().min(self.right()), self.top().min(self.bottom()) ) }
-    pub fn top_right(&self) -> Pos { Pos::new( self.left().min(self.right()), self.top().max(self.bottom()) ) }
-    pub fn bottom_left(&self) -> Pos { Pos::new( self.left().max(self.right()), self.top().min(self.bottom()) ) }
+    pub fn top_right(&self) -> Pos { Pos::new( self.left().max(self.right()), self.top().min(self.bottom()) ) }
+    pub fn bottom_left(&self) -> Pos { Pos::new( self.left().min(self.right()), self.top().max(self.bottom()) ) }
     pub fn bottom_right(&self) -> Pos { Pos::new( self.left().max(self.right()), self.top().max(self.bottom()) ) }
 
     pub fn pos(&self) -> Pos {

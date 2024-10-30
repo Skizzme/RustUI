@@ -1,6 +1,6 @@
 use glfw::{Action, Key, Modifiers, MouseButton, WindowEvent};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Event {
     PreRender,
     Render(RenderPass),
@@ -10,6 +10,15 @@ pub enum Event {
     Keyboard(Key, Action, Modifiers),
     Resize(f32, f32),
     GlfwRaw(WindowEvent),
+}
+
+impl Event {
+    pub fn is_render(&self, pass: RenderPass) -> bool {
+        match self {
+            Event::Render(e_pass) => &pass == e_pass,
+            _ => false
+        }
+    }
 }
 
 #[derive(Debug, Hash, PartialEq, Clone)]

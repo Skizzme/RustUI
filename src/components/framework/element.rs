@@ -26,6 +26,7 @@ pub struct Element {
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
     should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
     hovering: bool,
+    dyn_child: Box<dyn FnMut(&mut Self) -> Option<Box<dyn Iterator<Item=dyn UIHandler>>>>,
     children: Vec<Box<dyn UIHandler>>,
     pub draggable: bool,
     pub scrollable: bool,
@@ -37,7 +38,7 @@ pub struct Element {
 }
 
 impl Element {
-    pub fn new<B: Into<Bounds>, H: FnMut(&mut Self, &Event) + 'static>(bounds: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>) -> Element {
+    pub fn new<B: Into<Bounds>, H: FnMut(&mut Self, &Event) + 'static, C: FnMut(&mut Self) -> Option<Box<dyn Iterator<Item=dyn UIHandler>>> + 'static>(bounds: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>, dyn_children: C) -> Element {
         let b = bounds.into();
         Element {
             bounds: b.clone(),
@@ -45,6 +46,7 @@ impl Element {
             handler: Arc::new(Mutex::new(Box::new(handler))),
             should_render_fn: Arc::new(Mutex::new(Box::new((|_, _| false)))),
             hovering: false,
+            dyn_child: Box::new(dyn_children),
             children,
             draggable,
             scrollable: false,
@@ -134,6 +136,15 @@ impl UIHandler for Element {
         // Translate child positions, which also offsets mouse correctly
         context().renderer().stack().push(State::Translate(self.bounds.x(), self.bounds.y()));
         for c in &mut self.children {
+            match event {
+                Event::PostRender => {
+                    match c.animations() {
+                        None => {}
+                        Some(reg) => { reg.post(); }
+                    }
+                }
+                _ => {}
+            }
             if c.handle(event) {
                 context().renderer().stack().pop();
                 return true;
@@ -189,6 +200,12 @@ impl UIHandler for Element {
             return true;
         }
 
+        for a in self.animations().unwrap().all() {
+            if a.borrow().has_changed() {
+                return true;
+            }
+        }
+
         for c in &mut self.children {
             if c.should_render(rp) {
                 return true
@@ -210,7 +227,7 @@ pub struct ElementBuilder {
 impl ElementBuilder {
     pub fn new() -> Self {
         ElementBuilder {
-            element: Element::new(Bounds::ltrb(0.0,0.0,0.0,0.0), false, |_, _| {}, vec![])
+            element: Element::new(Bounds::ltrb(0.0,0.0,0.0,0.0), false, |_, _| {}, vec![], |_| None)
         }
     }
 
@@ -221,6 +238,7 @@ impl ElementBuilder {
     pub fn draggable(mut self, draggable: bool) -> Self { self.element.draggable = draggable; self }
     pub fn scrollable(mut self, scrollable: bool) -> Self { self.element.scrollable = scrollable; self }
     pub fn animations(&mut self) -> &mut AnimationRegistry { &mut self.element.animations }
+    pub fn children<C: FnMut(&mut Self) -> Option<Box<dyn Iterator<Item=dyn UIHandler>>> + 'static>(mut self, children: C) -> Self { self.element.dyn_child = children; self }
     pub fn build(self) -> Element {
         self.element
     }

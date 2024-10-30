@@ -80,7 +80,6 @@ impl Animation {
         }
 
         self.state += speed * context().framework().pre_delta();
-        // if self.state > 1.0 {self.state = 1.0}
         self.state = self.state.clamp(0.0, 1.0);
 
         self.value = animation_type.get_value(self.state)*(self.target-self.starting)+self.starting;
@@ -89,6 +88,7 @@ impl Animation {
     }
 
     pub(super) fn has_changed(&self) -> bool {
+        // println!("changed? {} {} {}", self.last_value, self.value, self.last_value != self.value);
         self.last_value != self.value
     }
 

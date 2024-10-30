@@ -34,6 +34,13 @@ impl Add for Pos {
     }
 }
 
+impl Add<(f32, f32)> for Pos {
+    type Output = Pos;
+    fn add(self, rhs: (f32, f32)) -> Self::Output {
+        Pos { x: self.x + rhs.0, y: self.y + rhs.1 }
+    }
+}
+
 impl Sub for Pos {
     type Output = Pos;
     fn sub(self, rhs: Self) -> Self::Output {

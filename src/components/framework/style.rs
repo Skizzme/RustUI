@@ -3,6 +3,7 @@ use crate::components::bounds::Bounds;
 use crate::components::position::Pos;
 use crate::components::render::color::{Color, ToColor};
 
+#[derive(Debug, Clone)]
 pub enum Style {
     Color(Color),
     Bounds(Bounds),
@@ -13,6 +14,7 @@ pub enum Style {
     None,
 }
 
+#[derive(Debug, Clone)]
 pub struct StyleRegistry {
     styles: HashMap<String, Style>,
 }
