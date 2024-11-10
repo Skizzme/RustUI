@@ -11,7 +11,7 @@ use crate::components::framework::animation::{Animation, AnimationRef, Animation
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::position::Pos;
 use crate::components::render::color::{Color, ToColor};
-use crate::components::render::font::FontRenderer;
+use crate::components::render::font::renderer::FontRenderer;
 use crate::components::render::stack::State;
 
 pub trait UIHandler {

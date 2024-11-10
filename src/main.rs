@@ -32,7 +32,7 @@ use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
 use RustUI::components::position::Pos;
-use RustUI::components::render::font::{FontRenderer, ScaleMode};
+use RustUI::components::render::font::renderer::FontRenderer;
 use RustUI::components::wrapper::shader::Shader;
 use RustUI::components::wrapper::texture::Texture;
 use RustUI::gl_binds::gl11::{BLEND, EnableClientState, Finish, FLOAT, RGBA, TexCoordPointer, TEXTURE_COORD_ARRAY, VERTEX_ARRAY, VertexPointer};

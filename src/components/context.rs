@@ -9,7 +9,7 @@ use image::open;
 use crate::components::bounds::Bounds;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::framework::Framework;
-use crate::components::render::font::FontManager;
+use crate::components::render::font::manager::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State;
 use crate::components::window::Window;
