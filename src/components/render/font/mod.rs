@@ -1,3 +1,5 @@
+pub mod format;
+
 extern crate freetype;
 
 use std::cmp::Ordering;
@@ -613,19 +615,19 @@ impl FontRenderer {
 
             // if should_render <= 1 {
             //     if should_render == 0 {
-                    let atlas_ref= self.font().atlas_tex.as_ref().unwrap().clone();
-                    self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
-                // }
+            let atlas_ref= self.font().atlas_tex.as_ref().unwrap().clone();
+            self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
+            // }
 
-                self.line_width += c_w;
-                match self.scale_mode {
-                    ScaleMode::Normal => {
-                        self.x += c_a;
-                    }
-                    ScaleMode::Quality => {
-                        self.x += self.get_scaled_value(c_a, self.comb_scale_x);
-                    }
+            self.line_width += c_w;
+            match self.scale_mode {
+                ScaleMode::Normal => {
+                    self.x += c_a;
                 }
+                ScaleMode::Quality => {
+                    self.x += self.get_scaled_value(c_a, self.comb_scale_x);
+                }
+            }
             // }
         }
         self.end();
