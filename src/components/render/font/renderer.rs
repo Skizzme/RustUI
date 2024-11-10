@@ -1,18 +1,20 @@
 use std::{hash, ptr};
 use std::hash::{Hash, Hasher};
-use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, DrawElements, ELEMENT_ARRAY_BUFFER, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES, UNSIGNED_INT, VERTEX_ARRAY};
+use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, DrawElements, DrawElementsInstanced, ELEMENT_ARRAY_BUFFER, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES, UNSIGNED_INT, VERTEX_ARRAY};
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
 use crate::components::position::Pos;
-use crate::components::render::color::ToColor;
+use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::{Font, FONT_RES};
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl11::{EnableClientState, Scalef, VertexPointer};
-use crate::gl_binds::gl11::types::GLsizei;
+use crate::gl_binds::gl11::{EnableClientState, FALSE, Scalef, VertexPointer};
+use crate::gl_binds::gl11::types::{GLsizei, GLuint};
+use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix};
+use crate::gl_binds::gl41::{DrawArraysInstanced, GetAttribLocation, VertexAttribDivisor};
 
 /// The object used to render fonts
 ///
@@ -82,14 +84,17 @@ impl FontRenderer {
         let hashed = hasher.finish();
         let mut map = &mut context().fonts().cached_inst;
         if !map.contains_key(&hashed) {
-            let mut vertices: Vec<[f32; 4]> = Vec::with_capacity(string.len());
-            let mut indices: Vec<u32> = Vec::with_capacity(string.len());
+            let mut dims: Vec<[f32; 4]> = Vec::with_capacity(string.len()*4);
+            let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(string.len()*4);
+            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(string.len());
+            let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3];
             let (x, y) = pos.xy();
 
             // Apply appropriate scale to the vertices etc for correct rendering
             self.begin(size, x, y, true);
             // println!("{} {} {}", self.get_line_height(), self.comb_scale_y, self.line_spacing);
             // Calculate vertices and uv coords for every char
+            let mut i = 0;
             for char in string.chars() {
                 if char == '\n' {
                     match self.scale_mode {
@@ -131,51 +136,73 @@ impl FontRenderer {
                 let atlas = self.font().atlas_tex.as_ref().unwrap();
                 let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
 
-                vertices.push([p_left, p_bottom, uv_left, uv_bottom]);
-                vertices.push([p_right, p_bottom, uv_right, uv_bottom]);
-                vertices.push([p_right, p_top, uv_right, uv_top]);
-                vertices.push([p_left, p_top, uv_left, uv_top]);
-
-                let base = vertices.len() as u32 - 4;
-
-                indices.push(base+0);
-                indices.push(base+1);
-                indices.push(base+2);
-                indices.push(base+0);
-                indices.push(base+2);
-                indices.push(base+3);
+                dims.push([p_left, p_top, p_right-p_left, p_bottom-p_top]);
+                uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
+                // optimize to use u32 later
+                colors.push([1.0, i as f32 / string.len() as f32, 1.0, 1.0]);
 
                 self.x += c_w;
                 self.line_width += c_w;
+                i+=1;
             }
             self.end();
 
             let mut vao = VertexArray::new();
             vao.bind();
 
-            let mut vert = Buffer::new(ARRAY_BUFFER);
-            vert.set_values(vertices);
+            let mut dims_buf = Buffer::new(ARRAY_BUFFER);
+            dims_buf.set_values(dims);
 
-            let mut element_buf = Buffer::new(ELEMENT_ARRAY_BUFFER);
+            let mut uvs_buf = Buffer::new(ARRAY_BUFFER);
+            uvs_buf.set_values(uvs);
+
+            let mut color = Buffer::new(ARRAY_BUFFER);
+            color.set_values(colors);
+
+            let mut element_buf = Buffer::new(ARRAY_BUFFER);
             element_buf.set_values(indices);
-
-            // Bind buffers into the VAO
-            vert.bind();
-            EnableClientState(VERTEX_ARRAY);
-            VertexPointer(4, FLOAT, 0, ptr::null());
-
             element_buf.bind();
+
+            let i_id = context().fonts().sdf_shader_i.get_attrib_location("indexA") as GLuint;
+            println!("i_id {i_id}");
+            EnableVertexAttribArray(i_id);
+            VertexAttribPointer(i_id, 1, UNSIGNED_INT, FALSE, 1 * 4, ptr::null());
+            VertexAttribDivisor(i_id, 0);
+
+            let c_id = context().fonts().sdf_shader_i.get_attrib_location("instanceColor") as GLuint;
+            println!("c_id {c_id}");
+            color.bind();
+            EnableVertexAttribArray(c_id);
+            VertexAttribPointer(c_id, 4, FLOAT, FALSE, 4 * 4, ptr::null());
+            VertexAttribDivisor(c_id, 1);
+
+            let d_id = context().fonts().sdf_shader_i.get_attrib_location("dims") as GLuint;
+            println!("d_id {d_id}");
+            dims_buf.bind();
+            EnableVertexAttribArray(d_id);
+            VertexAttribPointer(d_id, 4, FLOAT, FALSE, 4 * 4, ptr::null());
+            VertexAttribDivisor(d_id, 1);
+
+            let u_id = context().fonts().sdf_shader_i.get_attrib_location("uvs") as GLuint;
+            println!("u_id {u_id}");
+            uvs_buf.bind();
+            EnableVertexAttribArray(u_id);
+            VertexAttribPointer(u_id, 4, FLOAT, FALSE, 4 * 4, ptr::null());
+            VertexAttribDivisor(u_id, 1);
 
             // Unbind VAO
             VertexArray::unbind();
 
             // Unbind buffers
             element_buf.unbind();
-            vert.unbind();
+            color.unbind();
+            uvs_buf.unbind();
 
             // Add buffers to VAO object so they can be managed together
-            vao.add_buffer(vert);
             vao.add_buffer(element_buf);
+            vao.add_buffer(color);
+            vao.add_buffer(uvs_buf);
+            vao.add_buffer(dims_buf);
 
             map.insert(hashed, (vao, self.line_width*self.scale, self.get_line_height()*self.scale, 0));
         }
@@ -192,6 +219,7 @@ impl FontRenderer {
     /// Returns width, height
     pub unsafe fn draw_string_inst(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
         let string = string.to_string();
+        let len = string.len();
         let pos = pos.into();
 
         let (x, y) = pos.xy();
@@ -199,19 +227,23 @@ impl FontRenderer {
 
         let (vao, width, height) = self.get_or_cache_inst(size, string, pos);
         self.begin(size, x, y, true);
-        self.set_color(color);
+        // self.set_color(color);
         let atlas = self.font().atlas_tex.as_ref().unwrap();
 
         ActiveTexture(TEXTURE0);
         atlas.bind();
 
         BindVertexArray(vao);
-        DrawElements(TRIANGLES, (len * 6) as GLsizei, UNSIGNED_INT, ptr::null());
+
+        DrawArraysInstanced(TRIANGLES, 0, 6, len as GLsizei);
+
+        // DrawElements(TRIANGLES, (6) as GLsizei, UNSIGNED_INT, ptr::null());
         BindVertexArray(0);
 
         Texture::unbind();
         self.end();
         (width, height)
+        // (0f32, 0f32)
     }
 
     /// The method to be called to a render a string using immediate GL

@@ -16,7 +16,7 @@ use crate::components::window::Window;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::{gl11, gl20, gl30};
+use crate::gl_binds::{gl11, gl20, gl30, gl41};
 use crate::gl_binds::gl11::*;
 use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0, TEXTURE1, TEXTURE16, TEXTURE2};
 
@@ -55,6 +55,7 @@ impl UIContext {
         p_window.make_current();
         p_window.set_all_polling(true);
 
+        gl41::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         gl30::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         gl11::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         gl20::load_with(|f_name| glfw.get_proc_address_raw(f_name));
