@@ -1,11 +1,16 @@
-use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DeleteBuffers, DYNAMIC_DRAW, ELEMENT_ARRAY_BUFFER, GenBuffers, GenVertexArrays};
+use std::ptr;
+use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DeleteBuffers, DYNAMIC_DRAW, ELEMENT_ARRAY_BUFFER, FLOAT, GenBuffers, GenVertexArrays};
 use gl::types::GLsizeiptr;
-use crate::gl_binds::gl11::types::{GLenum, GLsizei, GLuint};
+use crate::gl_binds::gl11::FALSE;
+use crate::gl_binds::gl11::types::{GLboolean, GLenum, GLint, GLsizei, GLuint};
+use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
 use crate::gl_binds::gl30::DeleteVertexArrays;
+use crate::gl_binds::gl41::VertexAttribDivisor;
 
 pub struct Buffer {
     gl_ref: u32,
     gl_type: GLenum,
+    type_size: usize,
 }
 
 impl Buffer {
@@ -15,6 +20,7 @@ impl Buffer {
         Buffer {
             gl_ref,
             gl_type,
+            type_size: 0,
         }
     }
     pub unsafe fn set_values<T: Sized>(&mut self, v: Vec<T>) {
@@ -25,6 +31,15 @@ impl Buffer {
             v.as_ptr() as *const _,
             DYNAMIC_DRAW,
         );
+        self.type_size = size_of::<T>();
+        self.unbind();
+    }
+
+    pub unsafe fn attribPointer(&self, attrib: GLuint, size: GLint, type_: GLenum, normalized: GLboolean, divisor: GLuint) {
+        self.bind();
+        EnableVertexAttribArray(attrib);
+        VertexAttribPointer(attrib, size, type_, normalized, self.type_size as GLint, ptr::null());
+        VertexAttribDivisor(attrib, divisor);
         self.unbind();
     }
 
