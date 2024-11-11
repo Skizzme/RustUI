@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use crate::components::bounds::Bounds;
-use crate::components::position::Pos;
+use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
 
 #[derive(Debug, Clone)]
 pub enum Style {
     Color(Color),
     Bounds(Bounds),
-    Pos(Pos),
+    Pos(Vec2),
     Number(f32),
     String(String),
     Bool(bool),
@@ -35,7 +35,7 @@ impl StyleRegistry {
         self.set(key, Style::Bounds(value));
     }
 
-    pub fn set_pos(&mut self, key: impl ToString, value: Pos) {
+    pub fn set_pos(&mut self, key: impl ToString, value: Vec2) {
         self.set(key, Style::Pos(value));
     }
 
@@ -81,10 +81,10 @@ impl StyleRegistry {
         }
     }
 
-    pub fn get_pos(&self, key: impl ToString) -> Pos {
+    pub fn get_pos(&self, key: impl ToString) -> Vec2 {
         match self.get(key) {
             Style::Pos(p) => p.clone(),
-            _ => Pos::new(0.0,0.0),
+            _ => Vec2::new(0.0, 0.0),
         }
     }
 

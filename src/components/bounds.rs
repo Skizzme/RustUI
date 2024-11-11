@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 use crate::components::context::context;
-use crate::components::position::Pos;
+use crate::components::position::Vec2;
 use crate::components::render::color::ToColor;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -38,13 +38,13 @@ impl Bounds {
         obj
     }
 
-    pub fn top_left(&self) -> Pos { Pos::new( self.left().min(self.right()), self.top().min(self.bottom()) ) }
-    pub fn top_right(&self) -> Pos { Pos::new( self.left().max(self.right()), self.top().min(self.bottom()) ) }
-    pub fn bottom_left(&self) -> Pos { Pos::new( self.left().min(self.right()), self.top().max(self.bottom()) ) }
-    pub fn bottom_right(&self) -> Pos { Pos::new( self.left().max(self.right()), self.top().max(self.bottom()) ) }
+    pub fn top_left(&self) -> Vec2 { Vec2::new(self.left().min(self.right()), self.top().min(self.bottom()) ) }
+    pub fn top_right(&self) -> Vec2 { Vec2::new(self.left().max(self.right()), self.top().min(self.bottom()) ) }
+    pub fn bottom_left(&self) -> Vec2 { Vec2::new(self.left().min(self.right()), self.top().max(self.bottom()) ) }
+    pub fn bottom_right(&self) -> Vec2 { Vec2::new(self.left().max(self.right()), self.top().max(self.bottom()) ) }
 
-    pub fn pos(&self) -> Pos {
-        Pos::new(self.x, self.y)
+    pub fn pos(&self) -> Vec2 {
+        Vec2::new(self.x, self.y)
     }
     pub fn x(&self) -> f32 { self.x }
     pub fn y(&self) -> f32 { self.y }
@@ -57,7 +57,7 @@ impl Bounds {
     pub fn center_x(&self) -> f32 { self.x + self.width / 2.0 }
     pub fn center_y(&self) -> f32 { self.y + self.height / 2.0 }
 
-    pub fn set_pos(&mut self, pos: &Pos) {
+    pub fn set_pos(&mut self, pos: &Vec2) {
         self.x = pos.x;
         self.y = pos.y;
     }

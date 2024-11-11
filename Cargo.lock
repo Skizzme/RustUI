@@ -12,6 +12,7 @@ dependencies = [
  "glfw",
  "image",
  "include_dir",
+ "num-traits",
  "rand 0.9.0-alpha.2",
  "winapi",
 ]

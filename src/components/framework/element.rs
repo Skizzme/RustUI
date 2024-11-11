@@ -9,7 +9,7 @@ use crate::components::bounds::Bounds;
 use crate::components::context::context;
 use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationRegTrait};
 use crate::components::framework::event::{Event, RenderPass};
-use crate::components::position::Pos;
+use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::renderer::FontRenderer;
 use crate::components::render::stack::State;
@@ -32,7 +32,7 @@ pub struct Element {
     pub scrollable: bool,
     scroll: (f32, f32),
     last_scroll: (f32, f32),
-    dragging: (bool, Pos),
+    dragging: (bool, Vec2),
     has_rendered: bool,
     animations: AnimationRegistry,
 }
@@ -56,12 +56,12 @@ impl Element {
             scrollable: false,
             scroll: (0.0, 0.0),
             last_scroll: (0.0, 0.0),
-            dragging: (false, Pos::new(0.0, 0.0)),
+            dragging: (false, Vec2::new(0.0, 0.0)),
             has_rendered: false,
             animations: AnimationRegistry::new(),
         }
     }
-    pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> Element {
+    pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Vec2>, color: impl ToColor) -> Element {
         let pos = pos.into();
         let text = text.to_string();
         let color = color.to_color();
@@ -75,7 +75,7 @@ impl Element {
                     Event::Render(pass) => {
                         match pass {
                             RenderPass::Main => {
-                                let (width, height) = fr.draw_string_inst(size, &text_c, el.bounds.top_left(), color);;
+                                let (width, height) = fr.draw_string_inst((size, &text_c, color), el.bounds.top_left());
                                 el.bounds().set_width(width);
                                 el.bounds().set_height(height);
                             }

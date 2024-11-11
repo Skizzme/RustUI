@@ -4,15 +4,15 @@ use std::time::Instant;
 use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, DrawElements, DrawElementsInstanced, ELEMENT_ARRAY_BUFFER, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES, UNSIGNED_INT, VERTEX_ARRAY};
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
-use crate::components::position::Pos;
+use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::{Font, FONT_RES};
-use crate::components::render::font::format::{FormattedText};
+use crate::components::render::font::format::{FormatItem, FormattedText};
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl11::{EnableClientState, FALSE, Scalef, VertexPointer};
+use crate::gl_binds::gl11::{EnableClientState, FALSE, Scaled, Scalef, VertexPointer};
 use crate::gl_binds::gl11::types::{GLsizei, GLuint};
 use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix};
@@ -29,17 +29,15 @@ pub struct FontRenderer {
     pub scale_mode: ScaleMode,
     pub tab_length: u32, // The length of tabs in spaces. Default is 4
     pub line_spacing: f32,
-
-    pub scaled_factor_x: f32,
-    pub scaled_factor_y: f32,
-    pub comb_scale_x: f32,
-    pub comb_scale_y: f32,
-    pub scale: f32,
-    pub i_scale: f32,
-    pub start_x: f32,
-    pub x: f32,
-    pub y: f32,
     pub line_width: f32,
+
+    scale: f32,
+    i_scale: f32,
+    x: f32,
+    y: f32,
+    start_x: f32,
+    comb_scale_x: f32,
+    comb_scale_y: f32,
 }
 
 impl FontRenderer {
@@ -50,34 +48,33 @@ impl FontRenderer {
             line_spacing: 20.0,
             wrapping: Wrapping::None,
             scale_mode: ScaleMode::Normal,
-            scaled_factor_x: 0.0,
-            scaled_factor_y: 0.0,
-            comb_scale_x: 0.0,
-            comb_scale_y: 0.0,
+            line_width: 0.0,
             scale: 0.0,
             i_scale: 0.0,
-            start_x: 0.0,
             x: 0.0,
             y: 0.0,
-            line_width: 0.0,
+            start_x: 0.0,
+            comb_scale_x: 0.0,
+            comb_scale_y: 0.0,
         }
     }
 
     pub unsafe fn set_color(&mut self, color: impl ToColor) {
         let color = color.to_color();
-        context().fonts().sdf_shader.u_put_float("u_color", color.rgba());
+        context().fonts().sdf_shader.u_put_float("u_color", color.rgba().to_vec());
     }
 
     /// Renders a string using immediate GL
     ///
     /// The center of the rendered string is at `x`
     pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
-        let string = string.to_string();
-        let width = self.get_width(size, string.clone());
-        self.draw_string(size, string, (x-width/2.0, y), color)
+        // let string = string.to_string();
+        // let width = self.get_width(size, string.clone());
+        // self.draw_string(size, string, (x-width/2.0, y), color)
+        (0.0, 0.0)
     }
 
-    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Pos>) -> (u32, f32, f32) {
+    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (u32, f32, f32) {
         let formatted_text = formatted_text.into();
         let len = formatted_text.visible_length();
         let mut hasher = hash::DefaultHasher::new();
@@ -89,64 +86,130 @@ impl FontRenderer {
             let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut colors: Vec<[f32; 4]> = Vec::with_capacity(formatted_text.color_count());
-            let (x, y) = pos.xy();
+            let (x, y) = pos.into().xy();
+
+            self.x = x;
+            self.y = y;
+            self.start_x = x;
 
             // Apply appropriate scale to the vertices etc for correct rendering
 
-            self.begin(size, x, y, true);
+            let mut current_color = Color::from_u32(0);
             // println!("{} {} {}", self.get_line_height(), self.comb_scale_y, self.line_spacing);
             // Calculate vertices and uv coords for every char
-            let mut i = 0;
-            for char in string.chars() {
-                if char == '\n' {
-                    match self.scale_mode {
-                        ScaleMode::Normal => {
-                            self.y += self.get_line_height();
-                        }
-                        ScaleMode::Quality => {
-                            self.y += self.get_scaled_value(self.get_line_height(), self.comb_scale_y);
+            let matrix: [f64; 16] = context().renderer().get_transform_matrix();
+            let mut scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
+            let mut scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
+
+            self.scale = 1.0;
+            self.i_scale = 1.0;
+            self.comb_scale_x = 1.0;
+            self.comb_scale_y = 1.0;
+
+            // println!("fr {} {} {}", self.scaled_factor_x, self.comb_scale_x, self.scale);
+            // PushMatrix();
+
+            self.line_width = 0f32;
+
+            let atlas = self.font().atlas_tex.as_ref().unwrap();
+            atlas.bind();
+            // was 0.25 / ... but .35 seems better?
+            //(0.30 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4) // original smoothing
+            // let smoothing = (0.35 / (size / 6.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.25);
+
+
+            PushMatrix();
+            context().renderer().stack().begin();
+            context().renderer().stack().push(Blend(true));
+            context().renderer().stack().push(Texture2D(true));
+
+            context().fonts().sdf_shader_i.bind();
+
+            for item in formatted_text.items() {
+                match item {
+                    FormatItem::None => {}
+                    FormatItem::Color(v) => {
+                        current_color = v.clone();
+                    }
+                    FormatItem::Size(size) => {
+                        Scalef(1.0 / self.scale, 1.0 / self.scale, 1.0); // unscale the current scaling
+
+                        scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
+                        scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
+
+                        self.scale = match self.scale_mode {
+                            ScaleMode::Normal => {size / FONT_RES as f32 *  scaled_factor_x}
+                            ScaleMode::Quality => {size.ceil()/FONT_RES as f32 *  scaled_factor_x}
+                        };
+                        self.i_scale = 1.0/ self.scale;
+
+                        // self.x = x * self.i_scale;
+                        // self.y = y * self.i_scale;
+
+                        self.comb_scale_x = scaled_factor_x * self.scale;
+                        self.comb_scale_y = scaled_factor_y * self.scale;
+
+                        Scaled(self.scale as f64, self.scale as f64, 1.0);
+                    }
+                    FormatItem::Offset(v) => {}
+                    FormatItem::Text(string) => {
+                        println!("x {}", self.x);
+                        let mut i = 0;
+                        for char in string.chars() {
+                            if char == '\n' {
+                                match self.scale_mode {
+                                    ScaleMode::Normal => {
+                                        self.y += self.get_line_height() * self.scale;
+                                    }
+                                    ScaleMode::Quality => {
+                                        self.y += self.get_scaled_value(self.get_line_height(), self.comb_scale_y) * self.scale;
+                                    }
+                                }
+                                self.line_width = 0.0;
+                                self.x = self.start_x;
+                                continue;
+                            }
+
+                            let (c_w, _c_h, c_a, should_render) = self.get_dimensions(char);
+
+                            let glyph: &Glyph = match self.font().glyphs.get(char as usize) {
+                                None => {
+                                    continue
+                                    // return 0;
+                                    // return (0.0, 0.0);
+                                }
+                                Some(glyph) => {
+                                    glyph
+                                }
+                            };
+                            let pos_y = self.y + (self.get_height() - glyph.top as f32) * self.scale;
+
+                            let (right, bottom) = match self.scale_mode {
+                                ScaleMode::Normal => {
+                                    (self.x+glyph.width as f32 * self.scale, pos_y+glyph.height as f32 * self.scale)
+                                }
+                                ScaleMode::Quality => {
+                                    (self.get_scaled_value(self.x+glyph.width as f32 * self.scale, self.comb_scale_x), self.get_scaled_value(pos_y+glyph.height as f32 * self.scale, self.comb_scale_y))
+                                }
+                            };
+                            let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x as f32 * self.scale, pos_y, right, bottom);
+                            let atlas = self.font().atlas_tex.as_ref().unwrap();
+                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
+
+                            dims.push([p_left, p_top, p_right-p_left, p_bottom-p_top]);
+                            uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
+                            // optimize to use u32 later
+                            colors.push(current_color.rgba());
+
+                            self.x += c_w;
+                            self.line_width += c_w;
+                            i+=1;
                         }
                     }
-                    self.line_width = 0.0;
-                    self.x = self.start_x;
-                    continue;
                 }
-
-                let (c_w, _c_h, c_a, should_render) = self.get_dimensions(char);
-
-                let glyph: &Glyph = match self.font().glyphs.get(char as usize) {
-                    None => {
-                        continue
-                        // return 0;
-                        // return (0.0, 0.0);
-                    }
-                    Some(glyph) => {
-                        glyph
-                    }
-                };
-                let pos_y = self.y + self.get_height() - glyph.top as f32;
-
-                let (right, bottom) = match self.scale_mode {
-                    ScaleMode::Normal => {
-                        (self.x+glyph.width as f32, pos_y+glyph.height as f32)
-                    }
-                    ScaleMode::Quality => {
-                        (self.get_scaled_value(self.x+glyph.width as f32, self.comb_scale_x), self.get_scaled_value(pos_y+glyph.height as f32, self.comb_scale_y))
-                    }
-                };
-                let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x as f32, pos_y, right, bottom);
-                let atlas = self.font().atlas_tex.as_ref().unwrap();
-                let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
-
-                dims.push([p_left, p_top, p_right-p_left, p_bottom-p_top]);
-                uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
-                // optimize to use u32 later
-                colors.push([1.0, i as f32 / string.len() as f32, 1.0, 1.0]);
-
-                self.x += c_w;
-                self.line_width += c_w;
-                i+=1;
             }
+            PopMatrix();
+            context().renderer().stack().end();
             self.end();
 
             let mut vao = VertexArray::new();
@@ -180,7 +243,7 @@ impl FontRenderer {
             vao.add_buffer(uvs_buf);
             vao.add_buffer(dims_buf);
 
-            map.insert(hashed, (vao, self.line_width*self.scale, self.get_line_height()*self.scale, 0));
+            map.insert(hashed, (vao, self.line_width, self.get_line_height()*self.scale, 0));
         }
         map.get_mut(&hashed).unwrap().3 = 0;
         let (vao, width, height, _) = map.get(&hashed).unwrap();
@@ -193,15 +256,17 @@ impl FontRenderer {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_inst(&mut self, size: f32, formatted_text: impl Into<FormattedText>, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
+    pub unsafe fn draw_string_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (f32, f32) {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 
-        let (x, y) = pos.xy();
         let len = formatted_text.visible_length();
 
         let (vao, width, height) = self.get_or_cache_inst(formatted_text, pos);
-        self.begin(size, x, y, true);
+        context().renderer().stack().begin();
+        context().renderer().stack().push(Blend(true));
+        context().renderer().stack().push(Texture2D(true));
+        context().fonts().sdf_shader_i.bind();
         // self.set_color(color);
         let atlas = self.font().atlas_tex.as_ref().unwrap();
 
@@ -215,65 +280,12 @@ impl FontRenderer {
         // Finish();
         // println!("draw {} {:?}", len, st.elapsed());
         BindVertexArray(0);
+        context().renderer().stack().end();
 
         Texture::unbind();
         self.end();
         (width, height)
         // (0f32, 0f32)
-    }
-
-    /// The method to be called to a render a string using immediate GL
-    ///
-    /// Returns width, height
-    pub unsafe fn draw_string(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
-        // let str_height = self.font().glyphs.get('H' as usize).unwrap().top as f32;
-        let (x, y) = pos.into().xy();
-        self.begin(size, x, y, false);
-        self.set_color(color);
-        for char in string.to_string().chars() {
-            if char == '\n' {
-                match self.scale_mode {
-                    ScaleMode::Normal => {
-                        self.y += self.get_line_height() * self.comb_scale_y;
-                    }
-                    ScaleMode::Quality => {
-                        self.y += self.get_scaled_value(self.get_line_height(), self.comb_scale_y);
-                    }
-                }
-                self.line_width = 0.0;
-                self.x = self.start_x;
-                continue;
-            }
-
-            if char == '\t' {
-                self.x += self.get_width(size, " ".to_string())*self.tab_length as f32;
-                continue;
-            }
-
-            let (c_w, _c_h, c_a, should_render) = self.get_dimensions(char);
-            // if should_render == 2 {
-            //     break;
-            // }
-
-            // if should_render <= 1 {
-            //     if should_render == 0 {
-            let atlas_ref= self.font().atlas_tex.as_ref().unwrap().clone();
-            self.draw_char(self.comb_scale_x, self.comb_scale_y, &atlas_ref, char, self.x, self.y);
-            // }
-
-            self.line_width += c_w;
-            match self.scale_mode {
-                ScaleMode::Normal => {
-                    self.x += c_a;
-                }
-                ScaleMode::Quality => {
-                    self.x += self.get_scaled_value(c_a, self.comb_scale_x);
-                }
-            }
-            // }
-        }
-        self.end();
-        (self.line_width*self.scale, self.get_line_height()*self.scale)
     }
 
     // todo make this match scale mode
@@ -315,8 +327,8 @@ impl FontRenderer {
         };
 
         let (c_w, c_h, c_a) = match self.scale_mode {
-            ScaleMode::Normal => ((glyph.advance - glyph.bearing_x) as f32, glyph.height as f32, glyph.advance as f32),
-            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32).ceil(), (glyph.height as f32).ceil(), (glyph.advance as f32).ceil())
+            ScaleMode::Normal => ((glyph.advance - glyph.bearing_x) as f32 * self.scale, glyph.height as f32 * self.scale, glyph.advance as f32 * self.scale),
+            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32 * self.scale).ceil(), (glyph.height as f32 * self.scale).ceil(), (glyph.advance as f32 * self.scale).ceil())
         };
         let mut should_render = 0u32;
         if self.y > context().window().width as f32 * self.i_scale {
@@ -331,94 +343,10 @@ impl FontRenderer {
         (c_w, c_h, c_a, should_render)
     }
 
-    /// Draws a single char
-    ///
-    /// The exact draw methods are determined by this FontRenderer's options, like [FontRenderer::scale_mode] etc
-    pub unsafe fn draw_char(&mut self, scaled_x: f32, scaled_y: f32, atlas: &Texture, char: char, x: f32, y: f32) -> (f32, f32) {
-        let glyph: &Glyph = match self.font().glyphs.get(char as usize) {
-            None => {
-                return (0.0, 0.0);
-            }
-            Some(glyph) => {
-                glyph
-            }
-        };
-        let pos_y = y + self.get_height() - glyph.top as f32;
-
-        let (right, bottom) = match self.scale_mode {
-            ScaleMode::Normal => {
-                (x+glyph.width as f32, pos_y+glyph.height as f32)
-            }
-            ScaleMode::Quality => {
-                (self.get_scaled_value(x+glyph.width as f32, scaled_x), self.get_scaled_value(pos_y+glyph.height as f32, scaled_y))
-            }
-        };
-        let uv = Bounds::ltrb(glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
-        // println!("N: {} {:?}", char, uv);
-        context().renderer().draw_texture_rect_uv(
-            &Bounds::ltrb(x+glyph.bearing_x as f32, pos_y, right, bottom),
-            &uv,
-            0xffffff,
-        );
-        // TODO make rendering use bearing x correctly
-        match self.scale_mode {
-            ScaleMode::Normal => (((glyph.advance - glyph.bearing_x) as f32), (glyph.height as f32)),
-            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32).floor(), (glyph.height as f32).floor())
-        }
-    }
-
-    /// Sets this FontRenderer up for immediate GL drawing, setting shader uniforms, x and y offsets, scaling etc
-    pub unsafe fn begin(&mut self, size: f32, x: f32, y: f32, instanced_shader: bool) {
-        let matrix: [f64; 16] = context().renderer().get_transform_matrix();
-        self.scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
-        self.scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
-
-        self.scale = match self.scale_mode {
-            ScaleMode::Normal => {size/FONT_RES as f32 * self.scaled_factor_x}
-            ScaleMode::Quality => {size.ceil()/FONT_RES as f32 * self.scaled_factor_x}
-        };
-        self.i_scale = 1.0/self.scale;
-
-        context().renderer().stack().begin();
-        context().renderer().stack().push(Blend(true));
-        context().renderer().stack().push(Texture2D(true));
-        self.x = x*self.i_scale;
-        self.y = y*self.i_scale;
-        self.start_x = self.x;
-
-        self.comb_scale_x = self.scaled_factor_x*self.scale;
-        self.comb_scale_y = self.scaled_factor_y*self.scale;
-
-        // println!("fr {} {} {}", self.scaled_factor_x, self.comb_scale_x, self.scale);
-        PushMatrix();
-        Scalef(self.scale, self.scale, 1.0);
-
-        self.line_width = 0f32;
-
-        let atlas = self.font().atlas_tex.as_ref().unwrap();
-        atlas.bind();
-        // was 0.25 / ... but .35 seems better?
-        //(0.30 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4) // original smoothing
-        let smoothing = (0.35 / (size / 6.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.25);
-
-        let shader =
-            if instanced_shader {
-                &mut context().fonts().sdf_shader_i
-            } else {
-                &mut context().fonts().sdf_shader
-            };
-
-        shader.bind();
-        shader.u_put_float("u_smoothing", vec![smoothing]);
-
-    }
-
     pub unsafe fn end(&self) {
         // context().renderer().stack().pop();
-        context().renderer().stack().end();
         Shader::unbind();
         BindTexture(TEXTURE_2D, 0);
-        PopMatrix();
         Texture::unbind();
         Disable(BLEND);
     }

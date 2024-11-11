@@ -294,8 +294,8 @@ impl UIContext {
                         }
                         WindowEvent::ContentScale(x, y) => {
                             println!("xy {} {}", x, y);
-                            self.p_window.set_size((self.window.width as f32 * (x / self.content_scale.0)) as i32, (self.window.height as f32 * (y / self.content_scale.1)) as i32);
-                            self.content_scale = (*x, *y)
+                            // self.p_window.set_size((self.window.width as f32 * (x / self.content_scale.0)) as i32, (self.window.height as f32 * (y / self.content_scale.1)) as i32);
+                            // self.content_scale = (*x, *y)
                         }
                         WindowEvent::FileDrop(fl) => {
                             println!("{:?}", fl);

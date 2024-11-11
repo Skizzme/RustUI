@@ -1,11 +1,13 @@
 use std::hash::{Hash, Hasher};
-use crate::components::position::Pos;
+use num_traits::{Num, NumCast};
+use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
-use crate::components::render::font::format::FormatItem::{Size, Text};
+use crate::components::render::font::format::FormatItem::{Offset, Size, Text};
 
 pub trait Formatter {
     fn parse(&mut self) -> bool;
     fn parsed(&self) -> &FormattedText;
+    fn parse_all(&mut self);
 }
 
 #[derive(Debug, Clone, Hash)]
@@ -33,6 +35,12 @@ impl FormattedText {
         self.items.push(item);
     }
 
+    pub fn append(&mut self, all: &FormattedText) {
+        for item in all.items() {
+            self.push(item.clone())
+        }
+    }
+
     pub fn visible_length(&self) -> usize {
         self.visible_length
     }
@@ -46,21 +54,38 @@ impl FormattedText {
     }
 }
 
-impl<T: ToColor> Into<FormattedText> for (f32, String, T) {
-    fn into(&self) -> FormattedText {
+impl<S: NumCast, T: ToString, C: ToColor> Into<FormattedText> for (S, T, C) {
+    fn into(self) -> FormattedText {
         let (size, text, color) = self;
         let color = color.to_color();
         let mut ft = FormattedText::new();
-        ft.push(Size(*size));
+        ft.push(Size(size.to_f32().unwrap()));
         ft.push(FormatItem::Color(color));
-        ft.push(Text(text.clone()));
+
+        let mut fm = DefaultFormatter::new(text.to_string());
+        fm.parse_all();
+        ft.append(fm.parsed());
         ft
     }
 }
 
-impl Into<FormattedText> for FormattedText {
-    fn into(&self) -> FormattedText {
-        self.clone()
+impl Into<FormattedText> for Vec<FormatItem> {
+    fn into(self) -> FormattedText {
+        let mut fm = FormattedText::new();
+        for item in self {
+            fm.push(item.clone());
+        }
+        fm
+    }
+}
+
+impl Into<FormattedText> for Vec<FormattedText> {
+    fn into(self) -> FormattedText {
+        let mut fm = FormattedText::new();
+        for item in self {
+            fm.append(&item);
+        }
+        fm
     }
 }
 
@@ -69,14 +94,40 @@ pub enum FormatItem {
     Color(Color),
     Size(f32),
     Text(String),
-    Offset(Pos),
+    Offset(Vec2),
     None,
+}
+
+impl Into<FormatItem> for String {
+    fn into(self) -> FormatItem {
+        Text(self)
+    }
+}
+
+impl Into<FormatItem> for Color {
+    fn into(self) -> FormatItem {
+        FormatItem::Color(self)
+    }
+}
+
+impl Into<FormatItem> for f32 {
+    fn into(self) -> FormatItem {
+        Size(self)
+    }
+}
+
+impl Into<FormatItem> for Vec2 {
+    fn into(self) -> FormatItem {
+        Offset(self)
+    }
 }
 
 impl Hash for FormatItem {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            FormatItem::Color(v) | Text(v) | FormatItem::Offset(v) => v.hash(state),
+            FormatItem::Color(v) => v.hash(state),
+            Text(v) => v.hash(state),
+            Offset(v) => v.hash(state),
             Size(v) => state.write(&v.to_be_bytes()),
             FormatItem::None => state.write(&[0u8])
         }
@@ -107,7 +158,6 @@ impl DefaultFormatter {
             return 0u8 as char;
         }
         self.index += 1;
-        println!("{}", self.index);
         self.char = self.raw.as_bytes()[self.index] as char;
         self.char
     }
@@ -122,10 +172,7 @@ impl DefaultFormatter {
 
         let mut current = FormatItem::None;
         std::mem::swap(&mut self.current, &mut current);
-        println!("FIN {:?}", current);
         self.parsed.push(current);
-
-        self.next();
 
         true
     }
@@ -136,11 +183,19 @@ impl Formatter for DefaultFormatter {
         loop {
             if self.char == '&' {
                 self.finish(); // finish the possible previous token
-                if self.char == 'f' {
-                    self.current = FormatItem::Color(Color::from_u32(0xffffffff));
-                    self.finish();
-                    break;
+                self.next();
+                let mut color = String::new();
+                for i in 0..8 {
+                    color.push(self.char);
+                    self.next();
                 }
+                println!("color {color}");
+
+                self.current = FormatItem::Color(Color::from_u32(u32::from_str_radix(&color, 16).unwrap()));
+                self.finish();
+
+                println!("{}", self.char);
+                break;
             } else {
                 // TODO figure out the damn macros
                 match &mut self.current {
@@ -163,6 +218,10 @@ impl Formatter for DefaultFormatter {
         self.index >= self.raw.len()-1
     }
 
+    fn parse_all(&mut self) {
+        while !self.parse() {}
+    }
+
     fn parsed(&self) -> &FormattedText {
         &self.parsed
     }
@@ -170,7 +229,8 @@ impl Formatter for DefaultFormatter {
 
 #[test]
 pub fn format() {
-    let mut formatter = DefaultFormatter::new("thius is a test &f sting".to_string());
-    while !formatter.parse() {}
+    let mut formatter = DefaultFormatter::new("thius is a test &ff9020ff sting".to_string());
+    formatter.parse_all();
+
     println!("{:?}", formatter.parsed);
 }

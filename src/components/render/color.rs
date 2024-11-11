@@ -73,8 +73,8 @@ impl Color {
     pub fn alpha(&self) -> f32 {
         self.alpha
     }
-    pub fn rgba(&self) -> Vec<f32> {
-        vec![self.red, self.green, self.blue, self.alpha]
+    pub fn rgba(&self) -> [f32; 4] {
+        [self.red, self.green, self.blue, self.alpha]
     }
     pub fn rgba_u8(&self) -> Vec<u8> {
         vec![(self.red*255.0).round() as u8, (self.green*255.0).round() as u8, (self.blue*255.0).round() as u8, (self.alpha*255.0).round() as u8]

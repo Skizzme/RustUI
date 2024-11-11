@@ -2,23 +2,23 @@ use std::collections::HashSet;
 
 use glfw::{Action, MouseButton, WindowEvent};
 
-use crate::components::position::Pos;
+use crate::components::position::Vec2;
 
 pub struct Mouse {
-    pub(crate) pos: Pos,
-    last_pos: Pos,
-    click_pos: Pos,
-    pub(super) delta: Pos,
+    pub(crate) pos: Vec2,
+    last_pos: Vec2,
+    click_pos: Vec2,
+    pub(super) delta: Vec2,
     pub(super) pressed: HashSet<MouseButton>,
 }
 
 impl Mouse {
     pub fn new() -> Self {
         Mouse {
-            pos: Pos::new(0.0,0.0),
-            last_pos: Pos::new(0.0,0.0),
-            click_pos: Pos::new(0.0,0.0),
-            delta: Pos::new(0.0, 0.0),
+            pos: Vec2::new(0.0, 0.0),
+            last_pos: Vec2::new(0.0, 0.0),
+            click_pos: Vec2::new(0.0, 0.0),
+            delta: Vec2::new(0.0, 0.0),
             pressed: HashSet::new(),
         }
     }
@@ -48,14 +48,14 @@ impl Mouse {
         }
     }
 
-    pub fn pos(&self) -> &Pos {
+    pub fn pos(&self) -> &Vec2 {
         &self.pos
     }
     pub fn is_pressed(&self, button: MouseButton) -> bool {
         self.pressed.contains(&button)
     }
-    pub fn delta(&self) -> Pos { self.delta }
-    pub fn click_pos(&self) -> Pos {
+    pub fn delta(&self) -> Vec2 { self.delta }
+    pub fn click_pos(&self) -> Vec2 {
         self.click_pos
     }
 }

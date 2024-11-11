@@ -6,7 +6,10 @@ uniform float u_smoothing;
 
 void main() {
     float distance = texture2D(u_texture, gl_TexCoord[0].xy).a;
-    float alpha = smoothstep(0.5 - u_smoothing, 0.5 + u_smoothing, distance);
+    float width = gl_TexCoord[0].z;
+    float height = gl_TexCoord[0].w;
+    float smoothing = (1.0 / width + 1.0 / height) / 2 * 2.5;
+    float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);
     gl_FragColor = vec4(fragColor.rgb, fragColor.a * alpha);
     //    gl_FragColor = vec4(gl_TexCoord[0].x, gl_TexCoord[0].y, 1, 1);
     //    gl_FragColor = vec4(alpha, gl_TexCoord[0].x, gl_TexCoord[0].y, 1.0);

@@ -31,8 +31,8 @@ use RustUI::components::framework::element::{Element, ElementBuilder, UIHandler}
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
-use RustUI::components::position::Pos;
-use RustUI::components::render::font::renderer::FontRenderer;
+use RustUI::components::position::Vec2;
+use RustUI::components::render::font::renderer::{FontRenderer, ScaleMode};
 use RustUI::components::wrapper::shader::Shader;
 use RustUI::components::wrapper::texture::Texture;
 use RustUI::gl_binds::gl11::{BLEND, EnableClientState, Finish, FLOAT, RGBA, TexCoordPointer, TEXTURE_COORD_ARRAY, VERTEX_ARRAY, VertexPointer};
@@ -63,7 +63,7 @@ fn main() {
 pub struct TestScreen {
     pub text: String,
     fr: FontRenderer,
-    previous_pos: Pos,
+    previous_pos: Vec2,
     previous_tex: Arc<Mutex<String>>,
     last_fps: u32,
 }
@@ -73,8 +73,8 @@ impl TestScreen {
         let mut t = fs::read_to_string("test.js").unwrap();
         TestScreen {
             text: t,
-            fr: context().fonts().renderer("main"),
-            previous_pos: Pos::new(0.0,0.0),
+            fr: context().fonts().renderer("main").scale_mode(ScaleMode::Quality),
+            previous_pos: Vec2::new(0.0, 0.0),
             previous_tex: Arc::new(Mutex::new("".to_string())),
             last_fps: 0,
         }
@@ -89,11 +89,11 @@ impl ScreenTrait for TestScreen {
                     return;
                 }
                 context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-                self.fr.draw_string_inst(30.0, "something", (0.0, 0.0), 0xffffffff);
-                self.fr.draw_string_inst(30.0, format!("{:?}", context().fps()), (200.0, 100.0), 0xffffffff);
+                self.fr.draw_string_inst((30.0, "something", 0xffffffff), (0.0, 0.0));
+                self.fr.draw_string_inst((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
 
-                context().fonts().renderer("main").draw_string_inst(44.0, &self.text, (10.0, 10.0), 0x90ffffff);
+                context().fonts().renderer("main").draw_string_inst((44.0, &self.text, 0x90ffffff), (10.0, 10.0));
             }
             Event::PostRender => {
                 self.previous_pos = *context().window().mouse().pos();
@@ -119,7 +119,7 @@ impl ScreenTrait for TestScreen {
                         }
                         let mouse = context().window().mouse();
                         // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
-                        let (width, height) = context().fonts().renderer("main").draw_string_inst(40.0, format!("{:?}", mouse.pos()), el.bounds(), 0xffffffff);
+                        let (width, height) = context().fonts().renderer("main").draw_string_inst((context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{:?}", mouse.pos()), 0xffffffff), el.bounds());
                         el.bounds().set_width(width);
                         el.bounds().set_height(height);
                         let hovering = el.hovering();

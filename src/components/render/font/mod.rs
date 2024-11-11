@@ -22,7 +22,7 @@ use gl::types::{GLdouble, GLsizeiptr};
 use crate::asset_manager;
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
-use crate::components::position::Pos;
+use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::renderer::Glyph;
 use crate::components::render::stack::State::{Blend, Texture2D};

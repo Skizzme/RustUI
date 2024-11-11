@@ -82,7 +82,7 @@ impl Renderer {
         self.rounded_rect_shader.bind();
         self.rounded_rect_shader.u_put_float("u_size", vec![bounds.width(), bounds.height()]);
         self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
-        self.rounded_rect_shader.u_put_float("u_color", color.to_color().rgba());
+        self.rounded_rect_shader.u_put_float("u_color", color.to_color().rgba().to_vec());
 
         self.draw_texture_rect(&bounds, 0xffffffff);
 
