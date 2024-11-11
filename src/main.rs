@@ -131,7 +131,7 @@ impl ScreenTrait for TestScreen {
                 }
             })
             .should_render(move |_, rp| {
-                println!("el p check {:?}", rp);
+                // println!("el p check {:?}", rp);
                 if rp == &RenderPass::Main {
                     let mouse = context().window().mouse();
                     let res = tex_cl2.lock().unwrap().clone() != format!("{:?}", mouse.pos()).to_string();
@@ -170,7 +170,7 @@ impl ScreenTrait for TestScreen {
                 }
             })
             .should_render(|_, _| {
-                println!("c el check");
+                // println!("c el check");
                 false
             });
 

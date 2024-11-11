@@ -1,35 +1,86 @@
+use std::hash::{Hash, Hasher};
 use crate::components::position::Pos;
-use crate::components::render::color::Color;
-use crate::components::render::font::format::FormatItem::Text;
+use crate::components::render::color::{Color, ToColor};
+use crate::components::render::font::format::FormatItem::{Size, Text};
 
 pub trait Formatter {
     fn parse(&mut self) -> bool;
     fn parsed(&self) -> &FormattedText;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash)]
 pub struct FormattedText {
     items: Vec<FormatItem>,
+    visible_length: usize,
+    color_count: usize,
 }
 
 impl FormattedText {
     pub fn new() -> FormattedText {
         FormattedText {
             items: vec![],
+            visible_length: 0,
+            color_count: 0,
         }
     }
 
     pub fn push(&mut self, item: FormatItem) {
+        match &item {
+            Text(t) => self.visible_length += t.len(),
+            FormatItem::Color(_) => self.color_count += 1,
+            _ => {}
+        }
         self.items.push(item);
+    }
+
+    pub fn visible_length(&self) -> usize {
+        self.visible_length
+    }
+
+    pub fn color_count(&self) -> usize {
+        self.color_count
+    }
+
+    pub fn items(&self) -> &Vec<FormatItem> {
+        &self.items
     }
 }
 
-#[derive(Debug)]
+impl<T: ToColor> Into<FormattedText> for (f32, String, T) {
+    fn into(&self) -> FormattedText {
+        let (size, text, color) = self;
+        let color = color.to_color();
+        let mut ft = FormattedText::new();
+        ft.push(Size(*size));
+        ft.push(FormatItem::Color(color));
+        ft.push(Text(text.clone()));
+        ft
+    }
+}
+
+impl Into<FormattedText> for FormattedText {
+    fn into(&self) -> FormattedText {
+        self.clone()
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum FormatItem {
     Color(Color),
+    Size(f32),
     Text(String),
     Offset(Pos),
     None,
+}
+
+impl Hash for FormatItem {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            FormatItem::Color(v) | Text(v) | FormatItem::Offset(v) => v.hash(state),
+            Size(v) => state.write(&v.to_be_bytes()),
+            FormatItem::None => state.write(&[0u8])
+        }
+    }
 }
 
 pub struct DefaultFormatter {

@@ -7,6 +7,7 @@ use crate::components::context::context;
 use crate::components::position::Pos;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::{Font, FONT_RES};
+use crate::components::render::font::format::{FormattedText};
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::shader::Shader;
@@ -76,21 +77,22 @@ impl FontRenderer {
         self.draw_string(size, string, (x-width/2.0, y), color)
     }
 
-    unsafe fn get_or_cache_inst(&mut self, size: f32, string: String, pos: Pos) -> (u32, f32, f32) {
+    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Pos>) -> (u32, f32, f32) {
+        let formatted_text = formatted_text.into();
+        let len = formatted_text.visible_length();
         let mut hasher = hash::DefaultHasher::new();
-        hasher.write(&size.to_be_bytes());
-        hasher.write(string.as_bytes());
-        pos.hash(&mut hasher);
+        formatted_text.hash(&mut hasher);
 
         let hashed = hasher.finish();
         let mut map = &mut context().fonts().cached_inst;
         if !map.contains_key(&hashed) {
-            let mut dims: Vec<[f32; 4]> = Vec::with_capacity(string.len());
-            let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(string.len());
-            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(string.len());
+            let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(formatted_text.color_count());
             let (x, y) = pos.xy();
 
             // Apply appropriate scale to the vertices etc for correct rendering
+
             self.begin(size, x, y, true);
             // println!("{} {} {}", self.get_line_height(), self.comb_scale_y, self.line_spacing);
             // Calculate vertices and uv coords for every char
@@ -191,15 +193,14 @@ impl FontRenderer {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_inst(&mut self, size: f32, string: impl ToString, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
-        let string = string.to_string();
-        let len = string.len();
+    pub unsafe fn draw_string_inst(&mut self, size: f32, formatted_text: impl Into<FormattedText>, pos: impl Into<Pos>, color: impl ToColor) -> (f32, f32) {
+        let formatted_text = formatted_text.into();
         let pos = pos.into();
 
         let (x, y) = pos.xy();
-        let len = string.len();
+        let len = formatted_text.visible_length();
 
-        let (vao, width, height) = self.get_or_cache_inst(size, string, pos);
+        let (vao, width, height) = self.get_or_cache_inst(formatted_text, pos);
         self.begin(size, x, y, true);
         // self.set_color(color);
         let atlas = self.font().atlas_tex.as_ref().unwrap();
@@ -208,14 +209,11 @@ impl FontRenderer {
         atlas.bind();
 
         BindVertexArray(vao);
-
-        Finish();
-        let st = Instant::now();
+        // Finish();
+        // let st = Instant::now();
         DrawArraysInstanced(TRIANGLES, 0, 6, len as GLsizei);
-        Finish();
-        println!("draw {} {:?}", len, st.elapsed());
-
-        // DrawElements(TRIANGLES, (6) as GLsizei, UNSIGNED_INT, ptr::null());
+        // Finish();
+        // println!("draw {} {:?}", len, st.elapsed());
         BindVertexArray(0);
 
         Texture::unbind();
