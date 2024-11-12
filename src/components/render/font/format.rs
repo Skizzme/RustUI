@@ -189,14 +189,12 @@ impl Formatter for DefaultFormatter {
                     color.push(self.char);
                     self.next();
                 }
-                println!("color {color}");
 
                 self.current = FormatItem::Color(Color::from_u32(u32::from_str_radix(&color, 16).unwrap()));
                 self.finish();
 
-                println!("{}", self.char);
                 break;
-            } else {
+            } else {c
                 // TODO figure out the damn macros
                 match &mut self.current {
                     Text(ref mut text) => {

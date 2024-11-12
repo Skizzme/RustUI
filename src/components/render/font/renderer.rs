@@ -81,6 +81,7 @@ impl FontRenderer {
         formatted_text.hash(&mut hasher);
 
         let hashed = hasher.finish();
+
         let mut map = &mut context().fonts().cached_inst;
         if !map.contains_key(&hashed) {
             let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
@@ -153,7 +154,6 @@ impl FontRenderer {
                     }
                     FormatItem::Offset(v) => {}
                     FormatItem::Text(string) => {
-                        println!("x {}", self.x);
                         let mut i = 0;
                         for char in string.chars() {
                             if char == '\n' {
@@ -241,6 +241,7 @@ impl FontRenderer {
             // Add buffers to VAO object so they can be managed together
             vao.add_buffer(color);
             vao.add_buffer(uvs_buf);
+            vao.add_buffer(t_buf);
             vao.add_buffer(dims_buf);
 
             map.insert(hashed, (vao, self.line_width, self.get_line_height()*self.scale, 0));
@@ -256,7 +257,7 @@ impl FontRenderer {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (f32, f32) {
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (f32, f32) {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 

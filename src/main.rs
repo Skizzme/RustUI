@@ -70,7 +70,7 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let mut t = fs::read_to_string("test.js").unwrap();
+        let mut t = include_str!("../test.js").to_string();
         TestScreen {
             text: t,
             fr: context().fonts().renderer("main").scale_mode(ScaleMode::Quality),
@@ -89,11 +89,11 @@ impl ScreenTrait for TestScreen {
                     return;
                 }
                 context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-                self.fr.draw_string_inst((30.0, "something", 0xffffffff), (0.0, 0.0));
-                self.fr.draw_string_inst((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
+                self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
+                self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
 
-                context().fonts().renderer("main").draw_string_inst((44.0, &self.text, 0x90ffffff), (10.0, 10.0));
+                context().fonts().renderer("main").draw_string((44.0, &self.text, 0x90ffffff), (10.0, 10.0));
             }
             Event::PostRender => {
                 self.previous_pos = *context().window().mouse().pos();
@@ -119,7 +119,7 @@ impl ScreenTrait for TestScreen {
                         }
                         let mouse = context().window().mouse();
                         // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
-                        let (width, height) = context().fonts().renderer("main").draw_string_inst((context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{:?}", mouse.pos()), 0xffffffff), el.bounds());
+                        let (width, height) = context().fonts().renderer("main").draw_string((context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{:?}", mouse.pos()), 0xffffffff), el.bounds());
                         el.bounds().set_width(width);
                         el.bounds().set_height(height);
                         let hovering = el.hovering();
@@ -174,7 +174,7 @@ impl ScreenTrait for TestScreen {
                 false
             });
 
-        let el_1 = el_1.child(el_1_c.build());
+        // let el_1 = el_1.child(el_1_c.build());
         layer_0.add_element(el_1.build());
 
         vec![layer_0]

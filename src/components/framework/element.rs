@@ -8,6 +8,7 @@ use glfw::{Action, MouseButton};
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
 use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationRegTrait};
+use crate::components::framework::changing::Changing;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
@@ -21,8 +22,7 @@ pub trait UIHandler {
 }
 
 pub struct Element {
-    bounds: Bounds,
-    last_bounds: Bounds,
+    bounds: Changing<Bounds>,
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
     should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
     hovering: bool,
@@ -30,8 +30,7 @@ pub struct Element {
     children: Vec<Box<dyn UIHandler>>,
     pub draggable: bool,
     pub scrollable: bool,
-    scroll: (f32, f32),
-    last_scroll: (f32, f32),
+    scroll: Changing<(f32, f32)>,
     dragging: (bool, Vec2),
     has_rendered: bool,
     animations: AnimationRegistry,
@@ -45,8 +44,7 @@ impl Element {
     {
         let b = bounds.into();
         Element {
-            bounds: b.clone(),
-            last_bounds: b,
+            bounds: Changing::new(b.clone()),
             handler: Arc::new(Mutex::new(Box::new(handler))),
             should_render_fn: Arc::new(Mutex::new(Box::new((|_, _| false)))),
             hovering: false,
@@ -54,8 +52,7 @@ impl Element {
             children,
             draggable,
             scrollable: false,
-            scroll: (0.0, 0.0),
-            last_scroll: (0.0, 0.0),
+            scroll: Changing::new((0.0, 0.0)),
             dragging: (false, Vec2::new(0.0, 0.0)),
             has_rendered: false,
             animations: AnimationRegistry::new(),
@@ -75,7 +72,7 @@ impl Element {
                     Event::Render(pass) => {
                         match pass {
                             RenderPass::Main => {
-                                let (width, height) = fr.draw_string_inst((size, &text_c, color), el.bounds.top_left());
+                                let (width, height) = fr.draw_string((size, &text_c, color), el.bounds.current().top_left());
                                 el.bounds().set_width(width);
                                 el.bounds().set_height(height);
                             }
@@ -91,16 +88,16 @@ impl Element {
         builder.build()
     }
     pub fn set_bounds(&mut self, bounds: Bounds) {
-        self.bounds = bounds;
+        self.bounds.set(bounds);
     }
     pub fn bounds(&mut self) -> &mut Bounds {
-        &mut self.bounds
+        self.bounds.current()
     }
     pub fn hovering(&self) -> bool {
         self.hovering
     }
-    pub fn scroll(&self) -> (f32, f32) {
-        self.scroll
+    pub fn scroll(&mut self) -> &mut Changing<(f32, f32)> {
+        &mut self.scroll
     }
 }
 
@@ -127,8 +124,8 @@ impl UIHandler for Element {
             }
             Event::PostRender => {
                 self.has_rendered = true;
-                self.last_bounds = self.bounds.clone();
-                self.last_scroll = self.scroll();
+                self.scroll().update();
+                self.bounds.update();
             }
             _ => {}
         }
@@ -138,7 +135,7 @@ impl UIHandler for Element {
         (h.lock().unwrap())(self, event);
 
         // Translate child positions, which also offsets mouse correctly
-        context().renderer().stack().push(State::Translate(self.bounds.x(), self.bounds.y()));
+        context().renderer().stack().push(State::Translate(self.bounds().x(), self.bounds().y()));
         for c in &mut self.children {
             match event {
                 Event::PostRender => {
@@ -169,7 +166,7 @@ impl UIHandler for Element {
                             } else { false },
                         Action::Press => {
                             if self.hovering && self.draggable {
-                                self.dragging = (true, mouse.pos().clone() - self.bounds.pos());
+                                self.dragging = (true, mouse.pos().clone() - self.bounds().pos());
                                 true
                             } else { false }
                         },
@@ -179,9 +176,11 @@ impl UIHandler for Element {
             },
             Event::Scroll(x, y) => {
                 if self.hovering {
-                    self.scroll.0 += *x;
-                    self.scroll.1 += *y;
-                    println!("{:?}", self.scroll);
+                    let mut updated = *self.scroll.current();
+                    updated.0 += *x;
+                    updated.1 += *y;
+                    self.scroll().set(updated);
+
                     true
                 } else {
                     false
@@ -194,7 +193,7 @@ impl UIHandler for Element {
 
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        if !self.has_rendered || self.bounds != self.last_bounds || self.last_scroll != self.scroll  {
+        if !self.has_rendered || self.bounds.changed() || self.scroll.changed()  {
             return true;
         }
 
@@ -250,7 +249,7 @@ impl ElementBuilder {
     pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); self }
     pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); self }
     pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self { self.element.children.push(Box::new(child)); self }
-    pub fn bounds(mut self, bounds: Bounds) -> Self { self.element.bounds = bounds; self }
+    pub fn bounds(mut self, bounds: Bounds) -> Self { self.element.bounds.set(bounds); self }
     pub fn draggable(mut self, draggable: bool) -> Self { self.element.draggable = draggable; self }
     pub fn scrollable(mut self, scrollable: bool) -> Self { self.element.scrollable = scrollable; self }
     pub fn animations(&mut self) -> &mut AnimationRegistry { &mut self.element.animations }
