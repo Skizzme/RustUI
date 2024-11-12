@@ -41,7 +41,7 @@ impl FontManager {
                 *frames_elapsed += 1;
             }
         }
-        println!("CACHED {} REMOVE {}", self.cached_inst.len(), remove.len());
+
         remove.iter().for_each(|key| unsafe {
             let (vao, _, _, _) = self.cached_inst.remove(&key).unwrap();
             vao.delete();

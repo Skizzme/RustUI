@@ -1,5 +1,6 @@
 use std::hash;
 use std::hash::{Hash, Hasher};
+use std::time::Instant;
 
 use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES};
 
@@ -12,7 +13,7 @@ use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl11::{FALSE, Scaled, Scalef};
+use crate::gl_binds::gl11::{FALSE, Finish, Scaled, Scalef};
 use crate::gl_binds::gl11::types::{GLsizei, GLuint};
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix};
 use crate::gl_binds::gl41::DrawArraysInstanced;
@@ -85,7 +86,7 @@ impl FontRenderer {
         if !map.contains_key(&hashed) {
             let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
-            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(formatted_text.color_count());
+            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(len);
             let (x, y) = pos.into().xy();
 
             self.x = x;
@@ -103,24 +104,7 @@ impl FontRenderer {
             self.comb_scale_x = 1.0;
             self.comb_scale_y = 1.0;
 
-            // println!("fr {} {} {}", self.scaled_factor_x, self.comb_scale_x, self.scale);
-            // PushMatrix();
-
             self.line_width = 0f32;
-
-            let atlas = self.font().atlas_tex.as_ref().unwrap();
-            atlas.bind();
-            // was 0.25 / ... but .35 seems better?
-            //(0.30 / (size / 9.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.4) // original smoothing
-            // let smoothing = (0.35 / (size / 6.0 *self.scaled_factor_x.max(self.scaled_factor_y)) * FONT_RES as f32 / 64.0).clamp(0.0, 0.25);
-
-
-            PushMatrix();
-            context().renderer().stack().begin();
-            context().renderer().stack().push(Blend(true));
-            context().renderer().stack().push(Texture2D(true));
-
-            context().fonts().sdf_shader.bind();
 
             for item in formatted_text.items() {
                 match item {
@@ -129,7 +113,7 @@ impl FontRenderer {
                         current_color = v.clone();
                     }
                     FormatItem::Size(size) => {
-                        Scalef(1.0 / self.scale, 1.0 / self.scale, 1.0); // unscale the current scaling
+                        // Scalef(1.0 / self.scale, 1.0 / self.scale, 1.0); // unscale the current scaling
 
                         let matrix: [f64; 16] = context().renderer().get_transform_matrix();
                         let scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
@@ -147,7 +131,7 @@ impl FontRenderer {
                         self.comb_scale_x = scaled_factor_x * self.scale;
                         self.comb_scale_y = scaled_factor_y * self.scale;
 
-                        Scaled(self.scale as f64, self.scale as f64, 1.0);
+                        // Scaled(self.scale as f64, self.scale as f64, 1.0);
                     }
                     FormatItem::Offset(_) => {}
                     FormatItem::Text(string) => {
@@ -203,15 +187,16 @@ impl FontRenderer {
                     }
                 }
             }
-            PopMatrix();
-            context().renderer().stack().end();
-            self.end();
+            // PopMatrix();
+            // context().renderer().stack().end();
+            // self.end();
 
             let shader = &context().fonts().sdf_shader;
             let mut vao = VertexArray::new();
             vao.bind();
 
             let mut dims_buf = Buffer::new(ARRAY_BUFFER);
+            let (len, cap) = (dims.len(), dims.capacity());
             dims_buf.set_values(dims);
             dims_buf.attribPointer(shader.get_attrib_location("dims") as GLuint, 4, FLOAT, FALSE, 1);
 
@@ -263,7 +248,7 @@ impl FontRenderer {
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));
-        context().fonts().sdf_shader.bind();
+        self.bind_shader();
         // self.set_color(color);
         let atlas = self.font().atlas_tex.as_ref().unwrap();
 
@@ -291,6 +276,11 @@ impl FontRenderer {
             ScaleMode::Normal => (value * scale_factor) / scale_factor,
             ScaleMode::Quality => (value * scale_factor).ceil() / scale_factor
         }
+    }
+
+    unsafe fn bind_shader(&self) {
+        context().fonts().sdf_shader.bind();
+        context().fonts().sdf_shader.u_put_float("u_res", vec![FONT_RES as f32]);
     }
 
     /// Returns the necessary dimensions of a glyph / character
