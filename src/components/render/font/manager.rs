@@ -12,7 +12,6 @@ pub struct FontManager {
     cache_location: String,
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     pub(crate) sdf_shader: Shader,
-    pub(crate) sdf_shader_i: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
     pub cached_inst: HashMap<u64, (VertexArray, f32, f32, u32)>,
 }
@@ -21,14 +20,12 @@ impl FontManager {
     pub unsafe fn new(cache_location: impl ToString) -> Self {
         let st = Instant::now();
         let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
-        let s_instanced = Shader::new(asset_manager::file_contents_str("shaders/sdf_instanced/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf_instanced/fragment.glsl").unwrap());
         println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
             cache_location: cache_location.to_string(),
             mem_atlas_cache: HashMap::new(),
             sdf_shader: s,
-            sdf_shader_i: s_instanced,
             font_byte_library: HashMap::new(),
             cached_inst: HashMap::new(),
         }

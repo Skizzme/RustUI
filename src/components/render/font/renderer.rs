@@ -124,7 +124,7 @@ impl FontRenderer {
             context().renderer().stack().push(Blend(true));
             context().renderer().stack().push(Texture2D(true));
 
-            context().fonts().sdf_shader_i.bind();
+            context().fonts().sdf_shader.bind();
 
             for item in formatted_text.items() {
                 match item {
@@ -212,24 +212,25 @@ impl FontRenderer {
             context().renderer().stack().end();
             self.end();
 
+            let shader = &context().fonts().sdf_shader;
             let mut vao = VertexArray::new();
             vao.bind();
 
             let mut dims_buf = Buffer::new(ARRAY_BUFFER);
             dims_buf.set_values(dims);
-            dims_buf.attribPointer(context().fonts().sdf_shader_i.get_attrib_location("dims") as GLuint, 4, FLOAT, FALSE, 1);
+            dims_buf.attribPointer(shader.get_attrib_location("dims") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut uvs_buf = Buffer::new(ARRAY_BUFFER);
             uvs_buf.set_values(uvs);
-            uvs_buf.attribPointer(context().fonts().sdf_shader_i.get_attrib_location("uvs") as GLuint, 4, FLOAT, FALSE, 1);
+            uvs_buf.attribPointer(shader.get_attrib_location("uvs") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut color = Buffer::new(ARRAY_BUFFER);
             color.set_values(colors);
-            color.attribPointer(context().fonts().sdf_shader_i.get_attrib_location("color") as GLuint, 4, FLOAT, FALSE, 1);
+            color.attribPointer(shader.get_attrib_location("color") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut t_buf = Buffer::new(ARRAY_BUFFER);
             t_buf.set_values(vec![0f32, 1f32, 2f32, 0f32, 2f32, 3f32]);
-            t_buf.attribPointer(context().fonts().sdf_shader_i.get_attrib_location("ind") as GLuint, 1, FLOAT, FALSE, 0);
+            t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, FLOAT, FALSE, 0);
 
             // Unbind VAO
             VertexArray::unbind();
@@ -267,7 +268,7 @@ impl FontRenderer {
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));
-        context().fonts().sdf_shader_i.bind();
+        context().fonts().sdf_shader.bind();
         // self.set_color(color);
         let atlas = self.font().atlas_tex.as_ref().unwrap();
 

@@ -194,7 +194,7 @@ impl Formatter for DefaultFormatter {
                 self.finish();
 
                 break;
-            } else {c
+            } else {
                 // TODO figure out the damn macros
                 match &mut self.current {
                     Text(ref mut text) => {
