@@ -1,4 +1,5 @@
 use std::hash::{Hash, Hasher};
+
 use crate::gl_binds::gl30::Color4f;
 
 /// A struct to convert a color to all necessary forms
@@ -102,7 +103,7 @@ impl Color {
         self
     }
 
-    pub fn mult_rgb(mut self, mult: f32) -> Color {
+    pub fn mult_rgb(self, mult: f32) -> Color {
         Color {
             red: self.red * mult,
             green: self.green * mult,

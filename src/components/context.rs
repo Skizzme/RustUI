@@ -1,12 +1,9 @@
-use std::ptr::addr_of_mut;
 use std::thread;
 use std::time::{Duration, Instant};
 
 use gl::types::*;
 use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
-use image::open;
 
-use crate::components::bounds::Bounds;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::framework::Framework;
 use crate::components::render::font::manager::FontManager;
@@ -18,10 +15,11 @@ use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::{gl11, gl20, gl30, gl41};
 use crate::gl_binds::gl11::*;
-use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0, TEXTURE1, TEXTURE16, TEXTURE2};
+use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0};
 
 static mut CONTEXT: Option<UIContext> = None;
 
+#[allow(static_mut_refs)]
 pub unsafe fn context() -> &'static mut UIContext {
     match &mut CONTEXT {
         None => panic!("context was requested by was never created"),
@@ -61,7 +59,7 @@ impl UIContext {
         gl20::load_with(|f_name| glfw.get_proc_address_raw(f_name));
         gl::load_with(|f_name| glfw.get_proc_address_raw(f_name));
 
-        let mut fb_manager = FramebufferManager::new();
+        let fb_manager = FramebufferManager::new();
         CONTEXT = Some(UIContext {
             glfw,
             p_window,
@@ -73,7 +71,7 @@ impl UIContext {
             window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
             font_manager: FontManager::new(""),
-            framework: Framework::new(&mut fb_manager, builder.width, builder.height),
+            framework: Framework::new(),
             fb_manager,
             close_requested: false,
         });
@@ -117,9 +115,8 @@ impl UIContext {
     pub unsafe fn render(&mut self) {
         self.pre_render();
         Finish();
-        let st = Instant::now();
+
         PushMatrix();
-        // Scalef(self.content_scale.0, self.content_scale.1, 1.0);
         self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
         context().window().mouse.pos /= (self.content_scale.0, self.content_scale.1);
 
@@ -141,7 +138,7 @@ impl UIContext {
                         if self.renderer.blur_fb ==  0{
                             self.renderer.blur_fb = self.fb_manager.create_fb(RGBA).unwrap();
                         }
-                        let main_tex = self.main_fb().texture_id();
+
                         let (mut parent_fb_2, mut parent_tex_2) = (0, 0);
                         {
                             let blur_fb = self.fb_manager.fb(self.renderer.blur_fb);
@@ -285,11 +282,11 @@ impl UIContext {
                         WindowEvent::Scroll(x, y) => {
                             self.framework.event(Event::Scroll((*x) as f32, (*y) as f32))
                         }
-                        WindowEvent::CursorPos(x, y) => {
+                        WindowEvent::CursorPos(_, _) => {
                             self.framework.event(Event::PreRender);
                         }
                         WindowEvent::Close => self.close_requested = true,
-                        WindowEvent::MouseButton(button, action, mods) => {
+                        WindowEvent::MouseButton(button, action, _) => {
                             self.framework.event(Event::MouseClick(*button, *action))
                         }
                         WindowEvent::ContentScale(x, y) => {
@@ -299,8 +296,6 @@ impl UIContext {
                         }
                         WindowEvent::FileDrop(fl) => {
                             println!("{:?}", fl);
-                        }
-                        WindowEvent::FramebufferSize(width, height) => {
                         }
                         _ => {}
                     }

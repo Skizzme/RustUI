@@ -1,5 +1,6 @@
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, DivAssign, MulAssign, Sub};
+
 use crate::components::bounds::Bounds;
 
 #[derive(Clone, Debug, Copy,)]

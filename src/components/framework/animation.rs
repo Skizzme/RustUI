@@ -2,9 +2,10 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::rc::Rc;
+
 use rand::random;
+
 use crate::components::context::context;
-use crate::components::framework::element::Element;
 
 /// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
 pub enum AnimationType {
@@ -72,7 +73,7 @@ impl Animation {
         }
     }
 
-    pub unsafe fn animate(&mut self, target: f32, mut speed: f32, animation_type: AnimationType) -> f32 {
+    pub unsafe fn animate(&mut self, target: f32, speed: f32, animation_type: AnimationType) -> f32 {
         if self.target != target {
             self.target = target;
             self.starting = self.value;

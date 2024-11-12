@@ -1,17 +1,14 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::ops::Deref;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use glfw::ffi::MOUSE_BUTTON_1;
+
 use glfw::{Action, MouseButton};
+
 use crate::components::bounds::Bounds;
 use crate::components::context::context;
-use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationRegTrait};
+use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::changing::Changing;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::position::Vec2;
-use crate::components::render::color::{Color, ToColor};
+use crate::components::render::color::ToColor;
 use crate::components::render::font::renderer::FontRenderer;
 use crate::components::render::stack::State;
 
@@ -46,7 +43,7 @@ impl Element {
         Element {
             bounds: Changing::new(b.clone()),
             handler: Arc::new(Mutex::new(Box::new(handler))),
-            should_render_fn: Arc::new(Mutex::new(Box::new((|_, _| false)))),
+            should_render_fn: Arc::new(Mutex::new(Box::new(|_, _| false))),
             hovering: false,
             dyn_child: Arc::new(Mutex::new(Box::new(dyn_children))),
             children,
@@ -63,9 +60,8 @@ impl Element {
         let text = text.to_string();
         let color = color.to_color();
 
-        let pos_c = pos.clone();
         let text_c = text.clone();
-        let mut builder = ElementBuilder::new()
+        let builder = ElementBuilder::new()
             .bounds(Bounds::xywh(pos.x, pos.y, 0.0, 0.0))
             .handler(move |el, event| unsafe {
                 match event {
@@ -116,12 +112,12 @@ impl UIHandler for Element {
                     handled = true;
                 }
             }
-            Event::Render(pass) => {
+            // Event::Render(pass) => {
                 // match pass {
                 //     RenderPass::Main => self.bounds().draw_bounds(0xffffffff),
                 //     _ => {}
                 // }
-            }
+            // }
             Event::PostRender => {
                 self.has_rendered = true;
                 self.scroll().update();
@@ -131,7 +127,7 @@ impl UIHandler for Element {
         }
 
         // Arc mutex so that can be called with self ref
-        let mut h = (self.handler.clone());
+        let h = self.handler.clone();
         (h.lock().unwrap())(self, event);
 
         // Translate child positions, which also offsets mouse correctly
@@ -151,7 +147,7 @@ impl UIHandler for Element {
                 return true;
             }
         }
-        let popped = context().renderer().stack().pop();
+        context().renderer().stack().pop();
         // println!("popped {:?}", popped);
 
         // After letting child elements take priority, check if interaction on this object occurred
@@ -197,7 +193,7 @@ impl UIHandler for Element {
             return true;
         }
 
-        let mut fn_ref = self.should_render_fn.clone();
+        let fn_ref = self.should_render_fn.clone();
         // println!("check call");
         if (fn_ref.lock().unwrap())(self, rp) {
             return true;

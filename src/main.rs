@@ -14,30 +14,19 @@
 //         .unwrap();
 // }
 
-use std::{fs, ptr};
-use std::os::raw::c_int;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
-use gl::{ActiveTexture, ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DrawElements, ELEMENT_ARRAY_BUFFER, GenBuffers, GenVertexArrays, STATIC_DRAW, TRIANGLES, UNSIGNED_INT, VertexArrayElementBuffer, VertexArrayVertexBuffer};
-use gl::types::GLsizeiptr;
-use glfw::{Action, Cursor, ffi, MouseButton, StandardCursor, WindowHint, WindowMode};
-use image::open;
-use winapi::um::wincon::FreeConsole;
-use rand::{random, Rng, thread_rng};
-use RustUI::components::bounds::Bounds;
 
-use RustUI::components::context::{context, ContextBuilder, UIContext};
-use RustUI::components::framework::element::{Element, ElementBuilder, UIHandler};
+use glfw::{Action, WindowHint};
+use winapi::um::wincon::FreeConsole;
+
+use RustUI::components::bounds::Bounds;
+use RustUI::components::context::{context, ContextBuilder};
+use RustUI::components::framework::element::{ElementBuilder};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
 use RustUI::components::position::Vec2;
 use RustUI::components::render::font::renderer::{FontRenderer, ScaleMode};
-use RustUI::components::wrapper::shader::Shader;
-use RustUI::components::wrapper::texture::Texture;
-use RustUI::gl_binds::gl11::{BLEND, EnableClientState, Finish, FLOAT, RGBA, TexCoordPointer, TEXTURE_COORD_ARRAY, VERTEX_ARRAY, VertexPointer};
-use RustUI::gl_binds::gl20::{EnableVertexAttribArray, FALSE, TEXTURE0, TEXTURE_2D, TEXTURE_COORD_ARRAY_BUFFER_BINDING, VertexAttribPointer};
-use RustUI::gl_binds::gl30::Enable;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -70,7 +59,7 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let mut t = include_str!("../test.js").to_string();
+        let t = include_str!("../test.js").to_string();
         TestScreen {
             text: t,
             fr: context().fonts().renderer("main").scale_mode(ScaleMode::Quality),
@@ -108,7 +97,7 @@ impl ScreenTrait for TestScreen {
         let mut layer_0 = Layer::new();
         let tex_cl1 = self.previous_tex.clone();
         let tex_cl2 = self.previous_tex.clone();
-        let mut el_1 = ElementBuilder::new()
+        let el_1 = ElementBuilder::new()
             .bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0))
             .draggable(true)
             .handler(move |el, event| {
@@ -122,7 +111,7 @@ impl ScreenTrait for TestScreen {
                         let (width, height) = context().fonts().renderer("main").draw_string((context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{:?}", mouse.pos()), 0xffffffff), el.bounds());
                         el.bounds().set_width(width);
                         el.bounds().set_height(height);
-                        let hovering = el.hovering();
+                        // let hovering = el.hovering();
                         // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                         *tex_cl1.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
@@ -141,14 +130,14 @@ impl ScreenTrait for TestScreen {
                 }
             });
 
-        let mut el_1_c = ElementBuilder::new()
+        let el_1_c = ElementBuilder::new()
             .bounds(Bounds::xywh(0.0, 0.0, 40.0, 40.0))
             .draggable(false)
             .handler(|el, event| {
                 match event {
                     Event::Render(pass) => {
                         // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
-                        let hovering = el.hovering();
+                        // let hovering = el.hovering();
                         if pass == &RenderPass::Bloom {
                             let mut shrunk = el.bounds().clone();
                             shrunk.expand(-10.0);
@@ -157,7 +146,7 @@ impl ScreenTrait for TestScreen {
                             // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
                         }
                     },
-                    Event::MouseClick(button, action) => {
+                    Event::MouseClick(_, action) => {
                         if el.hovering() && *action == Action::Press {
                             let v = !context().p_window().uses_raw_mouse_motion();
                             println!("change {}", v);

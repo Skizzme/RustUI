@@ -1,37 +1,20 @@
-pub mod format;
-pub mod manager;
-pub mod renderer;
-
 extern crate freetype;
 
 use std::cmp::Ordering;
 use std::cmp::Ordering::{Equal, Greater, Less};
-use std::collections::HashMap;
 use std::io::Write;
-use std::path::Path;
-use std::{hash, ptr};
-use std::hash::{Hash, Hasher};
 use std::sync::mpsc::channel;
-use std::time::Instant;
 
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
 use gl::*;
-use gl::types::{GLdouble, GLsizeiptr};
 
-use crate::asset_manager;
-use crate::components::bounds::Bounds;
-use crate::components::context::context;
-use crate::components::position::Vec2;
-use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::renderer::Glyph;
-use crate::components::render::stack::State::{Blend, Texture2D};
-use crate::components::wrapper::buffer::{Buffer, VertexArray};
-use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl11::{EnableClientState, Scalef, TexCoordPointer, TEXTURE_COORD_ARRAY, VertexPointer};
-use crate::gl_binds::gl11::types::{GLsizei, GLuint};
-use crate::gl_binds::gl30::{PopMatrix, PushMatrix, Scaled};
+
+pub mod format;
+pub mod manager;
+pub mod renderer;
 
 const FONT_RES: u32 = 48u32;
 
@@ -76,10 +59,6 @@ impl Ord for CacheGlyph {
         } else {
             other
         }
-    }
-
-    fn clamp(self, min: Self, max: Self) -> Self where Self: Sized, Self: PartialOrd {
-        todo!()
     }
 }
 

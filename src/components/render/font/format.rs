@@ -1,5 +1,7 @@
 use std::hash::{Hash, Hasher};
-use num_traits::{Num, NumCast};
+
+use num_traits::{NumCast};
+
 use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::format::FormatItem::{Offset, Size, Text};
@@ -185,7 +187,7 @@ impl Formatter for DefaultFormatter {
                 self.finish(); // finish the possible previous token
                 self.next();
                 let mut color = String::new();
-                for i in 0..8 {
+                for _ in 0..8 {
                     color.push(self.char);
                     self.next();
                 }

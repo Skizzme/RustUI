@@ -1,13 +1,10 @@
 use std::collections::HashMap;
-use std::ops::{AddAssign, DivAssign, MulAssign};
 
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
-use crate::components::context::context;
-use crate::components::position::Vec2;
-use crate::gl_binds::gl11::{Scalef, Translatef};
 
-use crate::gl_binds::gl11::types::{GLdouble, GLenum};
-use crate::gl_binds::gl20::Translated;
+use crate::components::context::context;
+use crate::gl_binds::gl11::{Scalef, Translatef};
+use crate::gl_binds::gl11::types::GLenum;
 
 unsafe fn enable_disable(state: GLenum, value: bool) {
     match value {
@@ -162,7 +159,7 @@ impl Stack {
             self.current.insert(id, state.clone());
             state.apply();
         } else {
-            let current = self.current.get(&id).unwrap();
+            // let current = self.current.get(&id).unwrap();
             // TODO state checks properly
             // if !current.state.same(&state.state) && current.level <= state.level {
                 state.apply();
@@ -177,7 +174,7 @@ impl Stack {
         match self.markers.last() {
             Some(index) => {
                 // println!("end mark {} {}", index, self.stack.len());
-                for i in 0..(self.stack.len()-index) {
+                for _ in 0..(self.stack.len()-index) {
                     self.pop();
                 }
                 // for i in self.stack.len()..=*index {

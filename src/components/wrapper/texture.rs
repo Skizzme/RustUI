@@ -1,13 +1,5 @@
-use std::mem::size_of_val;
-use std::ptr;
-
 use gl::*;
 use gl::types::*;
-
-use crate::components::context::context;
-use crate::components::wrapper::shader::Shader;
-use crate::gl_binds::gl11::{EnableClientState, TexCoordPointer, TEXTURE_COORD_ARRAY, VertexPointer};
-use crate::gl_binds::gl30::Color4d;
 
 #[derive(Debug, Clone)]
 pub struct Texture {

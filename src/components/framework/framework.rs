@@ -1,20 +1,13 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use std::time::Instant;
-use glfw::WindowEvent;
-use crate::components::bounds::Bounds;
+
 use crate::components::context::context;
-use crate::components::framework::element::{Element, UIHandler};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::layer::Layer;
 use crate::components::framework::screen::{DefaultScreen, ScreenTrait};
-use crate::components::render::stack::State;
+use crate::components::framework::style::StyleRegistry;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
-use crate::gl_binds::gl11::{ALPHA, Enable, Finish, RGBA};
-use crate::gl_binds::gl30::{BindFramebuffer, FRAMEBUFFER};
-use crate::components::framework::animation::{Animation, AnimationRegistry};
-use crate::components::framework::style::{Style, StyleRegistry};
+use crate::gl_binds::gl11::RGBA;
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
@@ -28,7 +21,7 @@ pub struct Framework {
 }
 
 impl Framework {
-    pub unsafe fn new(fb_manager: &mut FramebufferManager, width: i32, height: i32,) -> Self {
+    pub unsafe fn new() -> Self {
         let mut fr = Framework {
             current_screen: Box::new(DefaultScreen::new()),
             screen_passes: HashMap::new(),

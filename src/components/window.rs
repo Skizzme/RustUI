@@ -1,6 +1,6 @@
 use glfw::WindowEvent;
-use crate::components::bounds::Bounds;
 
+use crate::components::bounds::Bounds;
 use crate::components::wrapper::mouse::Mouse;
 
 pub struct Window {

@@ -1,8 +1,9 @@
 use std::ptr;
-use gl::{ARRAY_BUFFER, BindBuffer, BindVertexArray, BufferData, DeleteBuffers, DYNAMIC_DRAW, ELEMENT_ARRAY_BUFFER, FLOAT, GenBuffers, GenVertexArrays};
+
+use gl::{BindBuffer, BindVertexArray, BufferData, DeleteBuffers, DYNAMIC_DRAW, GenBuffers, GenVertexArrays};
 use gl::types::GLsizeiptr;
-use crate::gl_binds::gl11::FALSE;
-use crate::gl_binds::gl11::types::{GLboolean, GLenum, GLint, GLsizei, GLuint};
+
+use crate::gl_binds::gl11::types::{GLboolean, GLenum, GLint, GLuint};
 use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
 use crate::gl_binds::gl30::DeleteVertexArrays;
 use crate::gl_binds::gl41::VertexAttribDivisor;

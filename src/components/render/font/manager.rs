@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::Instant;
+
 use crate::asset_manager;
 use crate::components::render::font::{Font, FONT_RES};
 use crate::components::render::font::renderer::FontRenderer;
@@ -33,7 +34,7 @@ impl FontManager {
 
     pub unsafe fn cleanup(&mut self) {
         let mut remove = vec![];
-        for (hash, (vao, width, height, frames_elapsed)) in &mut self.cached_inst {
+        for (hash, (_, _, _, frames_elapsed)) in &mut self.cached_inst {
             if *frames_elapsed > 10 {
                 remove.push(*hash);
             } else {
@@ -42,7 +43,7 @@ impl FontManager {
         }
         println!("CACHED {} REMOVE {}", self.cached_inst.len(), remove.len());
         remove.iter().for_each(|key| unsafe {
-            let (vao, width, height, _) = self.cached_inst.remove(&key).unwrap();
+            let (vao, _, _, _) = self.cached_inst.remove(&key).unwrap();
             vao.delete();
         });
     }

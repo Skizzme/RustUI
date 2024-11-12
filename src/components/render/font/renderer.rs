@@ -1,8 +1,8 @@
-use std::{hash, ptr};
+use std::hash;
 use std::hash::{Hash, Hasher};
-use std::time::Instant;
-use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, DrawElements, DrawElementsInstanced, ELEMENT_ARRAY_BUFFER, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES, UNSIGNED_INT, VERTEX_ARRAY};
-use crate::components::bounds::Bounds;
+
+use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES};
+
 use crate::components::context::context;
 use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
@@ -12,11 +12,10 @@ use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl11::{EnableClientState, FALSE, Scaled, Scalef, VertexPointer};
+use crate::gl_binds::gl11::{FALSE, Scaled, Scalef};
 use crate::gl_binds::gl11::types::{GLsizei, GLuint};
-use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
 use crate::gl_binds::gl30::{PopMatrix, PushMatrix};
-use crate::gl_binds::gl41::{DrawArraysInstanced, Finish, GetAttribLocation, VertexAttribDivisor};
+use crate::gl_binds::gl41::DrawArraysInstanced;
 
 /// The object used to render fonts
 ///
@@ -67,12 +66,12 @@ impl FontRenderer {
     /// Renders a string using immediate GL
     ///
     /// The center of the rendered string is at `x`
-    pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
+    // pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
         // let string = string.to_string();
         // let width = self.get_width(size, string.clone());
         // self.draw_string(size, string, (x-width/2.0, y), color)
-        (0.0, 0.0)
-    }
+        // (0.0, 0.0)
+    // }
 
     unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (u32, f32, f32) {
         let formatted_text = formatted_text.into();
@@ -82,7 +81,7 @@ impl FontRenderer {
 
         let hashed = hasher.finish();
 
-        let mut map = &mut context().fonts().cached_inst;
+        let map = &mut context().fonts().cached_inst;
         if !map.contains_key(&hashed) {
             let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
@@ -98,9 +97,6 @@ impl FontRenderer {
             let mut current_color = Color::from_u32(0);
             // println!("{} {} {}", self.get_line_height(), self.comb_scale_y, self.line_spacing);
             // Calculate vertices and uv coords for every char
-            let matrix: [f64; 16] = context().renderer().get_transform_matrix();
-            let mut scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
-            let mut scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
 
             self.scale = 1.0;
             self.i_scale = 1.0;
@@ -135,8 +131,9 @@ impl FontRenderer {
                     FormatItem::Size(size) => {
                         Scalef(1.0 / self.scale, 1.0 / self.scale, 1.0); // unscale the current scaling
 
-                        scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
-                        scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
+                        let matrix: [f64; 16] = context().renderer().get_transform_matrix();
+                        let scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
+                        let scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
 
                         self.scale = match self.scale_mode {
                             ScaleMode::Normal => {size / FONT_RES as f32 *  scaled_factor_x}
@@ -152,9 +149,8 @@ impl FontRenderer {
 
                         Scaled(self.scale as f64, self.scale as f64, 1.0);
                     }
-                    FormatItem::Offset(v) => {}
+                    FormatItem::Offset(_) => {}
                     FormatItem::Text(string) => {
-                        let mut i = 0;
                         for char in string.chars() {
                             if char == '\n' {
                                 match self.scale_mode {
@@ -170,7 +166,7 @@ impl FontRenderer {
                                 continue;
                             }
 
-                            let (c_w, _c_h, c_a, should_render) = self.get_dimensions(char);
+                            let (c_w, _c_h, _, _) = self.get_dimensions(char);
 
                             let glyph: &Glyph = match self.font().glyphs.get(char as usize) {
                                 None => {
@@ -203,7 +199,6 @@ impl FontRenderer {
 
                             self.x += c_w;
                             self.line_width += c_w;
-                            i+=1;
                         }
                     }
                 }

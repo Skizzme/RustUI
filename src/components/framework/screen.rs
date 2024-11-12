@@ -1,7 +1,3 @@
-use glfw::{Action, MouseButton};
-use crate::components::bounds::Bounds;
-use crate::components::context::context;
-use crate::components::framework::element::{Element, UIHandler};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::layer::Layer;
 
@@ -33,7 +29,7 @@ impl ScreenTrait for DefaultScreen {
         vec![]
     }
 
-    unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
+    unsafe fn should_render(&mut self, _: &RenderPass) -> bool {
         true
     }
 }

@@ -1,12 +1,9 @@
 use std::collections::HashMap;
 use std::ptr::null;
-use crate::components::bounds::Bounds;
-use crate::components::context;
+
 use crate::components::context::context;
-use crate::components::render::stack::State;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-
 use crate::gl_binds::gl30::*;
 use crate::gl_binds::gl30::types::{GLenum, GLint};
 
@@ -156,33 +153,9 @@ impl Framebuffer {
         context().renderer().draw_screen_rect_flipped();
         Shader::unbind();
         Enable(BLEND);
-
-        // BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
-        // BindFramebuffer(DRAW_FRAMEBUFFER, target_fb);
-        // BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
-        // BindFramebuffer(FRAMEBUFFER, target_fb);
     }
 
-    pub unsafe fn copy_raw(&self, target_fb: u32, target_tex: u32) {
-        // Disable(BLEND);
-        // BindFramebuffer(FRAMEBUFFER, target_fb);
-        //
-        // context().renderer().blend_shader.bind();
-        // context().renderer().blend_shader.u_put_int("u_bottom_tex", vec![2]);
-        // context().renderer().blend_shader.u_put_int("u_top_tex", vec![1]);
-        //
-        // ActiveTexture(TEXTURE2);
-        // BindTexture(TEXTURE_2D, target_tex);
-        //
-        // ActiveTexture(TEXTURE1);
-        // BindTexture(TEXTURE_2D, self.texture_id);
-        //
-        // ActiveTexture(TEXTURE0);
-        // Texture::unbind();
-        // context().renderer().draw_screen_rect_flipped();
-        // Shader::unbind();
-        // Enable(BLEND);
-
+    pub unsafe fn copy_raw(&self, target_fb: u32) {
         BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
         BindFramebuffer(DRAW_FRAMEBUFFER, target_fb);
         BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
@@ -195,10 +168,6 @@ impl Framebuffer {
         BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
         BindFramebuffer(FRAMEBUFFER, self.framebuffer_id);
     }
-
-    // pub unsafe fn copy_to_parent(&self) {
-    //     self.copy(self.parent_framebuffer as u32);
-    // }
 
     pub unsafe fn delete(&self) {
         DeleteFramebuffers(1, &self.framebuffer_id);
