@@ -26,10 +26,10 @@ use crate::gl_binds::gl41::DrawArraysInstanced;
 pub struct FontRenderer {
     pub font: String,
     pub wrapping: Wrapping,
-    pub scale_mode: ScaleMode,
     pub tab_length: u32, // The length of tabs in spaces. Default is 4
     pub line_spacing: f32,
     pub line_width: f32,
+    pub alignment: (AlignmentH, AlignmentV),
 
     scale: f32,
     i_scale: f32,
@@ -45,10 +45,10 @@ impl FontRenderer {
         FontRenderer {
             font,
             tab_length: 4,
-            line_spacing: 20.0,
+            line_spacing: 1.5,
             wrapping: Wrapping::None,
-            scale_mode: ScaleMode::Normal,
             line_width: 0.0,
+            alignment: (AlignmentH::Left, AlignmentV::Top),
             scale: 0.0,
             i_scale: 0.0,
             x: 0.0,
@@ -57,11 +57,6 @@ impl FontRenderer {
             comb_scale_x: 0.0,
             comb_scale_y: 0.0,
         }
-    }
-
-    pub unsafe fn set_color(&mut self, color: impl ToColor) {
-        let color = color.to_color();
-        context().fonts().sdf_shader.u_put_float("u_color", color.rgba().to_vec());
     }
 
     /// Renders a string using immediate GL
@@ -96,7 +91,7 @@ impl FontRenderer {
             // Apply appropriate scale to the vertices etc for correct rendering
 
             let mut current_color = Color::from_u32(0);
-            // println!("{} {} {}", self.get_line_height(), self.comb_scale_y, self.line_spacing);
+
             // Calculate vertices and uv coords for every char
 
             self.scale = 1.0;
@@ -119,10 +114,7 @@ impl FontRenderer {
                         let scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
                         let scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
 
-                        self.scale = match self.scale_mode {
-                            ScaleMode::Normal => {size / FONT_RES as f32 *  scaled_factor_x}
-                            ScaleMode::Quality => {size.ceil()/FONT_RES as f32 *  scaled_factor_x}
-                        };
+                        self.scale = size / FONT_RES as f32 *  scaled_factor_x;
                         self.i_scale = 1.0/ self.scale;
 
                         // self.x = x * self.i_scale;
@@ -137,14 +129,7 @@ impl FontRenderer {
                     FormatItem::Text(string) => {
                         for char in string.chars() {
                             if char == '\n' {
-                                match self.scale_mode {
-                                    ScaleMode::Normal => {
-                                        self.y += self.get_line_height() * self.scale;
-                                    }
-                                    ScaleMode::Quality => {
-                                        self.y += self.get_scaled_value(self.get_line_height(), self.comb_scale_y) * self.scale;
-                                    }
-                                }
+                                self.y += self.get_line_height() * self.scale;
                                 self.line_width = 0.0;
                                 self.x = self.start_x;
                                 continue;
@@ -164,14 +149,8 @@ impl FontRenderer {
                             };
                             let pos_y = self.y + (self.get_height() - glyph.top as f32) * self.scale;
 
-                            let (right, bottom) = match self.scale_mode {
-                                ScaleMode::Normal => {
-                                    (self.x+glyph.width as f32 * self.scale, pos_y+glyph.height as f32 * self.scale)
-                                }
-                                ScaleMode::Quality => {
-                                    (self.get_scaled_value(self.x+glyph.width as f32 * self.scale, self.comb_scale_x), self.get_scaled_value(pos_y+glyph.height as f32 * self.scale, self.comb_scale_y))
-                                }
-                            };
+                            let (right, bottom) = (self.x+glyph.width as f32 * self.scale, pos_y+glyph.height as f32 * self.scale);
+
                             let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x as f32 * self.scale, pos_y, right, bottom);
                             let atlas = self.font().atlas_tex.as_ref().unwrap();
                             let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
@@ -187,9 +166,6 @@ impl FontRenderer {
                     }
                 }
             }
-            // PopMatrix();
-            // context().renderer().stack().end();
-            // self.end();
 
             let shader = &context().fonts().sdf_shader;
             let mut vao = VertexArray::new();
@@ -249,7 +225,6 @@ impl FontRenderer {
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));
         self.bind_shader();
-        // self.set_color(color);
         let atlas = self.font().atlas_tex.as_ref().unwrap();
 
         ActiveTexture(TEXTURE0);
@@ -268,14 +243,6 @@ impl FontRenderer {
         self.end();
         (width, height)
         // (0f32, 0f32)
-    }
-
-    // todo make this match scale mode
-    pub fn get_scaled_value(&self, value: f32, scale_factor: f32) -> f32 {
-        match self.scale_mode {
-            ScaleMode::Normal => (value * scale_factor) / scale_factor,
-            ScaleMode::Quality => (value * scale_factor).ceil() / scale_factor
-        }
     }
 
     unsafe fn bind_shader(&self) {
@@ -313,10 +280,7 @@ impl FontRenderer {
             }
         };
 
-        let (c_w, c_h, c_a) = match self.scale_mode {
-            ScaleMode::Normal => ((glyph.advance - glyph.bearing_x) as f32 * self.scale, glyph.height as f32 * self.scale, glyph.advance as f32 * self.scale),
-            ScaleMode::Quality => (((glyph.advance - glyph.bearing_x) as f32 * self.scale).ceil(), (glyph.height as f32 * self.scale).ceil(), (glyph.advance as f32 * self.scale).ceil())
-        };
+        let (c_w, c_h, c_a) = ((glyph.advance - glyph.bearing_x) as f32 * self.scale, glyph.height as f32 * self.scale, glyph.advance as f32 * self.scale);
         let mut should_render = 0u32;
         if self.y > context().window().width as f32 * self.i_scale {
             should_render = 2;
@@ -359,7 +323,7 @@ impl FontRenderer {
     }
 
     pub unsafe fn get_line_height(&self) -> f32 {
-        self.get_height() + (self.line_spacing)
+        self.get_height() * (self.line_spacing)
     }
 
     pub fn line_spacing(mut self, spacing: f32) -> Self {
@@ -372,13 +336,13 @@ impl FontRenderer {
         self
     }
 
-    unsafe fn font(&self) -> &Font {
-        context().fonts().fonts.get(&self.font).unwrap()
+    pub fn alignment(mut self, alignment: (AlignmentH, AlignmentV)) -> Self {
+        self.alignment = alignment;
+        self
     }
 
-    pub fn scale_mode(mut self, scale_mode: ScaleMode) -> Self {
-        self.scale_mode = scale_mode;
-        self
+    unsafe fn font(&self) -> &Font {
+        context().fonts().fonts.get(&self.font).unwrap()
     }
 }
 
@@ -396,15 +360,6 @@ pub enum Wrapping {
     SoftHard(f32),
 }
 
-/// To choose between smooth scaling (for animations),
-/// or to preserve quality / readability for small text
-pub enum ScaleMode {
-    /// No correction, and can be hard to read when scaled far below the normal size. Around size 8
-    Normal,
-    /// Forces the characters to stay aligned with pixels, and preserves readability at much smaller font sizes
-    Quality,
-}
-
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Glyph {
     pub atlas_x: i32,
@@ -413,4 +368,18 @@ pub struct Glyph {
     pub advance: i32,
     pub bearing_x: i32,
     pub top: i32,
+}
+
+pub enum AlignmentH {
+    Left, // 0.0
+    Middle, // 0.5
+    Right, // 1.0
+    Custom(f32)
+}
+
+pub enum AlignmentV {
+    Top, // 0.0
+    Middle, // 0.5
+    Bottom, // 1.0
+    Custom(f32),
 }

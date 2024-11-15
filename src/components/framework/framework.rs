@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 
 use crate::components::context::context;
+use crate::components::framework::animation::{Animation, AnimationRegistry};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::layer::Layer;
 use crate::components::framework::screen::{DefaultScreen, ScreenTrait};
@@ -11,6 +12,7 @@ use crate::gl_binds::gl11::RGBA;
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
+    screen_animations: AnimationRegistry,
     screen_passes: HashMap<RenderPass, u32>,
     element_passes: HashMap<RenderPass, u32>,
     layers: Vec<Layer>,
@@ -24,6 +26,7 @@ impl Framework {
     pub unsafe fn new() -> Self {
         let mut fr = Framework {
             current_screen: Box::new(DefaultScreen::new()),
+            screen_animations: AnimationRegistry::new(),
             screen_passes: HashMap::new(),
             element_passes: HashMap::new(),
             layers: vec![],
@@ -54,7 +57,7 @@ impl Framework {
     }
 
     pub unsafe fn should_render_pass(&mut self, render_pass: &RenderPass) -> bool {
-        if self.created_at_elapsed() || self.current_screen.should_render(render_pass) {
+        if self.created_at_elapsed() || self.current_screen.should_render(render_pass) || self.screen_animations.has_changed() {
             return true
         }
         for i in 0..self.layers.len() {
@@ -70,7 +73,7 @@ impl Framework {
     }
 
     pub unsafe fn should_render_all(&mut self) -> bool {
-        if self.created_at_elapsed() {
+        if self.created_at_elapsed() || self.screen_animations.has_changed() {
             return true
         }
         for rp in RenderPass::all() {
@@ -89,6 +92,7 @@ impl Framework {
     fn reset(&mut self) {
         self.layers = Vec::new();
         self.created_at = Instant::now();
+        self.screen_animations = AnimationRegistry::new();
     }
 
     pub fn current_screen(&mut self) -> &mut Box<dyn ScreenTrait> {
@@ -114,10 +118,12 @@ impl Framework {
             Event::PreRender => {
                 self.pre_delta = self.last_pre_render.elapsed().as_secs_f64() as f32;
                 self.last_pre_render = Instant::now();
+                self.current_screen.handle(&event);
             }
             Event::Render(pass) => {
                 let (parent_fb, parent_tex) = self.screen_pass_fb(pass).bind();
-                if self.current_screen.should_render(pass) || self.created_at_elapsed() {
+                println!("{}", self.screen_animations.has_changed());
+                if self.current_screen.should_render(pass) || self.created_at_elapsed() || self.screen_animations.has_changed() {
                     Framebuffer::clear_current();
                     // if parent != 0 {
                     //     context().fb_manager().fb(parent as u32).copy(fb.id());
@@ -172,10 +178,12 @@ impl Framework {
                 }
             }
         }
-        // match &event {
-        //     Event::PostRender => self.created_at_elapsed() = false,
-        //     _ => {}
-        // }
+        match &event {
+            Event::PostRender => {
+                self.screen_animations.post();
+            },
+            _ => {}
+        }
     }
 
     pub unsafe fn set_screen<S>(&mut self, screen: S) where S: ScreenTrait + 'static {
@@ -183,6 +191,11 @@ impl Framework {
         self.current_screen = Box::new(screen);
         self.layers = self.current_screen.init();
     }
+
+    pub fn screen_animations(&mut self) -> &mut AnimationRegistry {
+        &mut self.screen_animations
+    }
+
     pub fn pre_delta(&self) -> f32 {
         self.pre_delta
     }

@@ -21,7 +21,6 @@ impl FontManager {
     pub unsafe fn new(cache_location: impl ToString) -> Self {
         let st = Instant::now();
         let s = Shader::new(asset_manager::file_contents_str("shaders/sdf/vertex.glsl").unwrap(), asset_manager::file_contents_str("shaders/sdf/fragment.glsl").unwrap());
-        println!("{}", st.elapsed().as_secs_f32());
         FontManager {
             fonts: HashMap::new(),
             cache_location: cache_location.to_string(),

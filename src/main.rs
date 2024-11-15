@@ -14,19 +14,25 @@
 //         .unwrap();
 // }
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 use glfw::{Action, WindowHint};
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::bounds::Bounds;
 use RustUI::components::context::{context, ContextBuilder};
+use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
 use RustUI::components::framework::element::{ElementBuilder};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
 use RustUI::components::position::Vec2;
-use RustUI::components::render::font::renderer::{FontRenderer, ScaleMode};
+use RustUI::components::render::font::format::FormattedText;
+use RustUI::components::render::font::renderer::{FontRenderer};
+use RustUI::components::render::mask::FramebufferMask;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -54,18 +60,25 @@ pub struct TestScreen {
     fr: FontRenderer,
     previous_pos: Vec2,
     previous_tex: Arc<Mutex<String>>,
+    t_size: AnimationRef,
     last_fps: u32,
+    t_text: Arc<Mutex<FormattedText>>,
+    mask: FramebufferMask,
 }
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
         let t = include_str!("../test.js").to_string();
+        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         TestScreen {
             text: t,
-            fr: context().fonts().renderer("main").scale_mode(ScaleMode::Quality),
+            fr: context().fonts().renderer("main"),
             previous_pos: Vec2::new(0.0, 0.0),
             previous_tex: Arc::new(Mutex::new("".to_string())),
+            t_size: Rc::new(RefCell::new(Animation::new())),
             last_fps: 0,
+            t_text: Arc::new(Mutex::new(FormattedText::new())),
+            mask: FramebufferMask::new(),
         }
     }
 }
@@ -73,6 +86,14 @@ impl TestScreen {
 impl ScreenTrait for TestScreen {
     unsafe fn handle(&mut self, event: &Event) {
         match event {
+            Event::PreRender => {
+                self.t_size.borrow_mut().animate(4f32, AnimationType::Sin);
+            }
+            Event::Scroll(_, y) => {
+                let current = self.t_size.borrow().target();
+                self.t_size.borrow_mut().set_target(*y + current);
+                // println!("SCROLL {}", y);
+            }
             Event::Render(pass) => {
                 if pass != &RenderPass::Main {
                     return;
@@ -82,7 +103,13 @@ impl ScreenTrait for TestScreen {
                 self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
 
-                context().fonts().renderer("main").draw_string((44.0, &self.text, 0x90ffffff), (10.0, 10.0));
+                // self.mask.begin_mask();
+                // context().renderer().draw_circle(200.0, 200.0, 175.0, 0xffffffff);
+                // self.mask.end_mask();
+                // self.mask.begin_draw();
+                self.fr.draw_string((self.t_size.borrow().value() * 1f32, &self.text, 0x90ffffff), (10.0, 10.0));
+                // self.mask.end_draw();
+                // self.mask.render();
             }
             Event::PostRender => {
                 self.previous_pos = *context().window().mouse().pos();
@@ -94,21 +121,31 @@ impl ScreenTrait for TestScreen {
     }
 
     unsafe fn init(&mut self) -> Vec<Layer> {
+        context().framework().screen_animations().register(self.t_size.clone());
         let mut layer_0 = Layer::new();
         let tex_cl1 = self.previous_tex.clone();
         let tex_cl2 = self.previous_tex.clone();
+        let t_test_c = self.t_text.clone();
         let el_1 = ElementBuilder::new()
             .bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0))
             .draggable(true)
             .handler(move |el, event| {
                 match event {
+                    Event::MousePos(x, y) => {
+                        let st = Instant::now();
+                        let t = (context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{} {}", x, y), 0xffffffff).into();
+                        println!("calc {:?}", st.elapsed());
+                        *t_test_c.lock().unwrap() = t;
+                    }
                     Event::Render(pass) => {
                         if pass != &RenderPass::Main {
                             return;
                         }
                         let mouse = context().window().mouse();
                         // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
-                        let (width, height) = context().fonts().renderer("main").draw_string((context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{:?}", mouse.pos()), 0xffffffff), el.bounds());
+                        let st = Instant::now();
+                        let (width, height) = context().fonts().renderer("main").draw_string(t_test_c.lock().unwrap().clone(), el.bounds());
+                        println!("{:?}", st.elapsed());
                         el.bounds().set_width(width);
                         el.bounds().set_height(height);
                         // let hovering = el.hovering();
@@ -170,11 +207,12 @@ impl ScreenTrait for TestScreen {
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        if rp == &RenderPass::Main {
-            let res = self.last_fps != context().fps();
-            res
-        } else {
-            false
-        }
+        true
+        // if rp == &RenderPass::Main {
+        //     let res = self.last_fps != context().fps();
+        //     res
+        // } else {
+        //     false
+        // }
     }
 }

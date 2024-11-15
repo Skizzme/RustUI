@@ -73,19 +73,27 @@ impl Animation {
         }
     }
 
-    pub unsafe fn animate(&mut self, target: f32, speed: f32, animation_type: AnimationType) -> f32 {
+    pub unsafe fn animate_to(&mut self, target: f32, speed: f32, animation_type: AnimationType) -> f32 {
+        self.set_target(target);
+
+        self.animate(speed, animation_type)
+    }
+
+    pub unsafe fn animate(&mut self, speed: f32, animation: AnimationType) -> f32 {
+        self.state += speed * context().framework().pre_delta();
+        self.state = self.state.clamp(0.0, 1.0);
+
+        self.value = animation.get_value(self.state)*(self.target-self.starting)+self.starting;
+
+        self.value
+    }
+
+    pub unsafe fn set_target(&mut self, target: f32) {
         if self.target != target {
             self.target = target;
             self.starting = self.value;
             self.state = 0f32;
         }
-
-        self.state += speed * context().framework().pre_delta();
-        self.state = self.state.clamp(0.0, 1.0);
-
-        self.value = animation_type.get_value(self.state)*(self.target-self.starting)+self.starting;
-
-        self.value
     }
 
     pub(super) fn has_changed(&self) -> bool {

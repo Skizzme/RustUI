@@ -6,6 +6,7 @@ pub enum Event {
     Render(RenderPass),
     PostRender,
     MouseClick(MouseButton, Action),
+    MousePos(f32, f32),
     Scroll(f32, f32),
     Keyboard(Key, Action, Modifiers),
     Resize(f32, f32),

@@ -76,20 +76,19 @@ impl UIContext {
             close_requested: false,
         });
         context().framebuffer = context().fb_manager.create_fb(RGBA).unwrap();
-        context().fonts().set_font_bytes("main", include_bytes!("../assets/fonts/ProductSans.ttf").to_vec());
     }
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
             if !self.frame() {
-                thread::sleep(Duration::from_secs_f32(1.0/60.0));
+                // thread::sleep(Duration::from_secs_f32(1.0/60.0));
             }
 
-            if self.last_render.elapsed().as_secs_f32() > 1.0 {
-                thread::sleep(Duration::from_millis(50));
-            }
+            // if self.last_render.elapsed().as_secs_f32() > 1.0 {
+            //     thread::sleep(Duration::from_millis(50));
+            // }
             // Finish();
-            self.glfw.set_swap_interval(SwapInterval::Sync(1));
+            // self.glfw.set_swap_interval(SwapInterval::Sync(1));
         }
     }
 
@@ -100,10 +99,10 @@ impl UIContext {
 
         self.framework.event(Event::PreRender);
         let should_render = self.should_render();
-        if should_render {
+        // if should_render {
             self.render();
             self.last_render = Instant::now();
-        }
+        // }
         self.framework.event(Event::PostRender);
         should_render
     }
@@ -253,17 +252,17 @@ impl UIContext {
 
         Clear(COLOR_BUFFER_BIT);
         BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-        self.main_fb().bind();
+        self.framebuffer().bind();
         Framebuffer::clear_current();
         check_error("pre");
     }
 
     unsafe fn post_render(&mut self) {
         check_error("post");
-        self.main_fb().unbind();
-        self.main_fb().bind_texture();
+        self.framebuffer().unbind();
+        self.framebuffer().bind_texture();
         self.renderer.draw_screen_rect_flipped();
-        self.main_fb().unbind();
+        self.framebuffer().unbind();
 
         self.renderer.end_frame();
         self.p_window.swap_buffers(); }
@@ -282,8 +281,9 @@ impl UIContext {
                         WindowEvent::Scroll(x, y) => {
                             self.framework.event(Event::Scroll((*x) as f32, (*y) as f32))
                         }
-                        WindowEvent::CursorPos(_, _) => {
+                        WindowEvent::CursorPos(x, y) => {
                             self.framework.event(Event::PreRender);
+                            self.framework.event(Event::MousePos(*x as f32, *y as f32));
                         }
                         WindowEvent::Close => self.close_requested = true,
                         WindowEvent::MouseButton(button, action, _) => {
@@ -316,7 +316,7 @@ impl UIContext {
     pub fn fps(&self) -> u32 { self.frames.1 }
     pub fn p_window(&mut self) -> &mut PWindow { &mut self.p_window }
     pub fn fb_manager(&mut self) -> &mut FramebufferManager { &mut self.fb_manager }
-    pub unsafe fn main_fb(&mut self) -> &mut Framebuffer { self.fb_manager.fb(self.framebuffer) }
+    pub unsafe fn framebuffer(&mut self) -> &mut Framebuffer { self.fb_manager.fb(self.framebuffer) }
 }
 
 pub struct ContextBuilder<'a> {
