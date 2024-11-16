@@ -122,7 +122,7 @@ impl Framework {
             }
             Event::Render(pass) => {
                 let (parent_fb, parent_tex) = self.screen_pass_fb(pass).bind();
-                println!("{}", self.screen_animations.has_changed());
+
                 if self.current_screen.should_render(pass) || self.created_at_elapsed() || self.screen_animations.has_changed() {
                     Framebuffer::clear_current();
                     // if parent != 0 {

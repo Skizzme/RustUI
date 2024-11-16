@@ -3,7 +3,7 @@ use crate::components::context::context;
 use crate::components::render::stack::State::Blend;
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::components::wrapper::shader::Shader;
-use crate::gl_binds::gl11::RGBA;
+use crate::gl_binds::gl11::{RGB, RGBA};
 use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0, TEXTURE1, TEXTURE2, TEXTURE3};
 use crate::gl_binds::gl30::{BLEND, Disable, Enable};
 
@@ -13,40 +13,49 @@ use crate::gl_binds::gl30::{BLEND, Disable, Enable};
 ///
 /// Make sure ALL drawing within the mask and apply layer DO NOT HAVE BLEND ENABLED
 pub struct FramebufferMask {
-    mask_framebuffer: Framebuffer,
-    apply_framebuffer: Framebuffer,
+    mask_fb: u32,
+    draw_fb: u32,
 }
 
 impl FramebufferMask {
     pub unsafe fn new() -> FramebufferMask {
         let window = context().window();
+
         FramebufferMask {
-            mask_framebuffer: Framebuffer::new(RGBA, window.width, window.height).expect("Failed to make mask framebuffer"),
-            apply_framebuffer: Framebuffer::new(RGBA, window.width, window.height).expect("Failed to make apply framebuffer"),
+            mask_fb: context().fb_manager().create_fb(RGBA).unwrap(),
+            draw_fb: context().fb_manager().create_fb(RGBA).unwrap(),
         }
+    }
+
+    unsafe fn mask_fb(&self) -> &mut Framebuffer {
+        context().fb_manager().fb(self.mask_fb)
+    }
+
+    unsafe fn draw_fb(&self) -> &mut Framebuffer {
+        context().fb_manager().fb(self.draw_fb)
     }
 
     /// Binds and clears the mask framebuffer to be drawn onto
     pub unsafe fn begin_mask(&mut self) {
-        self.mask_framebuffer.bind();
+        self.mask_fb().bind();
         Framebuffer::clear_current();
         Disable(BLEND);
     }
 
     pub unsafe fn end_mask(&self) {
-        self.mask_framebuffer.unbind();
+        self.mask_fb().unbind();
         Enable(BLEND);
     }
 
     /// Binds and clears the apply framebuffer to be drawn onto
     pub unsafe fn begin_draw(&mut self) {
-        self.apply_framebuffer.bind();
+        self.draw_fb().bind();
         Framebuffer::clear_current();
         context().renderer().stack().push_l(Blend(false), 1);
     }
 
     pub unsafe fn end_draw(&self) {
-        self.apply_framebuffer.unbind();
+        self.draw_fb().unbind();
         context().renderer().stack().pop();
     }
 
@@ -65,11 +74,11 @@ impl FramebufferMask {
         context().framebuffer().bind_texture();
 
         ActiveTexture(TEXTURE2);
-        self.mask_framebuffer.bind_texture();
+        self.mask_fb().bind_texture();
 
         // Bind TEXTURE0 last so that it doesn't have to be set later
         ActiveTexture(TEXTURE1);
-        self.apply_framebuffer.bind_texture();
+        self.draw_fb().bind_texture();
 
         ActiveTexture(TEXTURE0);
 

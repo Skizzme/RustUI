@@ -79,9 +79,6 @@ impl FontRenderer {
 
         let map = &mut context().fonts().cached_inst;
         if !map.contains_key(&hashed) {
-            let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
-            let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
-            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(len);
             let (x, y) = pos.into().xy();
 
             self.x = x;
@@ -101,6 +98,15 @@ impl FontRenderer {
 
             self.line_width = 0f32;
 
+            let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(len);
+
+            let (a_width, a_height) = {
+                let atlas = self.font().atlas_tex.as_ref().unwrap();
+                (atlas.width as f32, atlas.height as f32)
+            };
+            let glyphs = self.font().glyphs;
             for item in formatted_text.items() {
                 match item {
                     FormatItem::None => {}
@@ -108,8 +114,6 @@ impl FontRenderer {
                         current_color = v.clone();
                     }
                     FormatItem::Size(size) => {
-                        // Scalef(1.0 / self.scale, 1.0 / self.scale, 1.0); // unscale the current scaling
-
                         let matrix: [f64; 16] = context().renderer().get_transform_matrix();
                         let scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
                         let scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
@@ -117,13 +121,8 @@ impl FontRenderer {
                         self.scale = size / FONT_RES as f32 *  scaled_factor_x;
                         self.i_scale = 1.0/ self.scale;
 
-                        // self.x = x * self.i_scale;
-                        // self.y = y * self.i_scale;
-
                         self.comb_scale_x = scaled_factor_x * self.scale;
                         self.comb_scale_y = scaled_factor_y * self.scale;
-
-                        // Scaled(self.scale as f64, self.scale as f64, 1.0);
                     }
                     FormatItem::Offset(_) => {}
                     FormatItem::Text(string) => {
@@ -137,26 +136,19 @@ impl FontRenderer {
 
                             let (c_w, _c_h, _, _) = self.get_dimensions(char);
 
-                            let glyph: &Glyph = match self.font().glyphs.get(char as usize) {
-                                None => {
-                                    continue
-                                    // return 0;
-                                    // return (0.0, 0.0);
-                                }
-                                Some(glyph) => {
-                                    glyph
-                                }
+                            let glyph: &Glyph = match glyphs.get(char as usize) {
+                                None => continue,
+                                Some(glyph) => glyph
                             };
-                            let pos_y = self.y + (self.get_height() - glyph.top as f32) * self.scale;
 
-                            let (right, bottom) = (self.x+glyph.width as f32 * self.scale, pos_y+glyph.height as f32 * self.scale);
+                            let pos_y = self.y + (self.get_height() - glyph.top) * self.scale;
 
-                            let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x as f32 * self.scale, pos_y, right, bottom);
-                            let atlas = self.font().atlas_tex.as_ref().unwrap();
-                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x as f32 / atlas.width as f32, 0f32, (glyph.atlas_x + glyph.width) as f32 / atlas.width as f32, glyph.height as f32 / atlas.height as f32);
+                            let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x * self.scale, pos_y, self.x+glyph.width * self.scale, pos_y+glyph.height * self.scale);
+                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x / a_width, 0f32, (glyph.atlas_x + glyph.width) / a_width, glyph.height / a_height);
 
                             dims.push([p_left, p_top, p_right-p_left, p_bottom-p_top]);
                             uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
+
                             // optimize to use u32 later
                             colors.push(current_color.rgba());
 
@@ -362,12 +354,12 @@ pub enum Wrapping {
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Glyph {
-    pub atlas_x: i32,
-    pub width: i32,
-    pub height: i32,
-    pub advance: i32,
-    pub bearing_x: i32,
-    pub top: i32,
+    pub atlas_x: f32,
+    pub width: f32,
+    pub height: f32,
+    pub advance: f32,
+    pub bearing_x: f32,
+    pub top: f32,
 }
 
 pub enum AlignmentH {

@@ -103,13 +103,13 @@ impl ScreenTrait for TestScreen {
                 self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
 
-                // self.mask.begin_mask();
-                // context().renderer().draw_circle(200.0, 200.0, 175.0, 0xffffffff);
-                // self.mask.end_mask();
-                // self.mask.begin_draw();
+                self.mask.begin_mask();
+                context().renderer().draw_circle(200.0, 200.0, 175.0, 0xffffffff);
+                self.mask.end_mask();
+                self.mask.begin_draw();
                 self.fr.draw_string((self.t_size.borrow().value() * 1f32, &self.text, 0x90ffffff), (10.0, 10.0));
-                // self.mask.end_draw();
-                // self.mask.render();
+                self.mask.end_draw();
+                self.mask.render();
             }
             Event::PostRender => {
                 self.previous_pos = *context().window().mouse().pos();
@@ -134,7 +134,6 @@ impl ScreenTrait for TestScreen {
                     Event::MousePos(x, y) => {
                         let st = Instant::now();
                         let t = (context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{} {}", x, y), 0xffffffff).into();
-                        println!("calc {:?}", st.elapsed());
                         *t_test_c.lock().unwrap() = t;
                     }
                     Event::Render(pass) => {
@@ -145,11 +144,11 @@ impl ScreenTrait for TestScreen {
                         // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
                         let st = Instant::now();
                         let (width, height) = context().fonts().renderer("main").draw_string(t_test_c.lock().unwrap().clone(), el.bounds());
-                        println!("{:?}", st.elapsed());
+                        // println!("{:?}", st.elapsed());
                         el.bounds().set_width(width);
                         el.bounds().set_height(height);
-                        // let hovering = el.hovering();
-                        // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                        let hovering = el.hovering();
+                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                         *tex_cl1.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
                     }

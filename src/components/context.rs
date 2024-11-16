@@ -102,7 +102,7 @@ impl UIContext {
         // if should_render {
             self.render();
             self.last_render = Instant::now();
-        // }
+        // }\
         self.framework.event(Event::PostRender);
         should_render
     }

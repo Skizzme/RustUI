@@ -226,16 +226,16 @@ impl Font {
             atlas_tex: None,
         };
 
-        let mut atlas_height = 0;
-        let mut atlas_width = 0;
+        let mut atlas_height = 0f32;
+        let mut atlas_width = 0f32;
 
         PixelStorei(UNPACK_ALIGNMENT, 1);
         for i in 0..128 {
-            let width = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
-            let height= i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
-            let advance = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
-            let bearing_x = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
-            let top = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
+            let width = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
+            let height= i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
+            let advance = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
+            let bearing_x = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
+            let top = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
 
             if atlas_height < height {
                 atlas_height = height;
@@ -254,7 +254,7 @@ impl Font {
             atlas_width += width;
         }
 
-        let atlas_tex = Texture::create(atlas_width, atlas_height, &all_bytes, ALPHA);
+        let atlas_tex = Texture::create(atlas_width as i32, atlas_height as i32, &all_bytes, ALPHA);
         font.atlas_tex = Some(atlas_tex);
         BindTexture(TEXTURE_2D, 0);
 

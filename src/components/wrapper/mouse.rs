@@ -35,7 +35,7 @@ impl Mouse {
                     Action::Release => self.pressed.remove(button),
                     Action::Press | Action::Repeat => {
                         self.click_pos = self.pos;
-                        println!("{:?}", self.click_pos());
+                        // println!("{:?}", self.click_pos());
                         self.pressed.insert(button.clone())
                     },
                 };
