@@ -17,13 +17,14 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Instant, UNIX_EPOCH};
 
 use glfw::{Action, WindowHint};
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::bounds::Bounds;
 use RustUI::components::context::{context, ContextBuilder};
+use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
 use RustUI::components::framework::element::{ElementBuilder};
 use RustUI::components::framework::event::{Event, RenderPass};
@@ -68,7 +69,16 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let t = include_str!("../test.js").to_string();
+        let mut t = include_str!("../test.js").to_string();
+        // t.push_str(&t.clone());
+        // t.push_str(&t.clone());
+        // t.push_str(&t.clone());
+        // t.push_str(&t.clone());
+        // t.push_str(&t.clone());
+        // t.push_str(&t.clone());
+        // t.push_str(&t.clone());
+        // t.push_str(&t.clone());
+        println!("LEN : {}", t.len());
         context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         TestScreen {
             text: t,
@@ -99,17 +109,17 @@ impl ScreenTrait for TestScreen {
                     return;
                 }
                 context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-                self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
-                self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
+                // self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
+                // self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
 
-                self.mask.begin_mask();
-                context().renderer().draw_circle(200.0, 200.0, 175.0, 0xffffffff);
-                self.mask.end_mask();
-                self.mask.begin_draw();
-                self.fr.draw_string((self.t_size.borrow().value() * 1f32, &self.text, 0x90ffffff), (10.0, 10.0));
-                self.mask.end_draw();
-                self.mask.render();
+                // self.mask.begin_mask();
+                // context().renderer().draw_circle(200.0, 200.0, 175.0, 0xffffffff);
+                // self.mask.end_mask();
+                // self.mask.begin_draw();
+                // self.fr.draw_string((self.t_size.borrow().value() * 1f32, &self.text, 0x90ffffff), (10.0, 10.0));
+                // self.mask.end_draw();
+                // self.mask.render();
             }
             Event::PostRender => {
                 self.previous_pos = *context().window().mouse().pos();
@@ -133,7 +143,13 @@ impl ScreenTrait for TestScreen {
                 match event {
                     Event::MousePos(x, y) => {
                         let st = Instant::now();
-                        let t = (context().window().mouse().pos().x() / 400.0 * 40.0, format!("P: &ff2030ff{} {}", x, y), 0xffffffff).into();
+                        let items: Vec<FormattedText> = vec![
+                            (36.0, "before", 0xffffff90).into(),
+                            (context().window().mouse().pos().x() / 400.0 * 40.0, format!("&ff2030ff{} {}", x, y), 0xffffffff).into(),
+                            (36.0, "after ", 0xff90ffff).into(),
+                            (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0xffff2020).into()
+                        ];
+                        let t: FormattedText = items.into();
                         *t_test_c.lock().unwrap() = t;
                     }
                     Event::Render(pass) => {
@@ -200,18 +216,19 @@ impl ScreenTrait for TestScreen {
             });
 
         // let el_1 = el_1.child(el_1_c.build());
-        layer_0.add_element(el_1.build());
+        layer_0.add(el_1.build());
+        layer_0.add(Textbox::new(context().fonts().renderer("main"), "".to_string())); // self.text.clone()
 
         vec![layer_0]
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        true
-        // if rp == &RenderPass::Main {
-        //     let res = self.last_fps != context().fps();
-        //     res
-        // } else {
-        //     false
-        // }
+        // true
+        if rp == &RenderPass::Main {
+            let res = self.last_fps != context().fps();
+            res
+        } else {
+            false
+        }
     }
 }

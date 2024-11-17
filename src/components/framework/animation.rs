@@ -98,7 +98,7 @@ impl Animation {
 
     pub(super) fn has_changed(&self) -> bool {
         // println!("changed? {} {} {}", self.last_value, self.value, self.last_value != self.value);
-        self.last_value != self.value
+        (self.last_value - self.value).abs() > 0.0001
     }
 
     pub(super) fn post(&mut self) {

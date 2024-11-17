@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 use std::cmp::Ordering::{Equal, Greater, Less};
 use std::io::Write;
 use std::sync::mpsc::channel;
+use std::time::Instant;
 
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
@@ -102,7 +103,6 @@ impl Font {
 
         let size_metrics = m_face.size_metrics().unwrap();
 
-        println!("{} {} {}", m_face.num_faces(), m_face.num_charmaps(), m_face.num_glyphs());
         for j in 0..thread_count {
             let total_length = 128;
             let batch_size = total_length / thread_count;
@@ -214,8 +214,13 @@ impl Font {
 
     /// Loads each char / glyph from the same format created by [Font::create_font_data]
     pub unsafe fn load(mut all_bytes: Vec<u8>) -> Self {
-        let ascent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
-        let decent = f32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap());
+        let st = Instant::now();
+
+        let mut index = 0;
+        let ascent = f32::from_be_bytes(all_bytes[index..index+4].try_into().unwrap());
+        index += 4;
+        let decent = f32::from_be_bytes(all_bytes[index..index+4].try_into().unwrap());
+        index += 4;
 
         let mut font = Font {
             glyphs: [Glyph::default(); 128],
@@ -231,11 +236,21 @@ impl Font {
 
         PixelStorei(UNPACK_ALIGNMENT, 1);
         for i in 0..128 {
-            let width = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
-            let height= i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
-            let advance = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
-            let bearing_x = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
-            let top = i32::from_be_bytes(all_bytes.drain(..4).as_slice().try_into().unwrap()) as f32;
+
+            let width = i32_from_bytes(index, &all_bytes) as f32;
+            index += 4;
+
+            let height = i32_from_bytes(index, &all_bytes) as f32;
+            index += 4;
+
+            let advance = i32_from_bytes(index, &all_bytes) as f32;
+            index += 4;
+
+            let bearing_x = i32_from_bytes(index, &all_bytes) as f32;
+            index += 4;
+
+            let top = i32_from_bytes(index, &all_bytes) as f32;
+            index += 4;
 
             if atlas_height < height {
                 atlas_height = height;
@@ -254,10 +269,14 @@ impl Font {
             atlas_width += width;
         }
 
-        let atlas_tex = Texture::create(atlas_width as i32, atlas_height as i32, &all_bytes, ALPHA);
+        let atlas_tex = Texture::create(atlas_width as i32, atlas_height as i32, &all_bytes[index..].try_into().unwrap(), ALPHA);
         font.atlas_tex = Some(atlas_tex);
         BindTexture(TEXTURE_2D, 0);
 
         font
     }
+}
+
+fn i32_from_bytes(index: usize, bytes: &Vec<u8>) -> i32 {
+    i32::from_be_bytes(bytes[index..index+4].try_into().unwrap())
 }

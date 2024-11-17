@@ -40,7 +40,11 @@ impl Layer {
         false
     }
 
-    pub unsafe fn add_element(&mut self, el: Element) {
+    // pub unsafe fn add(&mut self, el: Element) {
+    //     self.elements.push(Box::new(el));
+    // }
+
+    pub unsafe fn add<H: UIHandler + 'static>(&mut self, el: H) {
         self.elements.push(Box::new(el));
     }
 

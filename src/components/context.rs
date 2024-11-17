@@ -81,14 +81,15 @@ impl UIContext {
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
             if !self.frame() {
-                // thread::sleep(Duration::from_secs_f32(1.0/60.0));
+                thread::sleep(Duration::from_secs_f32(1.0/200.0));
             }
 
-            // if self.last_render.elapsed().as_secs_f32() > 1.0 {
-            //     thread::sleep(Duration::from_millis(50));
-            // }
+            if self.last_render.elapsed().as_secs_f32() > 1.0 {
+                thread::sleep(Duration::from_millis(50));
+            }
             // Finish();
-            // self.glfw.set_swap_interval(SwapInterval::Sync(1));
+            self.glfw.set_swap_interval(SwapInterval::Adaptive);
+            // self.glfw.set_swap_interval(SwapInterval::None);
         }
     }
 
@@ -99,10 +100,10 @@ impl UIContext {
 
         self.framework.event(Event::PreRender);
         let should_render = self.should_render();
-        // if should_render {
+        if should_render {
             self.render();
             self.last_render = Instant::now();
-        // }\
+        }
         self.framework.event(Event::PostRender);
         should_render
     }
@@ -239,6 +240,7 @@ impl UIContext {
             self.frames.0 = 0;
             self.frames.2 = Instant::now();
         }
+        // println!("frame");
     }
 
     unsafe fn pre_render(&mut self) {
@@ -274,6 +276,9 @@ impl UIContext {
                 Some((_, event)) => {
                     self.window.handle(&event);
                     match &event {
+                        WindowEvent::Key(key, code, action, mods) => {
+                            self.framework.event(Event::Keyboard(*key, *action, *mods));
+                        }
                         WindowEvent::Size(width, height) => {
                             self.fb_manager().resize(*width, *height);
                             self.framework.on_resize(*width as f32, *height as f32);

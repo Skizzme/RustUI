@@ -69,10 +69,12 @@ impl FontRenderer {
         // (0.0, 0.0)
     // }
 
-    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (u32, f32, f32) {
+    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, f32, f32) {
+        let offset = offset.into();
         let formatted_text = formatted_text.into();
         let len = formatted_text.visible_length();
         let mut hasher = hash::DefaultHasher::new();
+        offset.hash(&mut hasher);
         formatted_text.hash(&mut hasher);
 
         let hashed = hasher.finish();
@@ -81,22 +83,17 @@ impl FontRenderer {
         if !map.contains_key(&hashed) {
             let (x, y) = pos.into().xy();
 
-            self.x = x;
-            self.y = y;
             self.start_x = x;
-
-            // Apply appropriate scale to the vertices etc for correct rendering
+            self.line_width = offset.x;
+            self.x = x + offset.x;
+            self.y = y + offset.y;
 
             let mut current_color = Color::from_u32(0);
-
-            // Calculate vertices and uv coords for every char
 
             self.scale = 1.0;
             self.i_scale = 1.0;
             self.comb_scale_x = 1.0;
             self.comb_scale_y = 1.0;
-
-            self.line_width = 0f32;
 
             let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
@@ -107,6 +104,8 @@ impl FontRenderer {
                 (atlas.width as f32, atlas.height as f32)
             };
             let glyphs = self.font().glyphs;
+            let mut max_line_height = 0f32;
+            let mut height = 0f32;
             for item in formatted_text.items() {
                 match item {
                     FormatItem::None => {}
@@ -118,23 +117,36 @@ impl FontRenderer {
                         let scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
                         let scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
 
-                        self.scale = size / FONT_RES as f32 *  scaled_factor_x;
+                        self.scale = size / FONT_RES as f32 * scaled_factor_x;
                         self.i_scale = 1.0/ self.scale;
 
                         self.comb_scale_x = scaled_factor_x * self.scale;
                         self.comb_scale_y = scaled_factor_y * self.scale;
+
+                        max_line_height = max_line_height.max(self.get_line_height() * self.scale);
                     }
-                    FormatItem::Offset(_) => {}
+                    FormatItem::Offset(amount) => {
+                        self.x += amount.x;
+                        self.y += amount.y;
+                    }
                     FormatItem::Text(string) => {
+                        let mut i = 0;
                         for char in string.chars() {
                             if char == '\n' {
-                                self.y += self.get_line_height() * self.scale;
+                                self.y += max_line_height;
+                                height += max_line_height;
+                                max_line_height = 0f32;
                                 self.line_width = 0.0;
                                 self.x = self.start_x;
                                 continue;
                             }
+                            max_line_height = max_line_height.max(self.get_line_height() * self.scale);
 
-                            let (c_w, _c_h, _, _) = self.get_dimensions(char);
+                            let (c_w, _c_h, _, should_render) = self.get_dimensions(char);
+                            if should_render == 2 {
+                                // println!("broken at {}", i);
+                                break
+                            }
 
                             let glyph: &Glyph = match glyphs.get(char as usize) {
                                 None => continue,
@@ -154,6 +166,7 @@ impl FontRenderer {
 
                             self.x += c_w;
                             self.line_width += c_w;
+                            i += 1;
                         }
                     }
                 }
@@ -193,11 +206,15 @@ impl FontRenderer {
             vao.add_buffer(t_buf);
             vao.add_buffer(dims_buf);
 
-            map.insert(hashed, (vao, self.line_width, self.get_line_height()*self.scale, 0));
+            map.insert(hashed, (vao, self.line_width, height, 0));
         }
         map.get_mut(&hashed).unwrap().3 = 0;
         let (vao, width, height, _) = map.get(&hashed).unwrap();
         (vao.gl_ref(), *width, *height)
+    }
+
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (f32, f32) {
+        self.draw_string_o(formatted_text, pos, (0,0))
     }
 
     /// The method to be called to a render a string using modern GL
@@ -206,13 +223,13 @@ impl FontRenderer {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (f32, f32) {
+    pub unsafe fn draw_string_o(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (f32, f32) {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 
         let len = formatted_text.visible_length();
 
-        let (vao, width, height) = self.get_or_cache_inst(formatted_text, pos);
+        let (vao, width, height) = self.get_or_cache_inst(formatted_text, pos, offset);
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));
@@ -306,6 +323,49 @@ impl FontRenderer {
         }
 
         width*scale
+    }
+
+    pub unsafe fn get_end_pos(&self, size: f32, string: impl ToString) -> Vec2 {
+        let string = string.to_string();
+        let scale = size/FONT_RES as f32;
+        let mut width = 0f32;
+        let mut height = 0f32;
+
+        for char in string.chars() {
+            let glyph =  self.font().glyphs.get(char as usize).unwrap();
+            if char == '\n' {
+                width = 0f32;
+                height += self.get_line_height();
+                continue;
+            }
+            width += (glyph.advance - glyph.bearing_x) as f32;
+        }
+
+        (width*scale, height*scale).into()
+    }
+
+    pub unsafe fn add_end_pos(&self, current: Vec2, size: f32, string: impl ToString) -> Vec2 {
+        let string = string.to_string();
+        let scale = size/FONT_RES as f32;
+        let mut width = current.x;
+        let mut height = current.y;
+
+        for char in string.chars() {
+            let glyph =  self.font().glyphs.get(char as usize).unwrap();
+            if char == '\n' {
+                width = 0f32;
+                height += self.get_line_height() * scale;
+                continue;
+            }
+            width += (glyph.advance - glyph.bearing_x) * scale;
+        }
+
+        (width, height).into()
+    }
+
+    pub unsafe fn get_sized_height(&self, size: f32) -> f32 {
+        let scale = size / FONT_RES as f32;
+        self.get_height() * scale
     }
 
     /// Returns the height, in pixels, of the font. Unscaled

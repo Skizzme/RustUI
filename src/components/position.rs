@@ -1,5 +1,6 @@
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, DivAssign, MulAssign, Sub};
+use num_traits::NumCast;
 
 use crate::components::bounds::Bounds;
 
@@ -35,10 +36,10 @@ impl Add for Vec2 {
     }
 }
 
-impl Add<(f32, f32)> for Vec2 {
+impl<A: NumCast, B: NumCast> Add<(A, B)> for Vec2 {
     type Output = Vec2;
-    fn add(self, rhs: (f32, f32)) -> Self::Output {
-        Vec2 { x: self.x + rhs.0, y: self.y + rhs.1 }
+    fn add(self, rhs: (A, B)) -> Self::Output {
+        Vec2 { x: self.x + rhs.0.to_f32().unwrap_or(0.0), y: self.y + rhs.1.to_f32().unwrap_or(0.0) }
     }
 }
 
@@ -49,11 +50,11 @@ impl Sub for Vec2 {
     }
 }
 
-impl Into<Vec2> for (f32, f32) {
-    fn into(self) -> Vec2 {
-        Vec2 {x: self.0, y: self.1 }
-    }
-}
+// impl Into<Vec2> for (f32, f32) {
+//     fn into(self) -> Vec2 {
+//         Vec2 {x: self.0, y: self.1 }
+//     }
+// }
 
 impl Into<(f32, f32)> for Vec2 {
     fn into(self) -> (f32, f32) {
@@ -61,9 +62,9 @@ impl Into<(f32, f32)> for Vec2 {
     }
 }
 
-impl Into<Vec2> for (f64, f64) {
+impl<A: NumCast, B: NumCast> Into<Vec2> for (A, B) {
     fn into(self) -> Vec2 {
-        Vec2 {x: self.0 as f32, y: self.1 as f32 }
+        Vec2 {x: self.0.to_f32().unwrap_or(0.0), y: self.1.to_f32().unwrap_or(0.0) }
     }
 }
 

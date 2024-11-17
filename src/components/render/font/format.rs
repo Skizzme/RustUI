@@ -146,9 +146,13 @@ pub struct DefaultFormatter {
 
 impl DefaultFormatter {
     fn new(text: String) -> DefaultFormatter {
+        let char = match text.len() {
+            0 => 0x00 as char,
+            _ => text.as_bytes()[0] as char,
+        };
         DefaultFormatter {
             index: 0,
-            char: text.as_bytes()[0] as char,
+            char: char,
             current: FormatItem::None,
             raw: text,
             parsed: FormattedText::new(),
@@ -182,6 +186,9 @@ impl DefaultFormatter {
 
 impl Formatter for DefaultFormatter {
     fn parse(&mut self) -> bool { // should only parse 1 token at a time
+        if self.raw.len() == 0 {
+            return true;
+        }
         loop {
             if self.char == '&' {
                 self.finish(); // finish the possible previous token
@@ -192,7 +199,7 @@ impl Formatter for DefaultFormatter {
                     self.next();
                 }
 
-                self.current = FormatItem::Color(Color::from_u32(u32::from_str_radix(&color, 16).unwrap()));
+                self.current = FormatItem::Color(Color::from_u32(u32::from_str_radix(&color, 16).unwrap_or(0xff20ff20)));
                 self.finish();
 
                 break;
