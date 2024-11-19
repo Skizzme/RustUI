@@ -62,15 +62,19 @@ pub struct Animation {
 }
 
 impl Animation {
-    pub fn new() -> Self {
+    pub fn new(target: f32, value: f32) -> Self {
         Animation {
             id: random::<u32>(),
-            target: 0.0,
-            starting: 0.0,
-            value: 0.0,
-            last_value: 0.0,
+            target,
+            starting: value,
+            value,
+            last_value: value,
             state: 0.0,
         }
+    }
+
+    pub fn zero() -> Self {
+        Animation::new(0.0, 0.0)
     }
 
     pub unsafe fn animate_to(&mut self, target: f32, speed: f32, animation_type: AnimationType) -> f32 {
@@ -96,12 +100,12 @@ impl Animation {
         }
     }
 
-    pub(super) fn has_changed(&self) -> bool {
+    pub fn has_changed(&self) -> bool {
         // println!("changed? {} {} {}", self.last_value, self.value, self.last_value != self.value);
         (self.last_value - self.value).abs() > 0.0001
     }
 
-    pub(super) fn post(&mut self) {
+    pub fn update(&mut self) {
         self.last_value = self.value;
     }
 
@@ -134,7 +138,7 @@ impl AnimationRegistry {
     }
 
     pub fn new_anim(&mut self) -> AnimationRef {
-        let rc = Rc::new(RefCell::new(Animation::new()));
+        let rc = Rc::new(RefCell::new(Animation::zero()));
         self.animations.insert(rc.borrow().id(), rc.clone());
         rc
     }
@@ -172,7 +176,7 @@ impl AnimationRegistry {
 
     pub fn post(&mut self) {
         for anim in self.animations.values() {
-            anim.borrow_mut().post();
+            anim.borrow_mut().update();
         }
     }
 }

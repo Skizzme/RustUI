@@ -85,7 +85,7 @@ impl TestScreen {
             fr: context().fonts().renderer("main"),
             previous_pos: Vec2::new(0.0, 0.0),
             previous_tex: Arc::new(Mutex::new("".to_string())),
-            t_size: Rc::new(RefCell::new(Animation::new())),
+            t_size: Rc::new(RefCell::new(Animation::zero())),
             last_fps: 0,
             t_text: Arc::new(Mutex::new(FormattedText::new())),
             mask: FramebufferMask::new(),
@@ -110,7 +110,7 @@ impl ScreenTrait for TestScreen {
                 }
                 context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
                 // self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
-                // self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
+                self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
 
                 // self.mask.begin_mask();
@@ -217,7 +217,8 @@ impl ScreenTrait for TestScreen {
 
         // let el_1 = el_1.child(el_1_c.build());
         layer_0.add(el_1.build());
-        layer_0.add(Textbox::new(context().fonts().renderer("main"), "".to_string())); // self.text.clone()
+        layer_0.add(Textbox::new(context().fonts().renderer("main"), self.text.clone())); // "".to_string()
+        self.text = "".to_string();
 
         vec![layer_0]
     }

@@ -71,17 +71,20 @@ impl FontRenderer {
 
     unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, f32, f32) {
         let offset = offset.into();
+        let pos = pos.into();
         let formatted_text = formatted_text.into();
         let len = formatted_text.visible_length();
         let mut hasher = hash::DefaultHasher::new();
         offset.hash(&mut hasher);
+        pos.hash(&mut hasher);
+
         formatted_text.hash(&mut hasher);
 
         let hashed = hasher.finish();
 
         let map = &mut context().fonts().cached_inst;
         if !map.contains_key(&hashed) {
-            let (x, y) = pos.into().xy();
+            let (x, y) = pos.xy();
 
             self.start_x = x;
             self.line_width = offset.x;
@@ -145,7 +148,7 @@ impl FontRenderer {
                             let (c_w, _c_h, _, should_render) = self.get_dimensions(char);
                             if should_render == 2 {
                                 // println!("broken at {}", i);
-                                break
+                                // break
                             }
 
                             let glyph: &Glyph = match glyphs.get(char as usize) {

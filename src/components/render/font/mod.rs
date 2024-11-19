@@ -111,7 +111,17 @@ impl Font {
             let t_bytes = font_bytes.clone();
             let thread = std::thread::spawn(move || {
                 let lib = freetype::Library::init().unwrap();
+
                 let face = lib.new_memory_face(t_bytes, 0).unwrap();
+
+                // for i in 0..face.num_glyphs() {
+                //     match face.get_char_index(i as usize) {
+                //         None => {}
+                //         Some(ind) => {
+                //             println!("{:?}", ind);
+                //         }
+                //     }
+                // }
 
                 face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
                 for i in offset..offset + batch_size {
