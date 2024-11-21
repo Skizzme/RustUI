@@ -2,13 +2,18 @@ extern crate freetype;
 
 use std::cmp::Ordering;
 use std::cmp::Ordering::{Equal, Greater, Less};
+use std::collections::HashMap;
 use std::io::Write;
+use std::num::NonZero;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering::Relaxed;
 use std::sync::mpsc::channel;
 use std::time::Instant;
 
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
 use gl::*;
+use crate::components::position::Vec2;
 
 use crate::components::render::font::renderer::Glyph;
 use crate::components::wrapper::texture::Texture;
@@ -18,11 +23,13 @@ pub mod manager;
 pub mod renderer;
 
 const FONT_RES: u32 = 48u32;
+const MAX_ATLAS_WIDTH: i32 = 14000;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 struct CacheGlyph {
     id: usize,
     bytes: Vec<u8>,
+    atlas_pos: Vec2,
     width: i32,
     height: i32,
     advance: i32,
@@ -71,7 +78,7 @@ pub struct FontMetrics {
 
 /// Only holds the data per font to be used by the font renderer
 pub struct Font {
-    pub glyphs: [Glyph; 128],
+    pub glyphs: HashMap<usize, Glyph>,
     metrics: FontMetrics,
     pub atlas_tex: Option<Texture>,
 }
@@ -100,32 +107,26 @@ impl Font {
 
         let m_face = m_lib.new_memory_face(font_bytes.clone(), 0).unwrap();
         m_face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
+        let all_chars = m_face.chars().map(|(c,i)| (c, i.get() as usize)).collect::<Vec<(usize, usize)>>();
+        let num_glyphs = all_chars.len();
 
         let size_metrics = m_face.size_metrics().unwrap();
 
         for j in 0..thread_count {
-            let total_length = 128;
-            let batch_size = total_length / thread_count;
+            let batch_size = num_glyphs / thread_count;
             let offset = j*batch_size;
             let t_sender = sender.clone();
             let t_bytes = font_bytes.clone();
+            let thread_chars = all_chars[offset..offset + batch_size].to_vec();
             let thread = std::thread::spawn(move || {
                 let lib = freetype::Library::init().unwrap();
 
                 let face = lib.new_memory_face(t_bytes, 0).unwrap();
 
-                // for i in 0..face.num_glyphs() {
-                //     match face.get_char_index(i as usize) {
-                //         None => {}
-                //         Some(ind) => {
-                //             println!("{:?}", ind);
-                //         }
-                //     }
-                // }
-
                 face.set_pixel_sizes(FONT_RES, FONT_RES).unwrap();
-                for i in offset..offset + batch_size {
-                    face.load_char(i, LoadFlag::RENDER).unwrap();
+                for (char, index) in thread_chars {
+
+                    face.load_char(char, LoadFlag::RENDER).unwrap();
 
                     let glyph = face.glyph();
 
@@ -137,10 +138,10 @@ impl Font {
                     let mut bytes = Vec::new();
                     bytes.write(glyph.bitmap().buffer()).unwrap();
 
-                    // println!("{:?} {:?} {:?}", i as u8 as char, glyph.metrics().vertBearingX >> 6, glyph.metrics().vertBearingY >> 6);
                     match t_sender.send(CacheGlyph {
-                        id: i,
+                        id: char,
                         bytes,
+                        atlas_pos: Vec2::new(0.0, 0.0),
                         width,
                         height,
                         advance: glyph.advance().x >> 6,
@@ -166,6 +167,9 @@ impl Font {
                 finished_count += 1;
             }
             if let Ok(recv) = receiver.try_recv() {
+                if max_height < recv.height {
+                    max_height = recv.height;
+                }
                 cache_glyphs.push(recv);
             }
             if finished_count == thread_count {
@@ -174,38 +178,73 @@ impl Font {
         }
 
         let mut meta_data: Vec<u8> = Vec::new();
-        meta_data.write(&(size_metrics.ascender as f32 / 64.0).to_be_bytes()).unwrap();
-        meta_data.write(&(size_metrics.descender as f32 / 64.0).to_be_bytes()).unwrap();
+        println!("CAH {}", cache_glyphs.len());
         cache_glyphs.sort();
-        for c_glyph in cache_glyphs.as_slice() {
-            if max_height < c_glyph.height {
-                max_height = c_glyph.height;
-            }
-            meta_data.write(&c_glyph.width.to_be_bytes()).unwrap();
-            meta_data.write(&c_glyph.height.to_be_bytes()).unwrap();
-            meta_data.write(&c_glyph.advance.to_be_bytes()).unwrap();
-            meta_data.write(&c_glyph.bearing_x.to_be_bytes()).unwrap();
-            meta_data.write(&c_glyph.top.to_be_bytes()).unwrap();
-        }
 
         // Creates the single texture atlas with all glyphs,
         // since swapping textures for every character is slow.
         // Is also in a single row to waste less pixel space
         let mut atlas_bytes: Vec<u8> = Vec::new();
-        for i in 0..max_height {
-            // Will write a single row of each glyph's pixels in order
-            // so that a proper texture can be created quicker when loading
-            for c_glyph in cache_glyphs.as_slice() {
-                let offset = i * c_glyph.width;
-                // Checks if the current glyph is too short/not enough height, and if it is it will fill the empty space
-                if c_glyph.width*c_glyph.height <= offset {
-                    for _ in 0..c_glyph.width { atlas_bytes.push(0u8); }
-                } else {
-                    atlas_bytes.write(&c_glyph.bytes[offset as usize..(offset+c_glyph.width) as usize]).unwrap();
+        let mut atlas_width = 0;
+        let mut atlas_height = 0;
+        let mut index_offset = 0;
+        loop {
+            let mut end_index = index_offset;
+            for row in 0..max_height {
+                let mut x = 0;
+                let mut y = atlas_height;
+                for i in index_offset..cache_glyphs.len() {
+                    let c_glyph = &mut cache_glyphs[i];
+                    let offset = row * c_glyph.width;
+                    if x + c_glyph.width > MAX_ATLAS_WIDTH || (atlas_width > 0 && x + c_glyph.width > atlas_width) {
+                        if atlas_width == 0 {
+                            atlas_width = x;
+                        }
+                        if row == 0 {
+                            y += max_height;
+                            atlas_height = atlas_height.max(y);
+                        }
+                        end_index = i;
+                        for x in x..atlas_width {
+                            atlas_bytes.push(0u8);
+                        }
+                        break;
+                    }
+                    if row == 0 {
+                        c_glyph.atlas_pos = Vec2::new(x as f32, y as f32);
+                    }
+
+                    if c_glyph.height <= row {
+                        for _ in 0..c_glyph.width { atlas_bytes.push(0u8); }
+                    } else {
+                        atlas_bytes.write(&c_glyph.bytes[offset as usize..(offset + c_glyph.width) as usize]).unwrap();
+                    }
+
+                    x += c_glyph.width;
                 }
             }
+            if index_offset == end_index {
+                break;
+            }
+            index_offset = end_index;
         }
 
+        meta_data.write(&(size_metrics.ascender as f32 / 64.0).to_be_bytes()).unwrap();
+        meta_data.write(&(size_metrics.descender as f32 / 64.0).to_be_bytes()).unwrap();
+        meta_data.write(&cache_glyphs.len().to_be_bytes()).unwrap();
+        for c_glyph in cache_glyphs.as_slice() {
+            meta_data.write(&c_glyph.id.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.width.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.height.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.advance.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.bearing_x.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.top.to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.atlas_pos.x().to_be_bytes()).unwrap();
+            meta_data.write(&c_glyph.atlas_pos.y().to_be_bytes()).unwrap();
+        }
+
+        meta_data.write(&atlas_width.to_be_bytes()).unwrap();
+        meta_data.write(&atlas_height.to_be_bytes()).unwrap();
         meta_data.write_all(atlas_bytes.as_slice()).unwrap();
         BindTexture(TEXTURE_2D, 0);
         meta_data
@@ -231,9 +270,11 @@ impl Font {
         index += 4;
         let decent = f32::from_be_bytes(all_bytes[index..index+4].try_into().unwrap());
         index += 4;
+        let glyph_count = usize::from_be_bytes(all_bytes[index..index+8].try_into().unwrap());
+        index += 8;
 
         let mut font = Font {
-            glyphs: [Glyph::default(); 128],
+            glyphs: HashMap::new(),
             metrics: FontMetrics {
                 ascent,
                 decent,
@@ -244,8 +285,12 @@ impl Font {
         let mut atlas_height = 0f32;
         let mut atlas_width = 0f32;
 
+        let mut v = 0;
+        GetIntegerv(gl::MAX_TEXTURE_SIZE, &mut v);
         PixelStorei(UNPACK_ALIGNMENT, 1);
-        for i in 0..128 {
+        for i in 0..glyph_count {
+            let id = usize::from_be_bytes(all_bytes[index..index+8].try_into().unwrap());
+            index += 8;
 
             let width = i32_from_bytes(index, &all_bytes) as f32;
             index += 4;
@@ -262,24 +307,38 @@ impl Font {
             let top = i32_from_bytes(index, &all_bytes) as f32;
             index += 4;
 
+            let atlas_x = f32::from_be_bytes(all_bytes[index..index+4].try_into().unwrap());
+            index += 4;
+
+            let atlas_y = f32::from_be_bytes(all_bytes[index..index+4].try_into().unwrap());
+            index += 4;
+
             if atlas_height < height {
                 atlas_height = height;
             }
 
-            font.glyphs[i] =
+            font.glyphs.insert(
+                id,
                 Glyph {
-                    atlas_x: atlas_width,
+                    atlas_pos: Vec2::new(atlas_x, atlas_y),
                     width,
                     height,
                     advance,
                     bearing_x,
                     top,
-                };
+                }
+            );
 
             atlas_width += width;
         }
 
-        let atlas_tex = Texture::create(atlas_width as i32, atlas_height as i32, &all_bytes[index..].try_into().unwrap(), ALPHA);
+        let width = i32_from_bytes(index, &all_bytes) as f32;
+        index += 4;
+        let height = i32_from_bytes(index, &all_bytes) as f32;
+        index += 4;
+        let atlas_bytes: &Vec<u8> = &all_bytes[index..].try_into().unwrap();
+
+        let atlas_tex = Texture::create(width as i32, height as i32, atlas_bytes, ALPHA);
         font.atlas_tex = Some(atlas_tex);
         BindTexture(TEXTURE_2D, 0);
 

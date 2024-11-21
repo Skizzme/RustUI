@@ -31,9 +31,14 @@ use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
 use RustUI::components::position::Vec2;
+use RustUI::components::render::font::Font;
 use RustUI::components::render::font::format::FormattedText;
 use RustUI::components::render::font::renderer::{FontRenderer};
 use RustUI::components::render::mask::FramebufferMask;
+use RustUI::components::render::renderer::shader_file;
+use RustUI::components::render::stack::{GlState, State};
+use RustUI::components::wrapper::shader::Shader;
+use RustUI::components::wrapper::texture::Texture;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -65,6 +70,7 @@ pub struct TestScreen {
     last_fps: u32,
     t_text: Arc<Mutex<FormattedText>>,
     mask: FramebufferMask,
+    t_shader: Shader,
 }
 
 impl TestScreen {
@@ -79,7 +85,7 @@ impl TestScreen {
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
         println!("LEN : {}", t.len());
-        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/Comfortaa-Light.ttf").to_vec());
         TestScreen {
             text: t,
             fr: context().fonts().renderer("main"),
@@ -89,6 +95,7 @@ impl TestScreen {
             last_fps: 0,
             t_text: Arc::new(Mutex::new(FormattedText::new())),
             mask: FramebufferMask::new(),
+            t_shader: Shader::new(shader_file("shaders/vertex.glsl"), shader_file("shaders/test.frag")),
         }
     }
 }
@@ -108,6 +115,18 @@ impl ScreenTrait for TestScreen {
                 if pass != &RenderPass::Main {
                     return;
                 }
+                match context().fonts().font("main") {
+                    None => {}
+                    Some(font) => {
+                        self.t_shader.bind();
+                        let tex = font.atlas_tex.as_ref().unwrap();
+                        tex.bind();
+                        context().renderer().draw_texture_rect(Bounds::xywh(0.0, 0.0, context().window().width() as f32, tex.height as f32), 0xffffffff);
+                        Texture::unbind();
+                        Shader::unbind();
+                    }
+                }
+
                 context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
                 // self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
                 self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
@@ -217,7 +236,7 @@ impl ScreenTrait for TestScreen {
 
         // let el_1 = el_1.child(el_1_c.build());
         layer_0.add(el_1.build());
-        layer_0.add(Textbox::new(context().fonts().renderer("main"), self.text.clone())); // "".to_string()
+        layer_0.add(Textbox::new(context().fonts().renderer("main"), "ð".to_string())); // "".to_string()
         self.text = "".to_string();
 
         vec![layer_0]

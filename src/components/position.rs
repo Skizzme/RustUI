@@ -4,7 +4,7 @@ use num_traits::NumCast;
 
 use crate::components::bounds::Bounds;
 
-#[derive(Clone, Debug, Copy,)]
+#[derive(Clone, Debug, Copy, PartialEq, Default)]
 pub struct Vec2 {
     pub(crate) x: f32,
     pub(crate) y: f32,
@@ -16,6 +16,8 @@ impl Hash for Vec2 {
         state.write(&self.y.to_be_bytes());
     }
 }
+
+impl Eq for Vec2 {}
 
 impl Vec2 {
     pub fn new(x: f32, y: f32) -> Self { Vec2 { x, y } }

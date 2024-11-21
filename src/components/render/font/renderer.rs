@@ -106,7 +106,7 @@ impl FontRenderer {
                 let atlas = self.font().atlas_tex.as_ref().unwrap();
                 (atlas.width as f32, atlas.height as f32)
             };
-            let glyphs = self.font().glyphs;
+
             let mut max_line_height = 0f32;
             let mut height = 0f32;
             for item in formatted_text.items() {
@@ -151,7 +151,7 @@ impl FontRenderer {
                                 // break
                             }
 
-                            let glyph: &Glyph = match glyphs.get(char as usize) {
+                            let glyph: &Glyph = match self.font().glyphs.get(&(char as usize)) {
                                 None => continue,
                                 Some(glyph) => glyph
                             };
@@ -159,7 +159,7 @@ impl FontRenderer {
                             let pos_y = self.y + (self.get_height() - glyph.top) * self.scale;
 
                             let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x * self.scale, pos_y, self.x+glyph.width * self.scale, pos_y+glyph.height * self.scale);
-                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_x / a_width, 0f32, (glyph.atlas_x + glyph.width) / a_width, glyph.height / a_height);
+                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
 
                             dims.push([p_left, p_top, p_right-p_left, p_bottom-p_top]);
                             uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
@@ -283,7 +283,7 @@ impl FontRenderer {
     /// }
     /// ```
     pub unsafe fn get_dimensions(&self, char: char) -> (f32, f32, f32, u32) {
-        let glyph: &Glyph = match self.font().glyphs.get(char as usize) {
+        let glyph: &Glyph = match self.font().glyphs.get(&(char as usize)) {
             None => {
                 return (0.0, 0.0, 0.0, 0);
             }
@@ -321,7 +321,7 @@ impl FontRenderer {
         let mut width = 0.0f32;
 
         for char in string.chars() {
-            let glyph =  self.font().glyphs.get(char as usize).unwrap();
+            let glyph =  self.font().glyphs.get(&(char as usize)).unwrap();
             width += (glyph.advance - glyph.bearing_x) as f32;
         }
 
@@ -335,7 +335,7 @@ impl FontRenderer {
         let mut height = 0f32;
 
         for char in string.chars() {
-            let glyph =  self.font().glyphs.get(char as usize).unwrap();
+            let glyph =  self.font().glyphs.get(&(char as usize)).unwrap();
             if char == '\n' {
                 width = 0f32;
                 height += self.get_line_height();
@@ -354,7 +354,10 @@ impl FontRenderer {
         let mut height = current.y;
 
         for char in string.chars() {
-            let glyph =  self.font().glyphs.get(char as usize).unwrap();
+            let glyph = match self.font().glyphs.get(&(char as usize)) {
+                None => continue,
+                Some(v) => v
+            };
             if char == '\n' {
                 width = 0f32;
                 height += self.get_line_height() * scale;
@@ -417,7 +420,7 @@ pub enum Wrapping {
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Glyph {
-    pub atlas_x: f32,
+    pub atlas_pos: Vec2,
     pub width: f32,
     pub height: f32,
     pub advance: f32,

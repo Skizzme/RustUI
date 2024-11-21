@@ -29,7 +29,7 @@ pub struct Renderer {
     stack: Stack
 }
 
-fn shader_file(path: impl ToString) -> String {
+pub fn shader_file(path: impl ToString) -> String {
     let path = path.to_string();
     file_contents_str(path.replace("/", path::MAIN_SEPARATOR_STR)).expect(format!("Failed to read shader file ({})", path).as_str()).to_string()
 }

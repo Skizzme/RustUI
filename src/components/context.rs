@@ -339,7 +339,7 @@ impl<'a> ContextBuilder<'a> {
             width: 400,
             height: 300,
             title: "".to_string(),
-            glfw: glfw::init(fail_on_errors!()).unwrap(),
+            glfw: glfw::init(|e, s| eprintln!("{:?} {:?}", e, s)).unwrap(),
             mode: WindowMode::Windowed,
         }
     }
