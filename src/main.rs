@@ -85,7 +85,8 @@ impl TestScreen {
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
         println!("LEN : {}", t.len());
-        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/Comfortaa-Light.ttf").to_vec());
+        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+        // context().fonts().load_font("main", true);
         TestScreen {
             text: t,
             fr: context().fonts().renderer("main"),
@@ -115,17 +116,18 @@ impl ScreenTrait for TestScreen {
                 if pass != &RenderPass::Main {
                     return;
                 }
-                match context().fonts().font("main") {
-                    None => {}
-                    Some(font) => {
-                        self.t_shader.bind();
-                        let tex = font.atlas_tex.as_ref().unwrap();
-                        tex.bind();
-                        context().renderer().draw_texture_rect(Bounds::xywh(0.0, 0.0, context().window().width() as f32, tex.height as f32), 0xffffffff);
-                        Texture::unbind();
-                        Shader::unbind();
-                    }
-                }
+                // match context().fonts().font("main") {
+                //     None => {}
+                //     Some(font) => {
+                //         self.t_shader.bind();
+                //         let tex = font.atlas_tex.as_ref().unwrap();
+                //         tex.bind();
+                //         // context().window().width()
+                //         context().renderer().draw_texture_rect(Bounds::xywh(0.0, 0.0, tex.width as f32, tex.height as f32), 0xffffffff);
+                //         Texture::unbind();
+                //         Shader::unbind();
+                //     }
+                // }
 
                 context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
                 // self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
@@ -236,7 +238,7 @@ impl ScreenTrait for TestScreen {
 
         // let el_1 = el_1.child(el_1_c.build());
         layer_0.add(el_1.build());
-        layer_0.add(Textbox::new(context().fonts().renderer("main"), "ð".to_string())); // "".to_string()
+        layer_0.add(Textbox::new(context().fonts().renderer("main"), "".to_string())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 
         vec![layer_0]

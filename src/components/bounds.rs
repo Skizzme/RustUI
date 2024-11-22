@@ -28,6 +28,24 @@ impl Bounds {
         obj
     }
 
+
+    /// Creates a 'Bounds' object from 2 positions. The order does not matter, the object will be created
+    /// by taking the minimum and maximum of the X and Y of both positions. Negative widths and heights
+    /// will never occur
+    pub fn from_pos<A: Into<Vec2>, B: Into<Vec2>>(pos1: A, pos2: B) -> Bounds {
+        let pos1 = pos1.into();
+        let pos2 = pos2.into();
+
+        let mut obj = Bounds::default();
+
+        obj.set_left(pos1.x().min(pos2.x()));
+        obj.set_right(pos1.x().max(pos2.x()));
+        obj.set_top(pos1.y().min(pos2.y()));
+        obj.set_bottom(pos1.y().max(pos2.y()));
+
+        obj
+    }
+
     /// Creates a `Bounds` object from `X, Y, Width, Height` parameters
     pub fn xywh(x: f32, y: f32, width: f32, height: f32) -> Bounds {
         let mut obj = Bounds::default();
@@ -91,6 +109,12 @@ impl Bounds {
         this.set_y(this.y + other.y);
         this.set_height(this.height - other.height - other.y);
         this
+    }
+
+    pub fn offset<A: Into<Vec2>>(&mut self, amount: A) {
+        let amount = amount.into();
+        self.x += amount.x;
+        self.y += amount.y;
     }
 }
 

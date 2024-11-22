@@ -1,8 +1,9 @@
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::iter::Iterator;
 use std::rc::Rc;
 use std::time::Instant;
-use glfw::{Action, Key, Modifiers};
+use glfw::{Action, Key, Modifiers, MouseButton};
 use rand::{Rng, thread_rng};
 use winapi::um::winuser::GetKeyboardState;
 use crate::components::bounds::Bounds;
@@ -16,7 +17,17 @@ use crate::components::render::font::format::{DefaultFormatter, FormatItem, Form
 use crate::components::render::font::renderer::FontRenderer;
 use crate::gl_binds::gl11::Translatef;
 
-const CHUNK_SIZE: usize = 1024*2;
+const CHUNK_SIZE: usize = 8; // 1024*2
+// static SHIFT_MAP: HashMap<char, char> = ;
+
+pub fn get_shifted(c: char) -> char {
+
+    let shifted: HashMap<char, char> = [
+        ('1', '!'), ('2', '@'), ('3', '#'), ('4', '$'), ('5', '%'), ('6', '^'), ('7', '&'), ('8', '*'), ('9', 's'), ('0', ')'), ('=', '+'),
+        ('-', '_'), ('`', '~'), (',', '<'), ('.', '>'), (';', ':'), ('/', '?'), ('\'', '"'), ('[', '{'), (']', '}'), ('\\', '|')
+    ].iter().cloned().collect();
+    *shifted.get(&c).unwrap_or(&c.to_ascii_uppercase())
+}
 
 #[derive(Debug)]
 pub struct Chunk {
@@ -81,13 +92,24 @@ impl StringEditor {
         let mut chunks = Vec::new();
         let mut changed = HashSet::new();
         let mut i = 0;
+        let length = string.chars().count();
         loop {
-            let end_index = (i+CHUNK_SIZE).min(string.len());
-            let sub = string.get(i..end_index).unwrap().to_string();
+            let end_index = (i+CHUNK_SIZE).min(length);
+            let mut sub = String::new();
+            for (ind, char) in string.char_indices() {
+                if ind < i {
+                    continue
+                }
+                if ind >= end_index {
+                    break
+                }
+                sub.push(char);
+            }
+            // let sub = string.char.get(i..end_index).unwrap().to_string();
             // changed.insert(chunks.len());
             chunks.push(Chunk::new((i, end_index), sub));
 
-            if end_index == string.len() {
+            if end_index == length {
                 break;
             }
             i += CHUNK_SIZE;
@@ -212,7 +234,7 @@ fn apply_changes_at(changes: &Vec<Change>, index: usize, current: &String, new: 
 
 fn add_char_at(index: usize, current: &String, new: &mut String) {
     if index < current.len() && index >= 0 {
-        new.push(current.as_bytes()[index] as char);
+        new.push(current.chars().nth(index).unwrap());
     }
 }
 
@@ -236,6 +258,7 @@ pub struct Textbox {
 
 impl Textbox {
     pub unsafe fn new(fr: FontRenderer, init: String) -> Self {
+        println!("EDIT {:?}", init.chars());
         let mut anims = AnimationRegistry::new();
         let font_size = anims.new_anim();
         font_size.borrow_mut().set_target(16.0);
@@ -273,7 +296,8 @@ impl Textbox {
             text.push(FormatItem::Color(Color::from_hsv(thread_rng().random::<f32>(), 1.0, 1.0)));
             text.push(FormatItem::Text(self.editor.chunks().get(index).unwrap().string.clone()));
 
-            let mut pos = self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string);
+            //self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string)
+            let mut pos = self.fr.draw_string_o(text.clone(), (0, 0), last_offset).into();
 
             let mut chunk = (
                 text,
@@ -310,6 +334,48 @@ impl UIHandler for Textbox {
             },
             Event::PostRender => {
                 self.changed = false;
+                false
+            }
+            Event::MouseClick(button, action) => {
+                let scroll_amount = self.scroll.borrow().value();
+                match button {
+                    MouseButton::Button1 => {
+                        if action == &Action::Press {
+                            let start_pos: Vec2 = (10, 100.0 + self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0)).into();
+                            let mut last_offset: Vec2 = (0, 0).into();
+                            // println!("{:?} {:?}", self.text_chunks.len(), start_pos);
+                            let mut i = 0;
+                            for (text, t_pos, size) in &self.text_chunks {
+                                if t_pos.y + start_pos.y < 0.0 {
+                                    last_offset = (t_pos.x, t_pos.y).into();
+                                    i += 1;
+                                    continue;
+                                }
+
+                                let offset: Vec2 = self.fr.draw_string_o(text.clone(), start_pos, last_offset).into();
+                                let mut bounds = Bounds::from_pos(last_offset, (offset.x, last_offset.y + offset.y + self.fr.get_sized_height(16.0)));
+                                bounds.offset(start_pos);
+                                if context().window().mouse().pos().intersects(&bounds) {
+                                    println!("clicked on {:?}", text);
+                                    let chunk = self.editor.chunks.get(i).unwrap();
+                                    for c in chunk.string.chars() {
+
+                                    }
+                                }
+                                println!("{} {} {} {}", last_offset.x, last_offset.y, offset.x, last_offset.y + offset.y);
+                                println!("{:?} {:?} {:?} {:?}", bounds, context().window().mouse().pos(), offset, text);
+                                last_offset = (offset.x, last_offset.y + offset.y).into();
+
+                                if t_pos.y + start_pos.y > context().window().height as f32 + 100f32 {
+                                    break;
+                                }
+                                i += 1;
+                            }
+                        }
+                    }
+                    MouseButton::Button2 => {}
+                    _ => {}
+                }
                 false
             }
             Event::Render(pass) => match pass {
@@ -381,7 +447,7 @@ impl UIHandler for Textbox {
                 _ => false
             },
             Event::Keyboard(key, action, mods) => {
-                println!("{:?} {:?} {:?} {:?} {:?}", key, action, mods, key.get_scancode(), key.get_name());
+                // println!("{:?} {:?} {:?} {:?} {:?}", key, action, mods, key.get_scancode(), key.get_name());
                 match key {
                     Key::LeftControl => self.holding_ctrl = action != &Action::Release,
                     _ => {}
@@ -389,6 +455,9 @@ impl UIHandler for Textbox {
                 if action == &Action::Release {
                     return false;
                 }
+                // for (ind, ch) in self.editor.chunks[0].string.char_indices() {
+                //     println!("IND {ind}, {ch}");
+                // }
                 match key.get_name() {
                     None => {
                         match key {
@@ -423,7 +492,7 @@ impl UIHandler for Textbox {
                     Some(pressed) => {
                         let char = pressed.as_bytes()[0] as char;
                         let char = if mods.contains(Modifiers::Shift) {
-                            char.to_ascii_uppercase()
+                            get_shifted(char)
                         } else { char };
                         self.editor.add_change(self.index, Change::Add(char.to_string()));
                         self.index += 1;

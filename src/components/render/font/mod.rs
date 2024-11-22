@@ -23,7 +23,7 @@ pub mod manager;
 pub mod renderer;
 
 const FONT_RES: u32 = 48u32;
-const MAX_ATLAS_WIDTH: i32 = 14000;
+const MAX_ATLAS_WIDTH: i32 = 2000;
 
 #[derive(Debug, PartialEq, Eq)]
 struct CacheGlyph {
@@ -103,6 +103,9 @@ impl Font {
 
         let thread_count = 32; // Seems to provide the best results
         let mut threads = Vec::new();
+
+        let st = Instant::now();
+
         let m_lib = freetype::Library::init().unwrap();
 
         let m_face = m_lib.new_memory_face(font_bytes.clone(), 0).unwrap();
@@ -111,7 +114,6 @@ impl Font {
         let num_glyphs = all_chars.len();
 
         let size_metrics = m_face.size_metrics().unwrap();
-
         for j in 0..thread_count {
             let batch_size = num_glyphs / thread_count;
             let offset = j*batch_size;
@@ -165,6 +167,7 @@ impl Font {
                     break;
                 }
                 finished_count += 1;
+                // println!("finished {} {:?}", finished_count, st.elapsed());
             }
             if let Ok(recv) = receiver.try_recv() {
                 if max_height < recv.height {
@@ -176,10 +179,12 @@ impl Font {
                 break;
             }
         }
+        println!("rendered in {:?}", st.elapsed());
+        let st = Instant::now();
 
         let mut meta_data: Vec<u8> = Vec::new();
         println!("CAH {}", cache_glyphs.len());
-        cache_glyphs.sort();
+        cache_glyphs.sort_by(|v1, v2| v1.height.cmp(&v2.height));
 
         // Creates the single texture atlas with all glyphs,
         // since swapping textures for every character is slow.
@@ -190,7 +195,9 @@ impl Font {
         let mut index_offset = 0;
         loop {
             let mut end_index = index_offset;
-            for row in 0..max_height {
+            let mut max_height = 0;
+            let mut row = 0;
+            while row < max_height.max(1) {
                 let mut x = 0;
                 let mut y = atlas_height;
                 for i in index_offset..cache_glyphs.len() {
@@ -199,10 +206,6 @@ impl Font {
                     if x + c_glyph.width > MAX_ATLAS_WIDTH || (atlas_width > 0 && x + c_glyph.width > atlas_width) {
                         if atlas_width == 0 {
                             atlas_width = x;
-                        }
-                        if row == 0 {
-                            y += max_height;
-                            atlas_height = atlas_height.max(y);
                         }
                         end_index = i;
                         for x in x..atlas_width {
@@ -220,14 +223,23 @@ impl Font {
                         atlas_bytes.write(&c_glyph.bytes[offset as usize..(offset + c_glyph.width) as usize]).unwrap();
                     }
 
+                    max_height = max_height.max(c_glyph.height);
                     x += c_glyph.width;
                 }
+                row += 1;
             }
+
             if index_offset == end_index {
                 break;
             }
+
+            atlas_height += max_height;
             index_offset = end_index;
         }
+        println!("atlas in {:?}", st.elapsed());
+        let st = Instant::now();
+
+        // println!("{} {} {} {}", atlas_width, atlas_height, atlas_width*atlas_height, atlas_bytes.len());
 
         meta_data.write(&(size_metrics.ascender as f32 / 64.0).to_be_bytes()).unwrap();
         meta_data.write(&(size_metrics.descender as f32 / 64.0).to_be_bytes()).unwrap();
@@ -246,6 +258,8 @@ impl Font {
         meta_data.write(&atlas_width.to_be_bytes()).unwrap();
         meta_data.write(&atlas_height.to_be_bytes()).unwrap();
         meta_data.write_all(atlas_bytes.as_slice()).unwrap();
+        println!("wrote in {:?}", st.elapsed());
+        let st = Instant::now();
         BindTexture(TEXTURE_2D, 0);
         meta_data
     }
