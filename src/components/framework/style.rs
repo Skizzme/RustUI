@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
-use crate::components::bounds::Bounds;
-use crate::components::position::Vec2;
+use crate::components::spatial::vec4::Vec4;
+use crate::components::spatial::vec2::Vec2;
 use crate::components::render::color::{Color, ToColor};
 
 #[derive(Debug, Clone)]
 pub enum Style {
     Color(Color),
-    Bounds(Bounds),
-    Pos(Vec2),
+    Vec4(Vec4),
+    Vec2(Vec2),
     Number(f32),
     String(String),
     Bool(bool),
@@ -32,12 +32,12 @@ impl StyleRegistry {
         self.styles.insert(key, value);
     }
 
-    pub fn set_bounds(&mut self, key: impl ToString, value: Bounds) {
-        self.set(key, Style::Bounds(value));
+    pub fn set_vec4(&mut self, key: impl ToString, value: Vec4) {
+        self.set(key, Style::Vec4(value));
     }
 
     pub fn set_pos(&mut self, key: impl ToString, value: Vec2) {
-        self.set(key, Style::Pos(value));
+        self.set(key, Style::Vec2(value));
     }
 
     pub fn set_color(&mut self, key: impl ToString, value: impl ToColor) {
@@ -75,16 +75,16 @@ impl StyleRegistry {
         }
     }
 
-    pub fn get_bounds(&self, key: impl ToString) -> Bounds {
+    pub fn get_vec4(&self, key: impl ToString) -> Vec4 {
         match self.get(key) {
-            Style::Bounds(b) => b.clone(),
-            _ => Bounds::xywh(0.0,0.0,0.0,0.0),
+            Style::Vec4(b) => b.clone(),
+            _ => Vec4::xywh(0.0, 0.0, 0.0, 0.0),
         }
     }
 
     pub fn get_pos(&self, key: impl ToString) -> Vec2 {
         match self.get(key) {
-            Style::Pos(p) => p.clone(),
+            Style::Vec2(p) => p.clone(),
             _ => Vec2::new(0.0, 0.0),
         }
     }

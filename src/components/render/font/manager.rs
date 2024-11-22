@@ -5,6 +5,8 @@ use std::time::Instant;
 use crate::asset_manager;
 use crate::components::render::font::{Font, FONT_RES};
 use crate::components::render::font::renderer::FontRenderer;
+use crate::components::spatial::vec2::Vec2;
+use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::VertexArray;
 use crate::components::wrapper::shader::Shader;
 
@@ -14,7 +16,7 @@ pub struct FontManager {
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     pub(crate) sdf_shader: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
-    pub cached_inst: HashMap<u64, (VertexArray, f32, f32, u32)>,
+    pub cached_inst: HashMap<u64, (VertexArray, Vec2, Vec4, u32)>,
 }
 
 impl FontManager {

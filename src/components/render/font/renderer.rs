@@ -5,11 +5,12 @@ use std::time::Instant;
 use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES};
 
 use crate::components::context::context;
-use crate::components::position::Vec2;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::{Font, FONT_RES};
 use crate::components::render::font::format::{FormatItem, FormattedText};
 use crate::components::render::stack::State::{Blend, Texture2D};
+use crate::components::spatial::vec2::Vec2;
+use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
@@ -69,7 +70,7 @@ impl FontRenderer {
         // (0.0, 0.0)
     // }
 
-    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, f32, f32) {
+    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
         let offset = offset.into();
         let pos = pos.into();
         let formatted_text = formatted_text.into();
@@ -109,6 +110,7 @@ impl FontRenderer {
 
             let mut max_line_height = 0f32;
             let mut height = 0f32;
+            let mut vec4 = Vec4::xywh(self.x, self.y, 0.0, 0.0);
             for item in formatted_text.items() {
                 match item {
                     FormatItem::None => {}
@@ -161,6 +163,11 @@ impl FontRenderer {
                             let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x * self.scale, pos_y, self.x+glyph.width * self.scale, pos_y+glyph.height * self.scale);
                             let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
 
+                            vec4.expand_to_x(p_left);
+                            vec4.expand_to_y(p_top);
+                            vec4.expand_to_x(p_right);
+                            vec4.expand_to_y(p_bottom);
+
                             dims.push([p_left, p_top, p_right-p_left, p_bottom-p_top]);
                             uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
 
@@ -209,14 +216,14 @@ impl FontRenderer {
             vao.add_buffer(t_buf);
             vao.add_buffer(dims_buf);
 
-            map.insert(hashed, (vao, self.line_width, height, 0));
+            map.insert(hashed, (vao, Vec2::new(self.line_width, height), vec4, 0));
         }
         map.get_mut(&hashed).unwrap().3 = 0;
-        let (vao, width, height, _) = map.get(&hashed).unwrap();
-        (vao.gl_ref(), *width, *height)
+        let (vao, end_pos, vec4, _) = map.get(&hashed).unwrap();
+        (vao.gl_ref(), *end_pos, vec4.clone())
     }
 
-    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (f32, f32) {
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
         self.draw_string_o(formatted_text, pos, (0,0))
     }
 
@@ -226,13 +233,14 @@ impl FontRenderer {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_o(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (f32, f32) {
+    pub unsafe fn draw_string_o(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (Vec2, Vec4) {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 
         let len = formatted_text.visible_length();
 
-        let (vao, width, height) = self.get_or_cache_inst(formatted_text, pos, offset);
+        let (vao, end_pos, vec4) = self.get_or_cache_inst(formatted_text, pos, offset);
+        vec4.draw_vec4(0xffffffff);
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));
@@ -253,7 +261,7 @@ impl FontRenderer {
 
         Texture::unbind();
         self.end();
-        (width, height)
+        (end_pos, vec4)
         // (0f32, 0f32)
     }
 

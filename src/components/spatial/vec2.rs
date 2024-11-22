@@ -1,8 +1,7 @@
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, DivAssign, MulAssign, Sub};
 use num_traits::NumCast;
-
-use crate::components::bounds::Bounds;
+use crate::components::spatial::vec4::Vec4;
 
 #[derive(Clone, Debug, Copy, PartialEq, Default)]
 pub struct Vec2 {
@@ -26,8 +25,8 @@ impl Vec2 {
     pub fn y(&self) -> f32 { self.y }
     pub fn xy(&self) -> (f32,f32) { (self.x, self.y) }
 
-    pub fn intersects(&self, bounds: &Bounds) -> bool {
-        self.x >= bounds.left() && self.y >= bounds.top() && self.x <= bounds.right() && self.y <= bounds.bottom()
+    pub fn intersects(&self, vec4: &Vec4) -> bool {
+        self.x >= vec4.left() && self.y >= vec4.top() && self.x <= vec4.right() && self.y <= vec4.bottom()
     }
 }
 
@@ -76,13 +75,13 @@ impl Into<(f64, f64)> for Vec2 {
     }
 }
 
-impl Into<Vec2> for Bounds {
+impl Into<Vec2> for Vec4 {
     fn into(self) -> Vec2 { Vec2::new(self.x(), self.y()) }
 }
-impl Into<Vec2> for &Bounds {
+impl Into<Vec2> for &Vec4 {
     fn into(self) -> Vec2 { Vec2::new(self.x(), self.y()) }
 }
-impl Into<Vec2> for &mut Bounds {
+impl Into<Vec2> for &mut Vec4 {
     fn into(self) -> Vec2 { Vec2::new(self.x(), self.y()) }
 }
 

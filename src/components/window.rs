@@ -1,6 +1,6 @@
 use glfw::WindowEvent;
 
-use crate::components::bounds::Bounds;
+use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::mouse::Mouse;
 
 pub struct Window {
@@ -30,9 +30,9 @@ impl Window {
         // println!("{:?}", event);
     }
 
-    /// Creates a bounds object of `(0.0,0.0,width,height)`
-    pub fn bounds(&self) -> Bounds {
-        Bounds::xywh(0.0, 0.0, self.width as f32, self.height as f32)
+    /// Creates a vec4 object of `(0.0,0.0,width,height)`
+    pub fn vec4(&self) -> Vec4 {
+        Vec4::xywh(0.0, 0.0, self.width as f32, self.height as f32)
     }
 
     pub fn width(&self) -> i32 {

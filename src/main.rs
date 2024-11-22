@@ -22,7 +22,7 @@ use std::time::{Instant, UNIX_EPOCH};
 use glfw::{Action, WindowHint};
 use winapi::um::wincon::FreeConsole;
 
-use RustUI::components::bounds::Bounds;
+use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::context::{context, ContextBuilder};
 use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
@@ -30,7 +30,7 @@ use RustUI::components::framework::element::{ElementBuilder};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
-use RustUI::components::position::Vec2;
+use RustUI::components::spatial::vec2::Vec2;
 use RustUI::components::render::font::Font;
 use RustUI::components::render::font::format::FormattedText;
 use RustUI::components::render::font::renderer::{FontRenderer};
@@ -123,13 +123,13 @@ impl ScreenTrait for TestScreen {
                 //         let tex = font.atlas_tex.as_ref().unwrap();
                 //         tex.bind();
                 //         // context().window().width()
-                //         context().renderer().draw_texture_rect(Bounds::xywh(0.0, 0.0, tex.width as f32, tex.height as f32), 0xffffffff);
+                //         context().renderer().draw_texture_rect(Vec4::xywh(0.0, 0.0, tex.width as f32, tex.height as f32), 0xffffffff);
                 //         Texture::unbind();
                 //         Shader::unbind();
                 //     }
                 // }
 
-                context().renderer().draw_rect(Bounds::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
+                context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
                 // self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
                 self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
@@ -158,7 +158,7 @@ impl ScreenTrait for TestScreen {
         let tex_cl2 = self.previous_tex.clone();
         let t_test_c = self.t_text.clone();
         let el_1 = ElementBuilder::new()
-            .bounds(Bounds::xywh(5.0, 100.0, 100.0, 100.0))
+            .vec4(Vec4::xywh(5.0, 100.0, 100.0, 100.0))
             .draggable(true)
             .handler(move |el, event| {
                 match event {
@@ -178,14 +178,14 @@ impl ScreenTrait for TestScreen {
                             return;
                         }
                         let mouse = context().window().mouse();
-                        // context().renderer().draw_rect(*el.bounds(), 0xff00ff00);
+                        // context().renderer().draw_rect(*el.vec4(), 0xff00ff00);
                         let st = Instant::now();
-                        let (width, height) = context().fonts().renderer("main").draw_string(t_test_c.lock().unwrap().clone(), el.bounds());
+                        let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().unwrap().clone(), el.vec4());
                         // println!("{:?}", st.elapsed());
-                        el.bounds().set_width(width);
-                        el.bounds().set_height(height);
+                        el.vec4().set_width(vec4.width());
+                        el.vec4().set_height(vec4.height());
                         let hovering = el.hovering();
-                        el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                        el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                         *tex_cl1.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
                     }
@@ -204,19 +204,19 @@ impl ScreenTrait for TestScreen {
             });
 
         let el_1_c = ElementBuilder::new()
-            .bounds(Bounds::xywh(0.0, 0.0, 40.0, 40.0))
+            .vec4(Vec4::xywh(0.0, 0.0, 40.0, 40.0))
             .draggable(false)
             .handler(|el, event| {
                 match event {
                     Event::Render(pass) => {
-                        // context().renderer().draw_rect(*el.bounds(), 0xff90ff20);z
+                        // context().renderer().draw_rect(*el.vec4(), 0xff90ff20);z
                         // let hovering = el.hovering();
                         if pass == &RenderPass::Bloom {
-                            let mut shrunk = el.bounds().clone();
+                            let mut shrunk = el.vec4().clone();
                             shrunk.expand(-10.0);
-                            context().renderer().draw_rect(*el.bounds(), 0xffffffff);
+                            context().renderer().draw_rect(*el.vec4(), 0xffffffff);
                             context().renderer().draw_rect(shrunk, 0xff10ff10);
-                            // el.bounds().draw_bounds(if hovering { 0xff10ff10 } else { 0xffffffff });
+                            // el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
                         }
                     },
                     Event::MouseClick(_, action) => {
@@ -238,7 +238,7 @@ impl ScreenTrait for TestScreen {
 
         // let el_1 = el_1.child(el_1_c.build());
         layer_0.add(el_1.build());
-        layer_0.add(Textbox::new(context().fonts().renderer("main"), "".to_string())); // "".to_string() self.text.clone()
+        layer_0.add(Textbox::new(context().fonts().renderer("main"), self.text.clone())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 
         vec![layer_0]

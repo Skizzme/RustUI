@@ -13,9 +13,9 @@ use std::time::Instant;
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
 use gl::*;
-use crate::components::position::Vec2;
 
 use crate::components::render::font::renderer::Glyph;
+use crate::components::spatial::vec2::Vec2;
 use crate::components::wrapper::texture::Texture;
 
 pub mod format;

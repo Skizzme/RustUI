@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use glfw::{Action, MouseButton, WindowEvent};
 
-use crate::components::position::Vec2;
+use crate::components::spatial::vec2::Vec2;
 
 pub struct Mouse {
     pub(crate) pos: Vec2,

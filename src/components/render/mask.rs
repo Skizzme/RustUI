@@ -1,4 +1,4 @@
-use crate::components::bounds::Bounds;
+use crate::components::spatial::vec4::Vec4;
 use crate::components::context::context;
 use crate::components::render::stack::State::Blend;
 use crate::components::wrapper::framebuffer::Framebuffer;
@@ -82,7 +82,7 @@ impl FramebufferMask {
 
         ActiveTexture(TEXTURE0);
 
-        renderer.draw_texture_rect(&Bounds::ltrb(0.0, window.height as f32, window.width as f32, 0.0), 0x00000000);
+        renderer.draw_texture_rect(&Vec4::ltrb(0.0, window.height as f32, window.width as f32, 0.0), 0x00000000);
 
         Shader::unbind();
         // Enable(BLEND);

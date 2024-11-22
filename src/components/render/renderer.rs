@@ -3,11 +3,11 @@ use std::path;
 use gl::*;
 
 use crate::asset_manager::file_contents_str;
-use crate::components::bounds::Bounds;
 use crate::components::context::context;
 use crate::components::render::color::ToColor;
 use crate::components::render::stack::Stack;
 use crate::components::render::stack::State::{Blend, Texture2D};
+use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::shader::Shader;
 use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2f};
 
@@ -73,18 +73,18 @@ impl Renderer {
     }
 
     /// Draws a nice rounded rectangle using texture shaders
-    pub unsafe fn draw_rounded_rect(&mut self, bounds: impl Into<Bounds>, radius: f32, color: impl ToColor) {
-        let bounds = bounds.into() + Bounds::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
+    pub unsafe fn draw_rounded_rect(&mut self, vec4: impl Into<Vec4>, radius: f32, color: impl ToColor) {
+        let vec4 = vec4.into() + Vec4::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
         self.stack.begin();
         self.stack.push(Blend(true));
         self.stack.push(Texture2D(true));
 
         self.rounded_rect_shader.bind();
-        self.rounded_rect_shader.u_put_float("u_size", vec![bounds.width(), bounds.height()]);
+        self.rounded_rect_shader.u_put_float("u_size", vec![vec4.width(), vec4.height()]);
         self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
         self.rounded_rect_shader.u_put_float("u_color", color.to_color().rgba().to_vec());
 
-        self.draw_texture_rect(&bounds, 0xffffffff);
+        self.draw_texture_rect(&vec4, 0xffffffff);
 
         Shader::unbind();
 
@@ -93,21 +93,21 @@ impl Renderer {
 
     /// Draws a circle, using a rounded rect, with the center point at x, y
     pub unsafe fn draw_circle(&mut self, x: f32, y: f32, radius: f32, color: impl ToColor) {
-        self.draw_rounded_rect(Bounds::ltrb(x-radius, y-radius, x+radius, y+radius), radius, color);
+        self.draw_rounded_rect(Vec4::ltrb(x-radius, y-radius, x+radius, y+radius), radius, color);
     }
 
     /// The most boring rectangle
-    pub unsafe fn draw_rect(&mut self, bounds: impl Into<Bounds>, color: impl ToColor) {
-        let bounds = bounds.into();
+    pub unsafe fn draw_rect(&mut self, vec4: impl Into<Vec4>, color: impl ToColor) {
+        let vec4 = vec4.into();
         self.stack.push(Texture2D(false));
         self.stack.push(Blend(true));
 
         color.apply_color();
         Begin(QUADS);
-        Vertex2f(bounds.left(), bounds.bottom());
-        Vertex2f(bounds.right(), bounds.bottom());
-        Vertex2f(bounds.right(), bounds.top());
-        Vertex2f(bounds.left(), bounds.top());
+        Vertex2f(vec4.left(), vec4.bottom());
+        Vertex2f(vec4.right(), vec4.bottom());
+        Vertex2f(vec4.right(), vec4.top());
+        Vertex2f(vec4.left(), vec4.top());
         End();
 
         self.stack.pop();
@@ -117,33 +117,33 @@ impl Renderer {
     /// A rectangle where each corner's color can be different
     ///
     /// Colors are in order of: bottom-left, bottom-right, top-right, top-left
-    pub unsafe fn draw_gradient_rect(&self, bounds: impl Into<Bounds>, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor)) {
-        let bounds = bounds.into();
+    pub unsafe fn draw_gradient_rect(&self, vec4: impl Into<Vec4>, color: (impl ToColor, impl ToColor, impl ToColor, impl ToColor)) {
+        let vec4 = vec4.into();
         Begin(QUADS);
         color.0.apply_color();
-        Vertex2f(bounds.left(), bounds.bottom());
+        Vertex2f(vec4.left(), vec4.bottom());
         color.1.apply_color();
-        Vertex2f(bounds.right(), bounds.bottom());
+        Vertex2f(vec4.right(), vec4.bottom());
         color.2.apply_color();
-        Vertex2f(bounds.right(), bounds.top());
+        Vertex2f(vec4.right(), vec4.top());
         color.3.apply_color();
-        Vertex2f(bounds.left(), bounds.top());
+        Vertex2f(vec4.left(), vec4.top());
         End();
     }
 
     /// Draws only the outline of a rectangle
-    pub unsafe fn draw_rect_outline(&mut self, bounds: impl Into<Bounds>, width: f32, color: impl ToColor) {
-        let bounds = bounds.into();
+    pub unsafe fn draw_rect_outline(&mut self, vec4: impl Into<Vec4>, width: f32, color: impl ToColor) {
+        let vec4 = vec4.into();
         self.stack.push(Texture2D(false));
 
         color.apply_color();
         LineWidth(width);
         Begin(LINE_STRIP);
-        Vertex2f(bounds.left(), bounds.bottom());
-        Vertex2f(bounds.right(), bounds.bottom());
-        Vertex2f(bounds.right(), bounds.top());
-        Vertex2f(bounds.left(), bounds.top());
-        Vertex2f(bounds.left(), bounds.bottom());
+        Vertex2f(vec4.left(), vec4.bottom());
+        Vertex2f(vec4.right(), vec4.bottom());
+        Vertex2f(vec4.right(), vec4.top());
+        Vertex2f(vec4.left(), vec4.top());
+        Vertex2f(vec4.left(), vec4.bottom());
         End();
 
         self.stack.pop();
@@ -152,21 +152,21 @@ impl Renderer {
     /// Draws a texture rectangle using normal UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect(&mut self, bounds: impl Into<Bounds>, color: impl ToColor) {
-        let bounds = bounds.into();
+    pub unsafe fn draw_texture_rect(&mut self, vec4: impl Into<Vec4>, color: impl ToColor) {
+        let vec4 = vec4.into();
         self.stack.push(Texture2D(false));
 
         Disable(TEXTURE_2D);
         Begin(QUADS);
         color.apply_color();
         TexCoord2d(0.0, 1.0);
-        Vertex2f(bounds.left(), bounds.bottom());
+        Vertex2f(vec4.left(), vec4.bottom());
         TexCoord2d(1.0, 1.0);
-        Vertex2f(bounds.right(), bounds.bottom());
+        Vertex2f(vec4.right(), vec4.bottom());
         TexCoord2d(1.0, 0.0);
-        Vertex2f(bounds.right(), bounds.top());
+        Vertex2f(vec4.right(), vec4.top());
         TexCoord2d(0.0, 0.0);
-        Vertex2f(bounds.left(), bounds.top());
+        Vertex2f(vec4.left(), vec4.top());
         End();
 
         self.stack.pop();
@@ -175,27 +175,27 @@ impl Renderer {
     /// Draws a texture rectangle using specified UV coordinates
     ///
     /// The texture should be bound before calling this
-    pub unsafe fn draw_texture_rect_uv(&mut self, bounds: impl Into<Bounds>, uv_bounds: impl Into<Bounds>, color: impl ToColor) {
-        let bounds = bounds.into();
-        let uv_bounds = uv_bounds.into();
+    pub unsafe fn draw_texture_rect_uv(&mut self, vec4: impl Into<Vec4>, uv_vec4: impl Into<Vec4>, color: impl ToColor) {
+        let vec4 = vec4.into();
+        let uv_vec4 = uv_vec4.into();
         self.stack.push(Texture2D(true));
 
         Begin(QUADS);
         color.apply_color();
-        TexCoord2f(uv_bounds.left(), uv_bounds.bottom());
-        Vertex2f(bounds.left(), bounds.bottom());
-        TexCoord2f(uv_bounds.right(), uv_bounds.bottom());
-        Vertex2f(bounds.right(), bounds.bottom());
-        TexCoord2f(uv_bounds.right(), uv_bounds.top());
-        Vertex2f(bounds.right(), bounds.top());
-        TexCoord2f(uv_bounds.left(), uv_bounds.top());
-        Vertex2f(bounds.left(), bounds.top());
+        TexCoord2f(uv_vec4.left(), uv_vec4.bottom());
+        Vertex2f(vec4.left(), vec4.bottom());
+        TexCoord2f(uv_vec4.right(), uv_vec4.bottom());
+        Vertex2f(vec4.right(), vec4.bottom());
+        TexCoord2f(uv_vec4.right(), uv_vec4.top());
+        Vertex2f(vec4.right(), vec4.top());
+        TexCoord2f(uv_vec4.left(), uv_vec4.top());
+        Vertex2f(vec4.left(), vec4.top());
         End();
 
         self.stack.pop();
     }
 
     pub unsafe fn draw_screen_rect_flipped(&mut self) {
-        self.draw_texture_rect_uv(&Bounds::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Bounds::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        self.draw_texture_rect_uv(&Vec4::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Vec4::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
     }
 }

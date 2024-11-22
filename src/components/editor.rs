@@ -6,18 +6,18 @@ use std::time::Instant;
 use glfw::{Action, Key, Modifiers, MouseButton};
 use rand::{Rng, thread_rng};
 use winapi::um::winuser::GetKeyboardState;
-use crate::components::bounds::Bounds;
+use crate::components::spatial::vec4::Vec4;
 use crate::components::context::context;
 use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
 use crate::components::framework::element::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
-use crate::components::position::Vec2;
+use crate::components::spatial::vec2::Vec2;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::format::{DefaultFormatter, FormatItem, FormattedText};
 use crate::components::render::font::renderer::FontRenderer;
 use crate::gl_binds::gl11::Translatef;
 
-const CHUNK_SIZE: usize = 8; // 1024*2
+const CHUNK_SIZE: usize = 256; // 1024*2
 // static SHIFT_MAP: HashMap<char, char> = ;
 
 pub fn get_shifted(c: char) -> char {
@@ -297,7 +297,7 @@ impl Textbox {
             text.push(FormatItem::Text(self.editor.chunks().get(index).unwrap().string.clone()));
 
             //self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string)
-            let mut pos = self.fr.draw_string_o(text.clone(), (0, 0), last_offset).into();
+            let (pos, _) = self.fr.draw_string_o(text.clone(), (0, 0), last_offset);
 
             let mut chunk = (
                 text,
@@ -344,6 +344,7 @@ impl UIHandler for Textbox {
                             let start_pos: Vec2 = (10, 100.0 + self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0)).into();
                             let mut last_offset: Vec2 = (0, 0).into();
                             // println!("{:?} {:?}", self.text_chunks.len(), start_pos);
+                            let mut to_update = Vec::new();
                             let mut i = 0;
                             for (text, t_pos, size) in &self.text_chunks {
                                 if t_pos.y + start_pos.y < 0.0 {
@@ -352,24 +353,26 @@ impl UIHandler for Textbox {
                                     continue;
                                 }
 
-                                let offset: Vec2 = self.fr.draw_string_o(text.clone(), start_pos, last_offset).into();
-                                let mut bounds = Bounds::from_pos(last_offset, (offset.x, last_offset.y + offset.y + self.fr.get_sized_height(16.0)));
-                                bounds.offset(start_pos);
-                                if context().window().mouse().pos().intersects(&bounds) {
+                                let (offset, vec4) = self.fr.draw_string_o(text.clone(), start_pos, last_offset);
+
+                                if context().window().mouse().pos().intersects(&vec4) {
                                     println!("clicked on {:?}", text);
+                                    to_update.push(i);
                                     let chunk = self.editor.chunks.get(i).unwrap();
                                     for c in chunk.string.chars() {
 
                                     }
                                 }
-                                println!("{} {} {} {}", last_offset.x, last_offset.y, offset.x, last_offset.y + offset.y);
-                                println!("{:?} {:?} {:?} {:?}", bounds, context().window().mouse().pos(), offset, text);
+
                                 last_offset = (offset.x, last_offset.y + offset.y).into();
 
                                 if t_pos.y + start_pos.y > context().window().height as f32 + 100f32 {
                                     break;
                                 }
                                 i += 1;
+                            }
+                            for i in to_update {
+                                self.update_chunk(i);
                             }
                         }
                     }
@@ -394,7 +397,8 @@ impl UIHandler for Textbox {
                         if *size != self.font_size.borrow().value() {
                             to_update_indices.push(i);
                         }
-                        let offset: Vec2 = self.fr.draw_string_o(text.clone(), start_pos, last_offset).into();
+                        let (offset, _) = self.fr.draw_string_o(text.clone(), start_pos, last_offset);
+
                         last_offset = (offset.x, last_offset.y + offset.y).into();
 
                         if t_pos.y + start_pos.y > context().window().height as f32 + 100f32 {
@@ -439,7 +443,7 @@ impl UIHandler for Textbox {
 
                     Translatef(0.0, self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
                     // println!("current ch sec {:?}", current.get_to_index(self.index));
-                    context().renderer().draw_rect(Bounds::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, self.fr.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
+                    context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, self.fr.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
 
                     Translatef(0.0, -self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
                     true
