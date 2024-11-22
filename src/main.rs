@@ -180,12 +180,12 @@ impl ScreenTrait for TestScreen {
                         let mouse = context().window().mouse();
                         // context().renderer().draw_rect(*el.vec4(), 0xff00ff00);
                         let st = Instant::now();
-                        let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().unwrap().clone(), el.vec4());
+                        let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().unwrap().clone(), el.bounds());
                         // println!("{:?}", st.elapsed());
-                        el.vec4().set_width(vec4.width());
-                        el.vec4().set_height(vec4.height());
+                        el.bounds().set_width(vec4.width());
+                        el.bounds().set_height(vec4.height());
                         let hovering = el.hovering();
-                        el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
+                        el.bounds().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                         *tex_cl1.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
                     }
@@ -212,9 +212,9 @@ impl ScreenTrait for TestScreen {
                         // context().renderer().draw_rect(*el.vec4(), 0xff90ff20);z
                         // let hovering = el.hovering();
                         if pass == &RenderPass::Bloom {
-                            let mut shrunk = el.vec4().clone();
+                            let mut shrunk = el.bounds().clone();
                             shrunk.expand(-10.0);
-                            context().renderer().draw_rect(*el.vec4(), 0xffffffff);
+                            context().renderer().draw_rect(*el.bounds(), 0xffffffff);
                             context().renderer().draw_rect(shrunk, 0xff10ff10);
                             // el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
                         }

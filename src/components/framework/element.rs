@@ -19,7 +19,7 @@ pub trait UIHandler {
 }
 
 pub struct Element {
-    vec4: Changing<Vec4>,
+    bounds: Changing<Vec4>,
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
     should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
     hovering: bool,
@@ -33,14 +33,14 @@ pub struct Element {
 }
 
 impl Element {
-    pub fn new<B, H, C>(vec4: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>, dyn_children: C) -> Element
+    pub fn new<B, H, C>(vec4: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>) -> Element
     where B: Into<Vec4>,
           H: FnMut(&mut Self, &Event) + 'static,
           C: FnMut(&mut Self) -> Option<Box<dyn Iterator<Item=Box<dyn UIHandler>>>> + 'static
     {
         let b = vec4.into();
         Element {
-            vec4: Changing::new(b.clone()),
+            bounds: Changing::new(b.clone()),
             handler: Arc::new(Mutex::new(Box::new(handler))),
             should_render_fn: Arc::new(Mutex::new(Box::new(|_, _| false))),
             hovering: false,
@@ -66,9 +66,9 @@ impl Element {
                     Event::Render(pass) => {
                         match pass {
                             RenderPass::Main => {
-                                let (_, b) = fr.draw_string((size, &text_c, color), el.vec4.current().top_left());
-                                el.vec4().set_width(b.width());
-                                el.vec4().set_height(b.height());
+                                let (_, b) = fr.draw_string((size, &text_c, color), el.bounds.current().top_left());
+                                el.bounds().set_width(b.width());
+                                el.bounds().set_height(b.height());
                             }
                             _ => {}
                         }
@@ -81,11 +81,11 @@ impl Element {
 
         builder.build()
     }
-    pub fn set_vec4(&mut self, vec4: Vec4) {
-        self.vec4.set(vec4);
+    pub fn set_bounds(&mut self, vec4: Vec4) {
+        self.bounds.set(vec4);
     }
-    pub fn vec4(&mut self) -> &mut Vec4 {
-        self.vec4.current()
+    pub fn bounds(&mut self) -> &mut Vec4 {
+        self.bounds.current()
     }
     pub fn hovering(&self) -> bool {
         self.hovering
@@ -101,12 +101,12 @@ impl UIHandler for Element {
         let mouse = context().window().mouse();
         match event {
             Event::PreRender => {
-                self.hovering = mouse.pos().intersects(self.vec4());
+                self.hovering = mouse.pos().intersects(self.bounds());
 
                 if self.dragging.0 {
                     // Set the dragging offset
                     let new = mouse.pos().clone() - self.dragging.1;
-                    self.vec4().set_pos(&new);
+                    self.bounds().set_pos(&new);
                     handled = true;
                 }
             }
@@ -119,7 +119,7 @@ impl UIHandler for Element {
             Event::PostRender => {
                 self.has_rendered = true;
                 self.scroll().update();
-                self.vec4.update();
+                self.bounds.update();
             }
             _ => {}
         }
@@ -129,7 +129,7 @@ impl UIHandler for Element {
         (h.lock().unwrap())(self, event);
 
         // Translate child positions, which also offsets mouse correctly
-        context().renderer().stack().push(State::Translate(self.vec4().x(), self.vec4().y()));
+        context().renderer().stack().push(State::Translate(self.bounds().x(), self.bounds().y()));
         for c in &mut self.children {
             match event {
                 Event::PostRender => {
@@ -160,7 +160,7 @@ impl UIHandler for Element {
                             } else { false },
                         Action::Press => {
                             if self.hovering && self.draggable {
-                                self.dragging = (true, mouse.pos().clone() - self.vec4().pos());
+                                self.dragging = (true, mouse.pos().clone() - self.bounds().pos());
                                 true
                             } else { false }
                         },
@@ -187,7 +187,7 @@ impl UIHandler for Element {
 
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        if !self.has_rendered || self.vec4.changed() || self.scroll.changed()  {
+        if !self.has_rendered || self.bounds.changed() || self.scroll.changed()  {
             return true;
         }
 
@@ -224,14 +224,14 @@ pub struct ElementBuilder {
 impl ElementBuilder {
     pub fn new() -> Self {
         ElementBuilder {
-            element: Element::new(Vec4::ltrb(0.0, 0.0, 0.0, 0.0), false, |_, _| {}, vec![], |_| None)
+            element: Element::new(Vec4::ltrb(0.0, 0.0, 0.0, 0.0), false, |_, _| {}, vec![])
         }
     }
 
     pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); self }
     pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); self }
     pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self { self.element.children.push(Box::new(child)); self }
-    pub fn vec4(mut self, vec4: Vec4) -> Self { self.element.vec4.set(vec4); self }
+    pub fn vec4(mut self, vec4: Vec4) -> Self { self.element.bounds.set(vec4); self }
     pub fn draggable(mut self, draggable: bool) -> Self { self.element.draggable = draggable; self }
     pub fn scrollable(mut self, scrollable: bool) -> Self { self.element.scrollable = scrollable; self }
     pub fn animations(&mut self) -> &mut AnimationRegistry { &mut self.element.animations }
