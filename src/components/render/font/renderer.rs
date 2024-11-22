@@ -219,8 +219,8 @@ impl FontRenderer {
             map.insert(hashed, (vao, Vec2::new(self.line_width, height), vec4, 0));
         }
         map.get_mut(&hashed).unwrap().3 = 0;
-        let (vao, end_pos, vec4, _) = map.get(&hashed).unwrap();
-        (vao.gl_ref(), *end_pos, vec4.clone())
+        let (vao, end_pos, bounds, _) = map.get(&hashed).unwrap();
+        (vao.gl_ref(), *end_pos, bounds.clone())
     }
 
     pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
@@ -239,8 +239,8 @@ impl FontRenderer {
 
         let len = formatted_text.visible_length();
 
-        let (vao, end_pos, vec4) = self.get_or_cache_inst(formatted_text, pos, offset);
-        vec4.draw_vec4(0xffffffff);
+        let (vao, end_pos, bounds) = self.get_or_cache_inst(formatted_text, pos, offset);
+        // vec4.draw_vec4(0xffffffff);
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));
@@ -261,7 +261,7 @@ impl FontRenderer {
 
         Texture::unbind();
         self.end();
-        (end_pos, vec4)
+        (end_pos, bounds)
         // (0f32, 0f32)
     }
 

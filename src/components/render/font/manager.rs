@@ -2,13 +2,13 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::time::Instant;
 
-use crate::asset_manager;
 use crate::components::render::font::{Font, FONT_RES};
 use crate::components::render::font::renderer::FontRenderer;
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::VertexArray;
 use crate::components::wrapper::shader::Shader;
+use crate::test_ui::asset_manager;
 
 pub struct FontManager {
     pub(crate) fonts: HashMap<String, Font>,

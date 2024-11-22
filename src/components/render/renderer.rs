@@ -2,7 +2,6 @@ use std::path;
 
 use gl::*;
 
-use crate::asset_manager::file_contents_str;
 use crate::components::context::context;
 use crate::components::render::color::ToColor;
 use crate::components::render::stack::Stack;
@@ -10,6 +9,7 @@ use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::shader::Shader;
 use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2f};
+use crate::test_ui::asset_manager::file_contents_str;
 
 /// The global renderer to render basically everything non-text related
 ///
