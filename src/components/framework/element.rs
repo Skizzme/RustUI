@@ -23,7 +23,6 @@ pub struct Element {
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
     should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
     hovering: bool,
-    dyn_child: Arc<Mutex<Box<dyn FnMut(&mut Self) -> Option<Box<dyn Iterator<Item=Box<dyn UIHandler>>>>>>>,
     children: Vec<Box<dyn UIHandler>>,
     pub draggable: bool,
     pub scrollable: bool,
@@ -45,7 +44,6 @@ impl Element {
             handler: Arc::new(Mutex::new(Box::new(handler))),
             should_render_fn: Arc::new(Mutex::new(Box::new(|_, _| false))),
             hovering: false,
-            dyn_child: Arc::new(Mutex::new(Box::new(dyn_children))),
             children,
             draggable,
             scrollable: false,
@@ -211,18 +209,6 @@ impl UIHandler for Element {
             }
         }
 
-        let cl = self.dyn_child.clone();
-        match (cl.lock().unwrap())(self) {
-            None => {}
-            Some(mut children) => {
-                for mut c in &mut children {
-                    if c.should_render(rp) {
-                        return true
-                    }
-                }
-            }
-        }
-
         false
     }
 
@@ -249,7 +235,6 @@ impl ElementBuilder {
     pub fn draggable(mut self, draggable: bool) -> Self { self.element.draggable = draggable; self }
     pub fn scrollable(mut self, scrollable: bool) -> Self { self.element.scrollable = scrollable; self }
     pub fn animations(&mut self) -> &mut AnimationRegistry { &mut self.element.animations }
-    pub fn children<C: FnMut(&mut Element) -> Option<Box<dyn Iterator<Item=Box<dyn UIHandler>>>> + 'static>(mut self, children: C) -> Self { self.element.dyn_child = Arc::new(Mutex::new(Box::new(children))); self }
     pub fn build(self) -> Element {
         self.element
     }
