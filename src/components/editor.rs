@@ -258,7 +258,7 @@ pub struct Textbox {
 
 impl Textbox {
     pub unsafe fn new(fr: FontRenderer, init: String) -> Self {
-        println!("EDIT {:?}", init.chars());
+        // println!("EDIT {:?}", init.chars());
         let mut anims = AnimationRegistry::new();
         let font_size = anims.new_anim();
         font_size.borrow_mut().set_target(16.0);
@@ -356,7 +356,7 @@ impl UIHandler for Textbox {
                                 let (offset, vec4) = self.fr.draw_string_o(text.clone(), start_pos, last_offset);
 
                                 if context().window().mouse().pos().intersects(&vec4) {
-                                    println!("clicked on {:?}", text);
+                                    // println!("clicked on {:?}", text);
                                     to_update.push(i);
                                     let chunk = self.editor.chunks.get(i).unwrap();
                                     for c in chunk.string.chars() {
@@ -526,7 +526,7 @@ impl UIHandler for Textbox {
                     }
                 }
                 println!("applied in {:?} {:?} {:?}", st.elapsed(), self.editor.chunks.len(), self.editor.current_chunk);
-                println!("{:?}", self.editor);
+                // println!("{:?}", self.editor);
                 // println!("{:?}", self.text_chunks);
                 true
             },

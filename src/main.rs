@@ -15,18 +15,21 @@
 // }
 
 use std::cell::RefCell;
+use std::hash::{Hash, Hasher};
+use std::marker::PhantomData;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Instant, UNIX_EPOCH};
 
-use glfw::{Action, WindowHint};
+use glfw::{Action, Key, WindowHint};
+use parking_lot::{Mutex, MutexGuard};
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::context::{context, ContextBuilder};
 use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
-use RustUI::components::framework::element::{ElementBuilder};
+use RustUI::components::framework::element::{ElementBuilder, MultiElement, UIHandler};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
@@ -60,6 +63,36 @@ fn main() {
     }
 }
 
+struct Ater<'a> {
+    lock: MutexGuard<'a, Vec<Test>>,
+    index: usize
+}
+
+impl<'a> Ater<'a> {
+    pub fn new(lock: MutexGuard<'a, Vec<Test>>) -> Self {
+        vec![].for_each()
+        Ater {
+            lock,
+            index: 0,
+        }
+    }
+}
+
+
+impl<'a> Iterator for Ater<'a> {
+    type Item = &'a Test;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.lock.len() {
+            let ret = &self.lock[self.index];
+            self.index += 1;
+            Some(ret)
+        } else {
+            None
+        }
+    }
+
+}
 
 pub struct TestScreen {
     pub text: String,
@@ -71,6 +104,7 @@ pub struct TestScreen {
     t_text: Arc<Mutex<FormattedText>>,
     mask: FramebufferMask,
     t_shader: Shader,
+    items: Arc<Mutex<Vec<Test>>>,
 }
 
 impl TestScreen {
@@ -87,6 +121,9 @@ impl TestScreen {
         println!("LEN : {}", t.len());
         context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         // context().fonts().load_font("main", true);
+
+        let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000)];
+        let test_vec = Arc::new(Mutex::new(v));
         TestScreen {
             text: t,
             fr: context().fonts().renderer("main"),
@@ -97,6 +134,7 @@ impl TestScreen {
             t_text: Arc::new(Mutex::new(FormattedText::new())),
             mask: FramebufferMask::new(),
             t_shader: Shader::new(shader_file("shaders/vertex.glsl"), shader_file("shaders/test.frag")),
+            items: test_vec,
         }
     }
 }
@@ -106,6 +144,20 @@ impl ScreenTrait for TestScreen {
         match event {
             Event::PreRender => {
                 self.t_size.borrow_mut().animate(4f32, AnimationType::Sin);
+            }
+            Event::Keyboard(key, action, _) => {
+                if action != &Action::Press {
+                    return;
+                }
+                let len = self.items.lock().len();
+                match key {
+                    Key::Backspace => {
+                        self.items.lock().pop();
+                    }
+                    _ => {
+                        self.items.lock().push(Test::new(len as i32));
+                    }
+                }
             }
             Event::Scroll(_, y) => {
                 let current = self.t_size.borrow().target();
@@ -171,7 +223,7 @@ impl ScreenTrait for TestScreen {
                             (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0xffff2020).into()
                         ];
                         let t: FormattedText = items.into();
-                        *t_test_c.lock().unwrap() = t;
+                        *t_test_c.lock() = t;
                     }
                     Event::Render(pass) => {
                         if pass != &RenderPass::Main {
@@ -180,14 +232,14 @@ impl ScreenTrait for TestScreen {
                         let mouse = context().window().mouse();
                         // context().renderer().draw_rect(*el.vec4(), 0xff00ff00);
                         let st = Instant::now();
-                        let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().unwrap().clone(), el.bounds());
+                        let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().clone(), el.bounds());
                         // println!("{:?}", st.elapsed());
                         el.bounds().set_width(vec4.width());
                         el.bounds().set_height(vec4.height());
                         let hovering = el.hovering();
                         el.bounds().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
 
-                        *tex_cl1.lock().unwrap() = format!("{:?}", context().window().mouse().pos()).to_string();
+                        *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
                     }
                     _ => {}
                 }
@@ -196,7 +248,7 @@ impl ScreenTrait for TestScreen {
                 // println!("el p check {:?}", rp);
                 if rp == &RenderPass::Main {
                     let mouse = context().window().mouse();
-                    let res = tex_cl2.lock().unwrap().clone() != format!("{:?}", mouse.pos()).to_string();
+                    let res = tex_cl2.lock().clone() != format!("{:?}", mouse.pos()).to_string();
                     res
                 } else {
                     false
@@ -237,8 +289,44 @@ impl ScreenTrait for TestScreen {
             });
 
         // let el_1 = el_1.child(el_1_c.build());
+
+        let test_vec_1 = self.items.clone();
+        let test_vec_2 = self.items.clone();
+        let el_test = MultiElement::new(
+            move || {
+                // let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000), Test::new(1), Test::new(2)];
+                let t = Ater::new(test_vec_2.lock());
+                (t, 0)
+            },
+            move |exists, state, item| {
+                let state_c = *state;
+                let vec = test_vec_1.clone();
+                let num = item.v;
+                (*state) += 1;
+                let res = if !exists {
+                    println!("CREATING! {:?} {:?}", state, exists);
+                    Some(Box::new(ElementBuilder::new()
+                        .handler(move |el, e| {
+                            match e {
+                                Event::Render(pass) => {
+                                    if pass != &RenderPass::Main {
+                                        return;
+                                    }
+                                    // println!("RENDER {}", state_c);
+                                    let mut fr = context().fonts().renderer("main");
+                                    fr.draw_string((16.0, format!("{}", num), 0xffffffff), (0, state_c * 20));
+                                }
+                                _ => {}
+                            }
+                        }).build()) as Box<dyn UIHandler>)
+                } else { None };
+                res
+            }
+        );
+
+        layer_0.add(el_test);
         layer_0.add(el_1.build());
-        layer_0.add(Textbox::new(context().fonts().renderer("main"), self.text.clone())); // "".to_string() self.text.clone()
+        // layer_0.add(Textbox::new(context().fonts().renderer("main"), self.text.clone())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 
         vec![layer_0]
@@ -252,5 +340,24 @@ impl ScreenTrait for TestScreen {
         } else {
             false
         }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug, Clone)]
+struct Test {
+    v: i32,
+}
+
+impl Test {
+    pub fn new(v: i32) -> Self {
+        Test {
+            v
+        }
+    }
+}
+
+impl Hash for Test {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write(&mut self.v.to_be_bytes());
     }
 }

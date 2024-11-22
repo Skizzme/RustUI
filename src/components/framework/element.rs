@@ -1,3 +1,6 @@
+use std::collections::{HashMap, HashSet};
+use std::fmt::Debug;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::{Arc, Mutex};
 
 use glfw::{Action, MouseButton};
@@ -18,6 +21,104 @@ pub trait UIHandler {
     fn animations(&mut self) -> Option<&mut AnimationRegistry>;
 }
 
+pub struct MultiElement<IterFn, Iter, Item, State, Cons>
+    where IterFn: FnMut() -> (Iter, State),
+          State: Default,
+          Iter: IntoIterator<Item=Item>,
+          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
+          Item: Hash + Eq + Debug,
+{
+    elements: HashMap<Item, Box<dyn UIHandler>>,
+    iter_fn: IterFn,
+    current_state: State,
+    item_construct: Cons,
+}
+
+impl<IterFn, Iter, Item, State, Cons> MultiElement<IterFn, Iter, Item, State, Cons>
+    where IterFn: FnMut() -> (Iter, State),
+          State: Default,
+          Iter: IntoIterator<Item=Item>,
+          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
+          Item: Eq + Hash + Debug,
+{
+    pub fn new(iter_fn: IterFn, item_construct: Cons) -> Self {
+        MultiElement {
+            elements: HashMap::new(),
+            iter_fn,
+            current_state: State::default(),
+            item_construct,
+        }
+    }
+
+    pub fn update_elements(&mut self) {
+        let (iter, mut state) = (self.iter_fn)();
+        self.current_state = state;
+        let iter = iter.into_iter();
+        let mut new_elements = Vec::new();
+        {
+            let mut key_set = HashSet::new();
+            self.elements.keys().for_each(|v| { key_set.insert(v); });
+
+            for mut item in iter {
+                let exists = key_set.contains(&item);
+                key_set.remove(&item);
+                match (self.item_construct)(exists, &mut self.current_state, &mut item) {
+                    None => {}
+                    Some(el) => {
+                        new_elements.push((item, el));
+                    }
+                }
+            }
+            // At this point, anything remaining in th
+            //             //     self.elements.remove(&item);
+            //             // }e key_set are objects that were not in the iter,
+            // meaning they should be removed
+            // for item in key_set {
+        }
+        for (k, v) in new_elements{
+            println!("K {:?}", k);
+            self.elements.insert(k, v);
+        }
+    }
+}
+
+impl<IterFn, Iter, Item, State, Cons> UIHandler for MultiElement<IterFn, Iter, Item, State, Cons>
+    where IterFn: FnMut() -> (Iter, State),
+          State: Default,
+          Iter: IntoIterator<Item=Item>,
+          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
+          Item: Eq + Hash + Debug,
+{
+    unsafe fn handle(&mut self, event: &Event) -> bool {
+        match event {
+            Event::PreRender => {
+                self.update_elements();
+            }
+            _ => {}
+        }
+
+        let mut handled = false;
+        for el in self.elements.values_mut() {
+            handled = el.handle(event);
+        }
+
+        handled
+    }
+
+    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
+        for el in self.elements.values_mut() {
+            if el.should_render(render_pass) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn animations(&mut self) -> Option<&mut AnimationRegistry> {
+        None // TODO
+    }
+}
+
 pub struct Element {
     bounds: Changing<Vec4>,
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
@@ -33,10 +134,9 @@ pub struct Element {
 }
 
 impl Element {
-    pub fn new<B, H, C>(vec4: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>) -> Element
+    pub fn new<B, H>(vec4: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>) -> Element
     where B: Into<Vec4>,
           H: FnMut(&mut Self, &Event) + 'static,
-          C: FnMut(&mut Self) -> Option<Box<dyn Iterator<Item=Box<dyn UIHandler>>>> + 'static
     {
         let b = vec4.into();
         Element {
@@ -228,13 +328,27 @@ impl ElementBuilder {
         }
     }
 
-    pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self { self.element.handler = Arc::new(Mutex::new(Box::new(handler))); self }
-    pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self { self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); self }
-    pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self { self.element.children.push(Box::new(child)); self }
-    pub fn vec4(mut self, vec4: Vec4) -> Self { self.element.bounds.set(vec4); self }
-    pub fn draggable(mut self, draggable: bool) -> Self { self.element.draggable = draggable; self }
-    pub fn scrollable(mut self, scrollable: bool) -> Self { self.element.scrollable = scrollable; self }
-    pub fn animations(&mut self) -> &mut AnimationRegistry { &mut self.element.animations }
+    pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self {
+        self.element.handler = Arc::new(Mutex::new(Box::new(handler))); self
+    }
+    pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self {
+        self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); self
+    }
+    pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self {
+        self.element.children.push(Box::new(child)); self
+    }
+    pub fn vec4(mut self, vec4: Vec4) -> Self {
+        self.element.bounds.set(vec4); self
+    }
+    pub fn draggable(mut self, draggable: bool) -> Self {
+        self.element.draggable = draggable; self
+    }
+    pub fn scrollable(mut self, scrollable: bool) -> Self {
+        self.element.scrollable = scrollable; self
+    }
+    pub fn animations(&mut self) -> &mut AnimationRegistry {
+        &mut self.element.animations
+    }
     pub fn build(self) -> Element {
         self.element
     }
