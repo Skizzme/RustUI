@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use num_traits::{NumCast};
+use num_traits::NumCast;
 
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::format::FormatItem::{Offset, Size, Text};

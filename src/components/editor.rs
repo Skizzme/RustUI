@@ -1,20 +1,19 @@
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
-use std::rc::Rc;
 use std::time::Instant;
+
 use glfw::{Action, Key, Modifiers, MouseButton};
 use rand::{Rng, thread_rng};
-use winapi::um::winuser::GetKeyboardState;
-use crate::components::spatial::vec4::Vec4;
+
 use crate::components::context::context;
-use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
+use crate::components::framework::animation::{AnimationRef, AnimationRegistry, AnimationType};
 use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
-use crate::components::spatial::vec2::Vec2;
-use crate::components::render::color::{Color, ToColor};
-use crate::components::render::font::format::{DefaultFormatter, FormatItem, FormattedText};
+use crate::components::render::color::Color;
+use crate::components::render::font::format::{FormatItem, FormattedText};
 use crate::components::render::font::renderer::FontRenderer;
+use crate::components::spatial::vec2::Vec2;
+use crate::components::spatial::vec4::Vec4;
 use crate::gl_binds::gl11::Translatef;
 
 const CHUNK_SIZE: usize = 256; // 1024*2

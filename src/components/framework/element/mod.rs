@@ -1,27 +1,23 @@
-pub mod ui_traits;
-pub mod multi_element;
-
-use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::marker::PhantomData;
-use std::rc::Rc;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use glfw::{Action, MouseButton};
 use parking_lot::Mutex;
 
-use crate::components::spatial::vec4::Vec4;
 use crate::components::context::context;
 use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::changing::Changing;
 use crate::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
-use crate::components::spatial::vec2::Vec2;
 use crate::components::render::color::ToColor;
 use crate::components::render::font::renderer::FontRenderer;
 use crate::components::render::stack::State;
+use crate::components::spatial::vec2::Vec2;
+use crate::components::spatial::vec4::Vec4;
+
+pub mod ui_traits;
+pub mod multi_element;
 
 pub struct Element {
     bounds: Changing<Vec4>,

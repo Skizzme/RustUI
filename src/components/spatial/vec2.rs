@@ -1,6 +1,8 @@
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, AddAssign, DivAssign, MulAssign, Sub};
+
 use num_traits::NumCast;
+
 use crate::components::spatial::vec4::Vec4;
 
 #[derive(Clone, Debug, Copy, PartialEq, Default)]

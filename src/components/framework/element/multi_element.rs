@@ -4,18 +4,14 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::time::UNIX_EPOCH;
+
 use parking_lot::Mutex;
+
 use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
 
-pub struct MultiElement<IterFn, State, Item, Cons>
-    where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
-          State: Debug,
-          Item: UIIdentifier + Debug,
-{
+pub struct MultiElement<IterFn, State, Item, Cons> {
     elements: HashMap<u64, Box<dyn UIHandler>>,
     changed: bool,
     iter_fn: IterFn,
@@ -26,8 +22,7 @@ pub struct MultiElement<IterFn, State, Item, Cons>
 impl<IterFn, State, Item, Cons> MultiElement<IterFn, State, Item, Cons>
     where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
           Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
-          State: Debug,
-          Item: UIIdentifier + Debug,
+          Item: UIIdentifier,
 {
     pub fn new(iter_fn: IterFn, item_construct: Cons) -> Self {
         MultiElement {
@@ -83,8 +78,7 @@ impl<IterFn, State, Item, Cons> MultiElement<IterFn, State, Item, Cons>
 impl<IterFn, State, Item, Cons> UIHandler for MultiElement<IterFn, State, Item, Cons>
     where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
           Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
-          State: Debug,
-          Item: UIIdentifier + Debug,
+          Item: UIIdentifier,
 {
     unsafe fn handle(&mut self, event: &Event) -> bool {
         match event {

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::components::spatial::vec4::Vec4;
-use crate::components::spatial::vec2::Vec2;
 use crate::components::render::color::{Color, ToColor};
+use crate::components::spatial::vec2::Vec2;
+use crate::components::spatial::vec4::Vec4;
 
 #[derive(Debug, Clone)]
 pub enum Style {

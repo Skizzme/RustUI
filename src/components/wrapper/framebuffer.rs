@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::ptr::null;
-use std::time::Instant;
 
 use crate::components::context::context;
 use crate::components::wrapper::shader::Shader;

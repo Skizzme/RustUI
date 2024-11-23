@@ -1,11 +1,10 @@
 use std::hash;
 use std::hash::{Hash, Hasher};
-use std::time::Instant;
 
 use gl::{ActiveTexture, ARRAY_BUFFER, BindTexture, BindVertexArray, BLEND, Disable, FLOAT, TEXTURE0, TEXTURE_2D, TRIANGLES};
 
 use crate::components::context::context;
-use crate::components::render::color::{Color, ToColor};
+use crate::components::render::color::Color;
 use crate::components::render::font::{Font, FONT_RES};
 use crate::components::render::font::format::{FormatItem, FormattedText};
 use crate::components::render::stack::State::{Blend, Texture2D};
@@ -14,9 +13,8 @@ use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl11::{FALSE, Finish, Scaled, Scalef};
+use crate::gl_binds::gl11::FALSE;
 use crate::gl_binds::gl11::types::{GLsizei, GLuint};
-use crate::gl_binds::gl30::{PopMatrix, PushMatrix};
 use crate::gl_binds::gl41::DrawArraysInstanced;
 
 /// The object used to render fonts

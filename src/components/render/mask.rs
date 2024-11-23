@@ -1,9 +1,9 @@
-use crate::components::spatial::vec4::Vec4;
 use crate::components::context::context;
 use crate::components::render::stack::State::Blend;
+use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::components::wrapper::shader::Shader;
-use crate::gl_binds::gl11::{RGB, RGBA};
+use crate::gl_binds::gl11::RGBA;
 use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0, TEXTURE1, TEXTURE2, TEXTURE3};
 use crate::gl_binds::gl30::{BLEND, Disable, Enable};
 

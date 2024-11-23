@@ -2,7 +2,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use gl::types::*;
-use glfw::{Context, fail_on_errors, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
+use glfw::{Context, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::framework::Framework;

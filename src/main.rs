@@ -15,35 +15,30 @@
 // }
 
 use std::cell::RefCell;
-use std::hash::{Hash, Hasher};
-use std::marker::PhantomData;
+use std::hash::Hash;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Instant, UNIX_EPOCH};
 
 use glfw::{Action, Key, WindowHint};
-use parking_lot::{Mutex, MutexGuard};
+use parking_lot::Mutex;
 use winapi::um::wincon::FreeConsole;
 
-use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::context::{context, ContextBuilder};
-use RustUI::components::editor::Textbox;
-use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
+use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationType};
 use RustUI::components::framework::element::ElementBuilder;
 use RustUI::components::framework::element::multi_element::MultiElement;
 use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
-use RustUI::components::spatial::vec2::Vec2;
-use RustUI::components::render::font::Font;
 use RustUI::components::render::font::format::FormattedText;
-use RustUI::components::render::font::renderer::{FontRenderer};
+use RustUI::components::render::font::renderer::FontRenderer;
 use RustUI::components::render::mask::FramebufferMask;
 use RustUI::components::render::renderer::shader_file;
-use RustUI::components::render::stack::{GlState, State};
+use RustUI::components::spatial::vec2::Vec2;
+use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::wrapper::shader::Shader;
-use RustUI::components::wrapper::texture::Texture;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
