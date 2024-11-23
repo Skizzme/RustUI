@@ -27,7 +27,7 @@ use winapi::um::wincon::FreeConsole;
 use RustUI::components::context::{context, ContextBuilder};
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationType};
 use RustUI::components::framework::element::ElementBuilder;
-use RustUI::components::framework::element::multi_element::MultiElement;
+use RustUI::components::framework::element::comp_element::CompElement;
 use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
@@ -243,7 +243,7 @@ impl ScreenTrait for TestScreen {
         let test_vec_1 = self.items.clone();
         let test_vec_2 = self.items.clone();
 
-        let el_test = MultiElement::new(
+        let el_test = CompElement::new(
             move |mut inner| {
                 let mut lock = test_vec_2.lock();
                 let mut i = 0;

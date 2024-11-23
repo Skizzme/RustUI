@@ -1,3 +1,4 @@
+use rand::{RngCore, thread_rng};
 use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::event::{Event, RenderPass};
 
@@ -9,4 +10,8 @@ pub trait UIHandler {
 
 pub trait UIIdentifier {
     fn ui_id(&self) -> u64;
+}
+
+pub fn random_id() -> u64 {
+    thread_rng().next_u64()
 }

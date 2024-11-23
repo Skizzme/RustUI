@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::hash::{Hash, Hasher};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
 
 use glfw::{Action, MouseButton};
@@ -17,9 +17,10 @@ use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 
 pub mod ui_traits;
-pub mod multi_element;
+pub mod comp_element;
 
 pub struct Element {
+    id: u64,
     bounds: Changing<Vec4>,
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
     should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
@@ -40,6 +41,7 @@ impl Element {
     {
         let b = vec4.into();
         Element {
+            id: ui_traits::random_id(),
             bounds: Changing::new(b.clone()),
             handler: Arc::new(Mutex::new(Box::new(handler))),
             should_render_fn: Arc::new(Mutex::new(Box::new(|_, _| false))),
@@ -217,6 +219,12 @@ impl UIHandler for Element {
 
     fn animations(&mut self) -> Option<&mut AnimationRegistry> {
         Some(&mut self.animations)
+    }
+}
+
+impl UIIdentifier for Element {
+    fn ui_id(&self) -> u64 {
+        self.id
     }
 }
 
