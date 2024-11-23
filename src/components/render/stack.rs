@@ -36,7 +36,6 @@ impl State {
                 Scalef(x, y, 1.0);
             }
         }
-        // println!("applied {:?}", self);
     }
 
     pub unsafe fn unapply(&self) {
@@ -52,7 +51,6 @@ impl State {
                 Scalef(1.0/x, 1.0/y, 1.0);
             }
         }
-        // println!("unapplied {:?}", self);
     }
 
     pub fn same(&self, other: &State) -> bool {

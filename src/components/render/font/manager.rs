@@ -16,7 +16,7 @@ pub struct FontManager {
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     pub(crate) sdf_shader: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
-    pub cached_inst: HashMap<u64, (VertexArray, Vec2, Vec4, u32)>,
+    pub(crate) cached_inst: HashMap<u64, (VertexArray, Vec2, Vec4, u32)>,
 }
 
 impl FontManager {

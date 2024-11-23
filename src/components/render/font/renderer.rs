@@ -58,17 +58,7 @@ impl FontRenderer {
         }
     }
 
-    /// Renders a string using immediate GL
-    ///
-    /// The center of the rendered string is at `x`
-    // pub unsafe fn draw_centered_string(&mut self, size: f32, string: impl ToString, x: f32, y: f32, color: impl ToColor) -> (f32, f32) {
-        // let string = string.to_string();
-        // let width = self.get_width(size, string.clone());
-        // self.draw_string(size, string, (x-width/2.0, y), color)
-        // (0.0, 0.0)
-    // }
-
-    unsafe fn get_or_cache_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
+    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
         let offset = offset.into();
         let pos = pos.into();
         let formatted_text = formatted_text.into();
@@ -237,7 +227,7 @@ impl FontRenderer {
 
         let len = formatted_text.visible_length();
 
-        let (vao, end_pos, bounds) = self.get_or_cache_inst(formatted_text, pos, offset);
+        let (vao, end_pos, bounds) = self.get_inst(formatted_text, pos, offset);
         // vec4.draw_vec4(0xffffffff);
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));

@@ -16,6 +16,7 @@
 
 use std::cell::RefCell;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::Add;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Instant, UNIX_EPOCH};
@@ -251,23 +252,31 @@ impl ScreenTrait for TestScreen {
                 for item in lock.iter_mut() {
                     inner(&mut state, item);
                     i += 1;
-                    state.set_x((i % 10 * 20) as f32);
-                    state.set_y(((i / 10) * 20) as f32);
+                    // state.set_x((i % 10 * 20) as f32);
+                    // state.set_y(((i / 10) * 20) as f32);
                 }
             },
             move |exists, state, item| {
                 let state_c = *state;
                 let num = item.v;
                 let res = if !exists {
-                    Some(Box::new(ElementBuilder::new()
+                    let mut el = ElementBuilder::new()
                         .handler(move |el, e| {
                             if e.is_render(RenderPass::Main) {
                                 let mut fr = context().fonts().renderer("main");
                                 let (pos, bounds) = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c);
                                 bounds.draw(0xff9020ff);
                                 el.set_bounds(bounds);
+                                println!("set bounds {:?}", bounds);
                             }
-                        }).build()) as Box<dyn UIHandler>)
+                        }).build();
+                    el.handle(&Event::Render(RenderPass::Main));
+                    println!("bounds {:?}", el.bounds());
+                    let mut fr = context().fonts().renderer("main");
+                    let (_, _, bounds) = fr.get_inst((16.0, format!("{}", num), 0xffffffff), state_c, (0,0));
+                    println!("OFFSET {:?}", bounds);
+                    state_c.add((bounds.width(), bounds.height()));
+                    Some(Box::new(el) as Box<dyn UIHandler>)
                 } else { None };
                 res
             }
