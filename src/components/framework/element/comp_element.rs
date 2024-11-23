@@ -11,6 +11,97 @@ use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::element::ui_traits::{random_id, UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
 
+/// An easy way to handle the UI representation of any sort of collections.
+///
+/// Given the necessary closures, it will handle adding, removing, and event dispatching of any sub-handlers.
+///
+/// As an example, it can be used to represent a collection of users (such as a HashMap).
+///
+/// ### Item
+/// [`Item`] is the thing that is being represented, and only needs to implement [`UIIdentifier`]. The value returned by [`ui_id()`]
+/// is only used by this single [`CompElement`]. This way there could be many different representations of the same [`Item`] across
+/// multiple [`CompElement`].
+///
+/// In the example of representing a collection of users with [`UIIdentifier`] implemented, [`ui_id()`]
+/// could simply return the ID of the user.
+///
+/// ### State
+/// [`State`] can be anything, but should be used in the process of creating a [`UIHandler`] which is returned from [`Cons`].
+/// Something like a position, index, etc.
+///
+/// ### Cons
+/// [`Cons`] is the closure that provides a new object of type `dyn UIHandler`. This handler will be the UI representation
+/// of the [`Item`] provided. [`Cons`] accepts `(bool, &mut State, &mut Item)`. The bool is if the [`Item`] already has
+/// an element to represent it locally in this [`CompElement`]
+///
+///
+/// ### IterFn
+/// The closure [`IterFn`] provides the functionality of any kind of iterator, without copying or cloning any values,
+/// by being structured in a way that the closure provided by the [`IterFn`] type is called on every iteration. The closure
+/// handles the construction and calling of [`Cons`].
+///
+/// # Examples
+///
+/// ```
+/// use std::hash::{DefaultHasher, Hasher};
+/// use std::sync::{Arc, Mutex};
+/// use RustUI::components::framework::element::comp_element::CompElement;
+/// use RustUI::components::framework::element::ElementBuilder;
+/// use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
+/// use RustUI::components::spatial::vec2::Vec2;
+///
+/// struct User {
+///     name: String
+/// }
+///
+/// impl UIIdentifier for User {
+///     fn ui_id(&self) -> u64 {
+///         let mut hasher = DefaultHasher::new();
+///         hasher.write(self.name.as_bytes());
+///         hasher.finish()
+///     }
+/// }
+///
+/// // Could also be a HashMap, HashSet, wrapped in Arc<Mutex<...>>, etc.
+/// let mut users = vec![
+///     User { name: "user_1".to_string() },
+///     User { name: "user_2".to_string() }
+/// ];
+///
+/// let users_list = CompElement::new(
+///     // IterFn closure
+///     move |mut inner| {
+///         let mut i = 0;
+///         let mut state = Vec2::new(0.0, 0.0);
+///
+///         // Iterate over the usernames.
+///         // Any method of iterating can work, including something where an Arc<Mutex<...>> must be locked
+///         for item in &mut users {
+///             inner(&mut state, item);
+///             i += 1;
+///
+///             // Because state can be anything, a Vec2 can be used
+///             // to arrange the list of usernames in a grid pattern
+///             state.set_x((i % 10 * 20) as f32);
+///             state.set_y(((i / 10) * 20) as f32);
+///         }
+///     },
+///     // Cons closure
+///     move |exists, state, item| {
+///         let state_c = *state;
+///         let username = item.name.to_string();
+///         let res = if !exists {
+///             Some(Box::new(ElementBuilder::new()
+///                 .handler(move |el, e| {
+///                     // handle the events
+///                 }).build()) as Box<dyn UIHandler>)
+///         } else { None };
+///         res
+///     }
+/// );
+/// ```
+///
+/// [`ui_id()`]: UIIdentifier::ui_id
 pub struct CompElement<IterFn, State, Item, Cons> {
     id: u64,
     elements: HashMap<u64, Box<dyn UIHandler>>,

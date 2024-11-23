@@ -15,7 +15,7 @@
 // }
 
 use std::cell::RefCell;
-use std::hash::Hash;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Instant, UNIX_EPOCH};
