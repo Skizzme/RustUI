@@ -29,7 +29,7 @@ use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::context::{context, ContextBuilder};
 use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
-use RustUI::components::framework::element::{ElementBuilder, MultiElement, UIHandler};
+use RustUI::components::framework::element::{ElementBuilder, MultiElement, UIHandler, UIIdentifier};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
@@ -61,37 +61,6 @@ fn main() {
         context().framework().set_screen(TestScreen::new());
         context().do_loop()
     }
-}
-
-struct Ater<'a> {
-    lock: MutexGuard<'a, Vec<Test>>,
-    index: usize
-}
-
-impl<'a> Ater<'a> {
-    pub fn new(lock: MutexGuard<'a, Vec<Test>>) -> Self {
-        vec![].for_each()
-        Ater {
-            lock,
-            index: 0,
-        }
-    }
-}
-
-
-impl<'a> Iterator for Ater<'a> {
-    type Item = &'a Test;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.lock.len() {
-            let ret = &self.lock[self.index];
-            self.index += 1;
-            Some(ret)
-        } else {
-            None
-        }
-    }
-
 }
 
 pub struct TestScreen {
@@ -293,18 +262,19 @@ impl ScreenTrait for TestScreen {
         let test_vec_1 = self.items.clone();
         let test_vec_2 = self.items.clone();
         let el_test = MultiElement::new(
-            move || {
-                // let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000), Test::new(1), Test::new(2)];
-                let t = Ater::new(test_vec_2.lock());
-                (t, 0)
+            move |mut inner| {
+                let mut lock = test_vec_2.lock();
+                let mut state = 0;
+                for item in lock.iter_mut() {
+                    inner(&mut state, item);
+                    state += 1;
+                }
             },
             move |exists, state, item| {
                 let state_c = *state;
-                let vec = test_vec_1.clone();
                 let num = item.v;
                 (*state) += 1;
                 let res = if !exists {
-                    println!("CREATING! {:?} {:?}", state, exists);
                     Some(Box::new(ElementBuilder::new()
                         .handler(move |el, e| {
                             match e {
@@ -312,7 +282,6 @@ impl ScreenTrait for TestScreen {
                                     if pass != &RenderPass::Main {
                                         return;
                                     }
-                                    // println!("RENDER {}", state_c);
                                     let mut fr = context().fonts().renderer("main");
                                     fr.draw_string((16.0, format!("{}", num), 0xffffffff), (0, state_c * 20));
                                 }
@@ -356,8 +325,8 @@ impl Test {
     }
 }
 
-impl Hash for Test {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write(&mut self.v.to_be_bytes());
+impl UIIdentifier for Test {
+    fn ui_id(&self) -> u64 {
+        self.v as u64
     }
 }

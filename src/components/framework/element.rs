@@ -1,9 +1,13 @@
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::sync::{Arc, Mutex};
+use std::marker::PhantomData;
+use std::rc::Rc;
+use std::sync::Arc;
 
 use glfw::{Action, MouseButton};
+use parking_lot::Mutex;
 
 use crate::components::spatial::vec4::Vec4;
 use crate::components::context::context;
@@ -21,73 +25,77 @@ pub trait UIHandler {
     fn animations(&mut self) -> Option<&mut AnimationRegistry>;
 }
 
-pub struct MultiElement<IterFn, Iter, Item, State, Cons>
-    where IterFn: FnMut() -> (Iter, State),
-          State: Default,
-          Iter: IntoIterator<Item=Item>,
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
-          Item: Hash + Eq + Debug,
-{
-    elements: HashMap<Item, Box<dyn UIHandler>>,
-    iter_fn: IterFn,
-    current_state: State,
-    item_construct: Cons,
+pub trait UIIdentifier {
+    fn ui_id(&self) -> u64;
 }
 
-impl<IterFn, Iter, Item, State, Cons> MultiElement<IterFn, Iter, Item, State, Cons>
-    where IterFn: FnMut() -> (Iter, State),
-          State: Default,
-          Iter: IntoIterator<Item=Item>,
+pub struct MultiElement<IterFn, State, Item, Cons>
+    where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
           Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
-          Item: Eq + Hash + Debug,
+          State: Debug,
+          Item: UIIdentifier + Debug,
+{
+    elements: HashMap<u64, Box<dyn UIHandler>>,
+    iter_fn: IterFn,
+    item_construct: Arc<Mutex<Cons>>,
+    _holder: PhantomData<(State, Item)>,
+}
+
+impl<IterFn, State, Item, Cons> MultiElement<IterFn, State, Item, Cons>
+    where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
+          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
+          State: Debug,
+          Item: UIIdentifier + Debug,
 {
     pub fn new(iter_fn: IterFn, item_construct: Cons) -> Self {
         MultiElement {
             elements: HashMap::new(),
             iter_fn,
-            current_state: State::default(),
-            item_construct,
+            item_construct: Arc::new(Mutex::new(item_construct)),
+            _holder: PhantomData::default(),
         }
     }
 
     pub fn update_elements(&mut self) {
-        let (iter, mut state) = (self.iter_fn)();
-        self.current_state = state;
-        let iter = iter.into_iter();
-        let mut new_elements = Vec::new();
-        {
-            let mut key_set = HashSet::new();
-            self.elements.keys().for_each(|v| { key_set.insert(v); });
+        let mut new_elements = Rc::new(RefCell::new(HashMap::new()));
+        let mut elements = Rc::new(RefCell::new(std::mem::take(&mut self.elements)));
 
-            for mut item in iter {
-                let exists = key_set.contains(&item);
-                key_set.remove(&item);
-                match (self.item_construct)(exists, &mut self.current_state, &mut item) {
-                    None => {}
-                    Some(el) => {
-                        new_elements.push((item, el));
-                    }
+        let cons = self.item_construct.clone();
+
+        let c_elements = elements.clone();
+        let c_new_elements = new_elements.clone();
+        (self.iter_fn)(Box::new(move |state, item| {
+            let id = item.ui_id();
+            let exists = c_elements.borrow().contains_key(&id) || c_new_elements.borrow().contains_key(&id);
+            let (id, el) = match (cons.lock())(exists, state, item) {
+                None => {
+                    let id = item.ui_id();
+                    let old = c_elements.borrow_mut().remove(&id);
+                    (id, old)
+                },
+                Some(el) => {
+                    (item.ui_id(), Some(el))
+                },
+            };
+
+            match el {
+                None => {}
+                Some(new) => {
+                    c_new_elements.borrow_mut().insert(id, new);
                 }
             }
-            // At this point, anything remaining in th
-            //             //     self.elements.remove(&item);
-            //             // }e key_set are objects that were not in the iter,
-            // meaning they should be removed
-            // for item in key_set {
-        }
-        for (k, v) in new_elements{
-            println!("K {:?}", k);
-            self.elements.insert(k, v);
-        }
+        }));
+
+        let new_elements = Rc::into_inner(new_elements).unwrap().into_inner();
+        std::mem::replace(&mut self.elements, new_elements);
     }
 }
 
-impl<IterFn, Iter, Item, State, Cons> UIHandler for MultiElement<IterFn, Iter, Item, State, Cons>
-    where IterFn: FnMut() -> (Iter, State),
-          State: Default,
-          Iter: IntoIterator<Item=Item>,
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
-          Item: Eq + Hash + Debug,
+impl<IterFn, State, Item, Cons> UIHandler for MultiElement<IterFn, State, Item, Cons>
+    where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
+          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
+          State: Debug,
+          Item: UIIdentifier + Debug,
 {
     unsafe fn handle(&mut self, event: &Event) -> bool {
         match event {
@@ -226,7 +234,7 @@ impl UIHandler for Element {
 
         // Arc mutex so that can be called with self ref
         let h = self.handler.clone();
-        (h.lock().unwrap())(self, event);
+        (h.lock())(self, event);
 
         // Translate child positions, which also offsets mouse correctly
         context().renderer().stack().push(State::Translate(self.bounds().x(), self.bounds().y()));
@@ -293,7 +301,7 @@ impl UIHandler for Element {
 
         let fn_ref = self.should_render_fn.clone();
         // println!("check call");
-        if (fn_ref.lock().unwrap())(self, rp) {
+        if (fn_ref.lock())(self, rp) {
             return true;
         }
 
