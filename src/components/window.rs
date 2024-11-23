@@ -31,7 +31,7 @@ impl Window {
     }
 
     /// Creates a vec4 object of `(0.0,0.0,width,height)`
-    pub fn vec4(&self) -> Vec4 {
+    pub fn bounds(&self) -> Vec4 {
         Vec4::xywh(0.0, 0.0, self.width as f32, self.height as f32)
     }
 

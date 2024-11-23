@@ -9,7 +9,7 @@ use winapi::um::winuser::GetKeyboardState;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::context::context;
 use crate::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
-use crate::components::framework::element::UIHandler;
+use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::render::color::{Color, ToColor};

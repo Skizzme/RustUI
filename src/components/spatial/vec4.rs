@@ -13,7 +13,7 @@ pub struct Vec4 {
 }
 
 impl Vec4 {
-    pub unsafe fn draw_vec4(&self, color: impl ToColor) {
+    pub unsafe fn draw(&self, color: impl ToColor) {
         context().renderer().draw_rect_outline(self, 1.0, color);
     }
 

@@ -1,3 +1,6 @@
+pub mod ui_traits;
+pub mod multi_element;
+
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
@@ -13,119 +16,12 @@ use crate::components::spatial::vec4::Vec4;
 use crate::components::context::context;
 use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::changing::Changing;
+use crate::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::render::color::ToColor;
 use crate::components::render::font::renderer::FontRenderer;
 use crate::components::render::stack::State;
-
-pub trait UIHandler {
-    unsafe fn handle(&mut self, event: &Event) -> bool;
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool;
-    fn animations(&mut self) -> Option<&mut AnimationRegistry>;
-}
-
-pub trait UIIdentifier {
-    fn ui_id(&self) -> u64;
-}
-
-pub struct MultiElement<IterFn, State, Item, Cons>
-    where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>>,
-          State: Debug,
-          Item: UIIdentifier + Debug,
-{
-    elements: HashMap<u64, Box<dyn UIHandler>>,
-    iter_fn: IterFn,
-    item_construct: Arc<Mutex<Cons>>,
-    _holder: PhantomData<(State, Item)>,
-}
-
-impl<IterFn, State, Item, Cons> MultiElement<IterFn, State, Item, Cons>
-    where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
-          State: Debug,
-          Item: UIIdentifier + Debug,
-{
-    pub fn new(iter_fn: IterFn, item_construct: Cons) -> Self {
-        MultiElement {
-            elements: HashMap::new(),
-            iter_fn,
-            item_construct: Arc::new(Mutex::new(item_construct)),
-            _holder: PhantomData::default(),
-        }
-    }
-
-    pub fn update_elements(&mut self) {
-        let mut new_elements = Rc::new(RefCell::new(HashMap::new()));
-        let mut elements = Rc::new(RefCell::new(std::mem::take(&mut self.elements)));
-
-        let cons = self.item_construct.clone();
-
-        let c_elements = elements.clone();
-        let c_new_elements = new_elements.clone();
-        (self.iter_fn)(Box::new(move |state, item| {
-            let id = item.ui_id();
-            let exists = c_elements.borrow().contains_key(&id) || c_new_elements.borrow().contains_key(&id);
-            let (id, el) = match (cons.lock())(exists, state, item) {
-                None => {
-                    let id = item.ui_id();
-                    let old = c_elements.borrow_mut().remove(&id);
-                    (id, old)
-                },
-                Some(el) => {
-                    (item.ui_id(), Some(el))
-                },
-            };
-
-            match el {
-                None => {}
-                Some(new) => {
-                    c_new_elements.borrow_mut().insert(id, new);
-                }
-            }
-        }));
-
-        let new_elements = Rc::into_inner(new_elements).unwrap().into_inner();
-        std::mem::replace(&mut self.elements, new_elements);
-    }
-}
-
-impl<IterFn, State, Item, Cons> UIHandler for MultiElement<IterFn, State, Item, Cons>
-    where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
-          State: Debug,
-          Item: UIIdentifier + Debug,
-{
-    unsafe fn handle(&mut self, event: &Event) -> bool {
-        match event {
-            Event::PreRender => {
-                self.update_elements();
-            }
-            _ => {}
-        }
-
-        let mut handled = false;
-        for el in self.elements.values_mut() {
-            handled = el.handle(event);
-        }
-
-        handled
-    }
-
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
-        for el in self.elements.values_mut() {
-            if el.should_render(render_pass) {
-                return true;
-            }
-        }
-        false
-    }
-
-    fn animations(&mut self) -> Option<&mut AnimationRegistry> {
-        None // TODO
-    }
-}
 
 pub struct Element {
     bounds: Changing<Vec4>,
@@ -143,8 +39,8 @@ pub struct Element {
 
 impl Element {
     pub fn new<B, H>(vec4: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>) -> Element
-    where B: Into<Vec4>,
-          H: FnMut(&mut Self, &Event) + 'static,
+        where B: Into<Vec4>,
+              H: FnMut(&mut Self, &Event) + 'static,
     {
         let b = vec4.into();
         Element {
@@ -168,7 +64,7 @@ impl Element {
 
         let text_c = text.clone();
         let builder = ElementBuilder::new()
-            .vec4(Vec4::xywh(pos.x, pos.y, 0.0, 0.0))
+            .bounds(Vec4::xywh(pos.x, pos.y, 0.0, 0.0))
             .handler(move |el, event| unsafe {
                 match event {
                     Event::Render(pass) => {
@@ -218,12 +114,14 @@ impl UIHandler for Element {
                     handled = true;
                 }
             }
-            // Event::Render(pass) => {
-                // match pass {
-                //     RenderPass::Main => self.vec4().draw_vec4(0xffffffff),
-                //     _ => {}
-                // }
-            // }
+            Event::Render(pass) => {
+            match pass {
+                RenderPass::Main => {
+                    self.bounds().draw(0xffffffff)
+                },
+                _ => {}
+            }
+            }
             Event::PostRender => {
                 self.has_rendered = true;
                 self.scroll().update();
@@ -238,6 +136,7 @@ impl UIHandler for Element {
 
         // Translate child positions, which also offsets mouse correctly
         context().renderer().stack().push(State::Translate(self.bounds().x(), self.bounds().y()));
+        // println!("transled to {:?}", self.bounds);
         for c in &mut self.children {
             match event {
                 Event::PostRender => {
@@ -345,7 +244,7 @@ impl ElementBuilder {
     pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self {
         self.element.children.push(Box::new(child)); self
     }
-    pub fn vec4(mut self, vec4: Vec4) -> Self {
+    pub fn bounds(mut self, vec4: Vec4) -> Self {
         self.element.bounds.set(vec4); self
     }
     pub fn draggable(mut self, draggable: bool) -> Self {

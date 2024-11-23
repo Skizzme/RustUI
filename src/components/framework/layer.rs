@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::components::context::context;
-use crate::components::framework::element::{Element, UIHandler};
+use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::RenderPass;
 use crate::components::wrapper::framebuffer::Framebuffer;
 use crate::gl_binds::gl11::RGBA;

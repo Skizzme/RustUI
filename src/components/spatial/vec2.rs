@@ -25,6 +25,9 @@ impl Vec2 {
     pub fn y(&self) -> f32 { self.y }
     pub fn xy(&self) -> (f32,f32) { (self.x, self.y) }
 
+    pub fn set_x(&mut self, x: f32) { self.x = x; }
+    pub fn set_y(&mut self, y: f32) { self.y = y; }
+
     pub fn intersects(&self, vec4: &Vec4) -> bool {
         self.x >= vec4.left() && self.y >= vec4.top() && self.x <= vec4.right() && self.y <= vec4.bottom()
     }
@@ -50,12 +53,6 @@ impl Sub for Vec2 {
         Vec2 { x: self.x - rhs.x, y: self.y - rhs.y }
     }
 }
-
-// impl Into<Vec2> for (f32, f32) {
-//     fn into(self) -> Vec2 {
-//         Vec2 {x: self.0, y: self.1 }
-//     }
-// }
 
 impl Into<(f32, f32)> for Vec2 {
     fn into(self) -> (f32, f32) {

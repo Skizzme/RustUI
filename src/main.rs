@@ -29,7 +29,9 @@ use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::context::{context, ContextBuilder};
 use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationRegistry, AnimationType};
-use RustUI::components::framework::element::{ElementBuilder, MultiElement, UIHandler, UIIdentifier};
+use RustUI::components::framework::element::ElementBuilder;
+use RustUI::components::framework::element::multi_element::MultiElement;
+use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
@@ -115,53 +117,37 @@ impl ScreenTrait for TestScreen {
                 self.t_size.borrow_mut().animate(4f32, AnimationType::Sin);
             }
             Event::Keyboard(key, action, _) => {
-                if action != &Action::Press {
+                if action == &Action::Release {
                     return;
                 }
                 let len = self.items.lock().len();
+                let mut lock = self.items.lock();
                 match key {
                     Key::Backspace => {
-                        self.items.lock().pop();
+                        lock.pop();
                     }
                     _ => {
-                        self.items.lock().push(Test::new(len as i32));
+                        let new = match lock.last() {
+                            None => 0,
+                            Some(v) => v.v + 1,
+                        };
+                        lock.push(Test::new(new));
                     }
                 }
             }
             Event::Scroll(_, y) => {
                 let current = self.t_size.borrow().target();
                 self.t_size.borrow_mut().set_target(*y + current);
-                // println!("SCROLL {}", y);
             }
             Event::Render(pass) => {
                 if pass != &RenderPass::Main {
                     return;
                 }
-                // match context().fonts().font("main") {
-                //     None => {}
-                //     Some(font) => {
-                //         self.t_shader.bind();
-                //         let tex = font.atlas_tex.as_ref().unwrap();
-                //         tex.bind();
-                //         // context().window().width()
-                //         context().renderer().draw_texture_rect(Vec4::xywh(0.0, 0.0, tex.width as f32, tex.height as f32), 0xffffffff);
-                //         Texture::unbind();
-                //         Shader::unbind();
-                //     }
-                // }
 
                 context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-                // self.fr.draw_string((30.0, "something", 0xffffffff), (0.0, 0.0));
                 self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
                 self.last_fps = context().fps();
 
-                // self.mask.begin_mask();
-                // context().renderer().draw_circle(200.0, 200.0, 175.0, 0xffffffff);
-                // self.mask.end_mask();
-                // self.mask.begin_draw();
-                // self.fr.draw_string((self.t_size.borrow().value() * 1f32, &self.text, 0x90ffffff), (10.0, 10.0));
-                // self.mask.end_draw();
-                // self.mask.render();
             }
             Event::PostRender => {
                 self.previous_pos = *context().window().mouse().pos();
@@ -179,7 +165,7 @@ impl ScreenTrait for TestScreen {
         let tex_cl2 = self.previous_tex.clone();
         let t_test_c = self.t_text.clone();
         let el_1 = ElementBuilder::new()
-            .vec4(Vec4::xywh(5.0, 100.0, 100.0, 100.0))
+            .bounds(Vec4::xywh(5.0, 100.0, 100.0, 100.0))
             .draggable(true)
             .handler(move |el, event| {
                 match event {
@@ -206,7 +192,7 @@ impl ScreenTrait for TestScreen {
                         el.bounds().set_width(vec4.width());
                         el.bounds().set_height(vec4.height());
                         let hovering = el.hovering();
-                        el.bounds().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
+                        el.bounds().draw(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                         *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
                     }
@@ -225,7 +211,7 @@ impl ScreenTrait for TestScreen {
             });
 
         let el_1_c = ElementBuilder::new()
-            .vec4(Vec4::xywh(0.0, 0.0, 40.0, 40.0))
+            .bounds(Vec4::xywh(0.0, 0.0, 40.0, 40.0))
             .draggable(false)
             .handler(|el, event| {
                 match event {
@@ -261,31 +247,30 @@ impl ScreenTrait for TestScreen {
 
         let test_vec_1 = self.items.clone();
         let test_vec_2 = self.items.clone();
+
         let el_test = MultiElement::new(
             move |mut inner| {
                 let mut lock = test_vec_2.lock();
-                let mut state = 0;
+                let mut i = 0;
+                let mut state = Vec2::new(0.0, 0.0);
                 for item in lock.iter_mut() {
                     inner(&mut state, item);
-                    state += 1;
+                    i += 1;
+                    state.set_x((i % 10 * 20) as f32);
+                    state.set_y(((i / 10) * 20) as f32);
                 }
             },
             move |exists, state, item| {
                 let state_c = *state;
                 let num = item.v;
-                (*state) += 1;
                 let res = if !exists {
                     Some(Box::new(ElementBuilder::new()
                         .handler(move |el, e| {
-                            match e {
-                                Event::Render(pass) => {
-                                    if pass != &RenderPass::Main {
-                                        return;
-                                    }
-                                    let mut fr = context().fonts().renderer("main");
-                                    fr.draw_string((16.0, format!("{}", num), 0xffffffff), (0, state_c * 20));
-                                }
-                                _ => {}
+                            if e.is_render(RenderPass::Main) {
+                                let mut fr = context().fonts().renderer("main");
+                                let (pos, bounds) = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c);
+                                bounds.draw(0xff9020ff);
+                                el.set_bounds(bounds);
                             }
                         }).build()) as Box<dyn UIHandler>)
                 } else { None };
