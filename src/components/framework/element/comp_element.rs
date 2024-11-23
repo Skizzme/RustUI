@@ -17,7 +17,7 @@ use crate::components::framework::event::{Event, RenderPass};
 ///
 /// As an example, it can be used to represent a collection of users (such as a HashMap).
 ///
-/// ### Item
+/// ### [`Item`]
 /// [`Item`] is the thing that is being represented, and only needs to implement [`UIIdentifier`]. The value returned by [`ui_id()`]
 /// is only used by this single [`CompElement`]. This way there could be many different representations of the same [`Item`] across
 /// multiple [`CompElement`].
@@ -25,20 +25,21 @@ use crate::components::framework::event::{Event, RenderPass};
 /// In the example of representing a collection of users with [`UIIdentifier`] implemented, [`ui_id()`]
 /// could simply return the ID of the user.
 ///
-/// ### State
-/// [`State`] can be anything, but should be used in the process of creating a [`UIHandler`] which is returned from [`Cons`].
+/// ### [`State`]
+/// [`State`] can be anything, but should be used in the process of creating a [`UIHandler`] which is returned from [`New`].
 /// Something like a position, index, etc.
 ///
-/// ### Cons
-/// [`Cons`] is the closure that provides a new object of type `dyn UIHandler`. This handler will be the UI representation
-/// of the [`Item`] provided. [`Cons`] accepts `(bool, &mut State, &mut Item)`. The bool is if the [`Item`] already has
+/// ### [`New`]
+/// [`New`] is the closure that provides a new object of type `dyn UIHandler`. This handler will be the UI representation
+/// of the [`Item`] provided. [`New`] accepts `(bool, &mut State, &mut Item)`. The bool is if the [`Item`] already has
 /// an element to represent it locally in this [`CompElement`]
 ///
-///
-/// ### IterFn
+/// ### [`IterFn`]
 /// The closure [`IterFn`] provides the functionality of any kind of iterator, without copying or cloning any values,
-/// by being structured in a way that the closure provided by the [`IterFn`] type is called on every iteration. The closure
-/// handles the construction and calling of [`Cons`].
+/// by being structured in a way that the closure provided by the [`IterFn`] type is called on every iteration in an external iteration.
+/// The closure handles the calling of [`New`] and updating of the element list.
+///
+/// Similar to generators.
 ///
 /// # Examples
 ///
@@ -69,13 +70,13 @@ use crate::components::framework::event::{Event, RenderPass};
 /// ];
 ///
 /// let users_list = CompElement::new(
-///     // IterFn closure
-///     move |mut inner| {
+///     // IterFn
+///     move |mut inner| { // 'inner' is the provided closure that must be called
 ///         let mut i = 0;
 ///         let mut state = Vec2::new(0.0, 0.0);
 ///
-///         // Iterate over the usernames.
-///         // Any method of iterating can work, including something where an Arc<Mutex<...>> must be locked
+///         // Any method of iterating can work, as long as inner() is called,
+///         // such as situations where an Arc<Mutex<...>> must be locked.
 ///         for item in &mut users {
 ///             inner(&mut state, item);
 ///             i += 1;
@@ -86,37 +87,42 @@ use crate::components::framework::event::{Event, RenderPass};
 ///             state.set_y(((i / 10) * 20) as f32);
 ///         }
 ///     },
-///     // Cons closure
+///     // New
 ///     move |exists, state, item| {
 ///         let state_c = *state;
 ///         let username = item.name.to_string();
-///         let res = if !exists {
-///             Some(Box::new(ElementBuilder::new()
-///                 .handler(move |el, e| {
-///                     // handle the events
-///                 }).build()) as Box<dyn UIHandler>)
-///         } else { None };
-///         res
+///         if !exists {
+///             Some(
+///                 Box::new(ElementBuilder::new()
+///                     .handler(move |el, e| {
+///                         // handle the events
+///                     })
+///                     .build()
+///                 ) as Box<dyn UIHandler>
+///             )
+///         } else {
+///             None
+///         }
 ///     }
 /// );
 /// ```
 ///
 /// [`ui_id()`]: UIIdentifier::ui_id
-pub struct CompElement<IterFn, State, Item, Cons> {
+pub struct CompElement<IterFn, State, Item, New> {
     id: u64,
     elements: HashMap<u64, Box<dyn UIHandler>>,
     changed: bool,
     iter_fn: IterFn,
-    item_construct: Arc<Mutex<Cons>>,
+    item_construct: Arc<Mutex<New>>,
     _phantom: PhantomData<(State, Item)>,
 }
 
-impl<IterFn, State, Item, Cons> CompElement<IterFn, State, Item, Cons>
+impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
     where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
+          New: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
           Item: UIIdentifier,
 {
-    pub fn new(iter_fn: IterFn, item_construct: Cons) -> Self {
+    pub fn new(iter_fn: IterFn, item_construct: New) -> Self {
         CompElement {
             id: random_id(),
             elements: HashMap::new(),
@@ -168,9 +174,9 @@ impl<IterFn, State, Item, Cons> CompElement<IterFn, State, Item, Cons>
     }
 }
 
-impl<IterFn, State, Item, Cons> UIHandler for CompElement<IterFn, State, Item, Cons>
+impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, New>
     where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          Cons: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
+          New: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
           Item: UIIdentifier,
 {
     unsafe fn handle(&mut self, event: &Event) -> bool {
