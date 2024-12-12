@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, LinkedList};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::rc::Rc;
@@ -111,6 +111,7 @@ use crate::components::framework::event::{Event, RenderPass};
 pub struct CompElement<IterFn, State, Item, New> {
     id: u64,
     elements: HashMap<u64, Box<dyn UIHandler>>,
+    render_order: Vec<u64>,
     changed: bool,
     iter_fn: IterFn,
     item_construct: Arc<Mutex<New>>,
@@ -123,9 +124,11 @@ impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
           Item: UIIdentifier,
 {
     pub fn new(iter_fn: IterFn, item_construct: New) -> Self {
+
         CompElement {
             id: random_id(),
             elements: HashMap::new(),
+            render_order: Vec::new(),
             changed: true,
             iter_fn,
             item_construct: Arc::new(Mutex::new(item_construct)),

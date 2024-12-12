@@ -107,52 +107,50 @@ impl TestScreen {
 }
 
 impl ScreenTrait for TestScreen {
-    unsafe fn handle(&mut self, event: &Event) {
-        match event {
-            Event::PreRender => {
-                self.t_size.borrow_mut().animate(4f32, AnimationType::Sin);
-            }
-            Event::Keyboard(key, action, _) => {
-                if action == &Action::Release {
-                    return;
-                }
-                let len = self.items.lock().len();
-                let mut lock = self.items.lock();
-                match key {
-                    Key::Backspace => {
-                        lock.pop();
-                    }
-                    _ => {
-                        let new = match lock.last() {
-                            None => 0,
-                            Some(v) => v.v + 1,
-                        };
-                        lock.push(Test::new(new));
-                    }
-                }
-            }
-            Event::Scroll(_, y) => {
-                let current = self.t_size.borrow().target();
-                self.t_size.borrow_mut().set_target(*y + current);
-            }
-            Event::Render(pass) => {
-                if pass != &RenderPass::Main {
-                    return;
-                }
-
-                context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-                self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
-                self.last_fps = context().fps();
-
-            }
-            Event::PostRender => {
-                self.previous_pos = *context().window().mouse().pos();
-            }
-            Event::MouseClick(_, _) => {}
-            Event::Keyboard(_, _, _) => {}
-            _ => {}
+    unsafe fn handle(&mut self, event: &Event) { match event {
+        Event::PreRender => {
+            self.t_size.borrow_mut().animate(4f32, AnimationType::Sin);
         }
-    }
+        Event::Keyboard(key, action, _) => {
+            if action == &Action::Release {
+                return;
+            }
+            let len = self.items.lock().len();
+            let mut lock = self.items.lock();
+            match key {
+                Key::Backspace => {
+                    lock.pop();
+                }
+                _ => {
+                    let new = match lock.last() {
+                        None => 0,
+                        Some(v) => v.v + 1,
+                    };
+                    lock.push(Test::new(new));
+                }
+            }
+        }
+        Event::Scroll(_, y) => {
+            let current = self.t_size.borrow().target();
+            self.t_size.borrow_mut().set_target(*y + current);
+        }
+        Event::Render(pass) => {
+            if pass != &RenderPass::Main {
+                return;
+            }
+
+            context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
+            self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
+            self.last_fps = context().fps();
+
+        }
+        Event::PostRender => {
+            self.previous_pos = *context().window().mouse().pos();
+        }
+        Event::MouseClick(_, _) => {}
+        Event::Keyboard(_, _, _) => {}
+        _ => {}
+    }}
 
     unsafe fn init(&mut self) -> Vec<Layer> {
         context().framework().screen_animations().register(self.t_size.clone());
@@ -163,38 +161,36 @@ impl ScreenTrait for TestScreen {
         let el_1 = ElementBuilder::new()
             .bounds(Vec4::xywh(5.0, 100.0, 100.0, 100.0))
             .draggable(true)
-            .handler(move |el, event| {
-                match event {
-                    Event::MousePos(x, y) => {
-                        let st = Instant::now();
-                        let items: Vec<FormattedText> = vec![
-                            (36.0, "before", 0xffffff90).into(),
-                            (context().window().mouse().pos().x() / 400.0 * 40.0, format!("&ff2030ff{} {}", x, y), 0xffffffff).into(),
-                            (36.0, "after ", 0xff90ffff).into(),
-                            (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0xffff2020).into()
-                        ];
-                        let t: FormattedText = items.into();
-                        *t_test_c.lock() = t;
-                    }
-                    Event::Render(pass) => {
-                        if pass != &RenderPass::Main {
-                            return;
-                        }
-                        let mouse = context().window().mouse();
-                        // context().renderer().draw_rect(*el.vec4(), 0xff00ff00);
-                        let st = Instant::now();
-                        let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().clone(), el.bounds());
-                        // println!("{:?}", st.elapsed());
-                        el.bounds().set_width(vec4.width());
-                        el.bounds().set_height(vec4.height());
-                        let hovering = el.hovering();
-                        el.bounds().draw(if hovering { 0xff10ff10 } else { 0xffffffff });
-
-                        *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
-                    }
-                    _ => {}
+            .handler(move |el, event| { match event {
+                Event::MousePos(x, y) => {
+                    let st = Instant::now();
+                    let items: Vec<FormattedText> = vec![
+                        (36.0, "before", 0xffffff90).into(),
+                        (context().window().mouse().pos().x() / 400.0 * 40.0, format!("&ff2030ff{} {}", x, y), 0xffffffff).into(),
+                        (36.0, "after ", 0xff90ffff).into(),
+                        (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0xffff2020).into()
+                    ];
+                    let t: FormattedText = items.into();
+                    *t_test_c.lock() = t;
                 }
-            })
+                Event::Render(pass) => {
+                    if pass != &RenderPass::Main {
+                        return;
+                    }
+                    let mouse = context().window().mouse();
+                    // context().renderer().draw_rect(*el.vec4(), 0xff00ff00);
+                    let st = Instant::now();
+                    let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().clone(), el.bounds());
+                    // println!("{:?}", st.elapsed());
+                    el.bounds().set_width(vec4.width());
+                    el.bounds().set_height(vec4.height());
+                    let hovering = el.hovering();
+                    el.bounds().draw(if hovering { 0xff10ff10 } else { 0xffffffff });
+
+                    *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
+                }
+                _ => {}
+            }})
             .should_render(move |_, rp| {
                 // println!("el p check {:?}", rp);
                 if rp == &RenderPass::Main {
@@ -259,7 +255,7 @@ impl ScreenTrait for TestScreen {
             move |exists, state, item| {
                 let state_c = *state;
                 let num = item.v;
-                let res = if !exists {
+                if !exists {
                     let mut el = ElementBuilder::new()
                         .handler(move |el, e| {
                             if e.is_render(RenderPass::Main) {
@@ -271,14 +267,13 @@ impl ScreenTrait for TestScreen {
                             }
                         }).build();
                     el.handle(&Event::Render(RenderPass::Main));
-                    println!("bounds {:?}", el.bounds());
-                    let mut fr = context().fonts().renderer("main");
-                    let (_, _, bounds) = fr.get_inst((16.0, format!("{}", num), 0xffffffff), state_c, (0,0));
-                    println!("OFFSET {:?}", bounds);
-                    state_c.add((bounds.width(), bounds.height()));
+                    // println!("bounds {:?}", el.bounds());
+                    // let mut fr = context().fonts().renderer("main");
+                    // let (_, b, bounds) = fr.get_inst((16.0, format!("{}", num), 0xffffffff), state_c, (0,0));
+                    println!("OFFSET {:?}", el.bounds());
+                    state_c.add((el.bounds().width(), el.bounds().height()));
                     Some(Box::new(el) as Box<dyn UIHandler>)
-                } else { None };
-                res
+                } else { None }
             }
         );
 

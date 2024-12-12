@@ -95,6 +95,7 @@ impl UIContext {
 
     pub unsafe fn frame(&mut self) -> bool {
 
+        let st = Instant::now();
         self.handle_events();
         self.window.mouse.frame();
 
@@ -105,6 +106,8 @@ impl UIContext {
             self.last_render = Instant::now();
         }
         self.framework.event(Event::PostRender);
+
+        // println!("FRAMETIME: {:?}", st.elapsed());
         should_render
     }
 
