@@ -93,12 +93,12 @@ use crate::components::framework::event::{Event, RenderPass};
 ///         let username = item.name.to_string();
 ///         if !exists {
 ///             Some(
-///                 Box::new(ElementBuilder::new()
+///                 (Box::new(ElementBuilder::new()
 ///                     .handler(move |el, e| {
 ///                         // handle the events
 ///                     })
 ///                     .build()
-///                 ) as Box<dyn UIHandler>
+///                 ) as Box<dyn UIHandler>, 0)
 ///             )
 ///         } else {
 ///             None
@@ -120,7 +120,7 @@ pub struct CompElement<IterFn, State, Item, New> {
 
 impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
     where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          New: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
+          New: FnMut(bool, &mut State, &mut Item) -> Option<(Box<dyn UIHandler>, u64)> + 'static,
           Item: UIIdentifier,
 {
     pub fn new(iter_fn: IterFn, item_construct: New) -> Self {
@@ -140,19 +140,22 @@ impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
         let mut new_elements = Rc::new(RefCell::new(HashMap::new()));
         let mut elements = Rc::new(RefCell::new(std::mem::take(&mut self.elements)));
         let changed = Rc::new(RefCell::new(false));
+        let render_order = Rc::new(RefCell::new(Vec::new()));
 
         let cons = self.item_construct.clone();
 
         let c_elements = elements.clone();
         let c_new_elements = new_elements.clone();
         let c_changed = changed.clone();
+        let c_render_order = render_order.clone();
+
         (self.iter_fn)(Box::new(move |state, item| {
             let id = item.ui_id();
             let exists = c_elements.borrow().contains_key(&id) || c_new_elements.borrow().contains_key(&id);
 
             let (id, el) = match (cons.lock())(exists, state, item) {
                 None => (id, c_elements.borrow_mut().remove(&id)),
-                Some(el) => {
+                Some((el, order)) => {
                     (*c_changed.borrow_mut()) = true;
                     (id, Some(el))
                 },
@@ -174,12 +177,15 @@ impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
 
         let new_elements = Rc::into_inner(new_elements).unwrap().into_inner();
         std::mem::replace(&mut self.elements, new_elements);
+
+        let new_ord = Rc::into_inner(render_order).unwrap().into_inner();
+        std::mem::replace(&mut self.render_order, new_ord);
     }
 }
 
 impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, New>
     where IterFn: FnMut(Box<dyn for<'a> FnMut(&mut State, &'a mut Item)>),
-          New: FnMut(bool, &mut State, &mut Item) -> Option<Box<dyn UIHandler>> + 'static,
+          New: FnMut(bool, &mut State, &mut Item) -> Option<(Box<dyn UIHandler>, u64)> + 'static,
           Item: UIIdentifier,
 {
     unsafe fn handle(&mut self, event: &Event) -> bool {

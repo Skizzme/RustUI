@@ -141,8 +141,15 @@ impl ScreenTrait for TestScreen {
 
             context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
             self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
+            let formated: FormattedText = (14.0, "SAMPLE Error: 0.35148287, Learn-Rate: 0.0010 (99.81%), Epoch: 0/1000 (44.96%) Some(0.001) [1.0, 0.0] [0.3240496, 0.039128505] 34734 0.49078798", 0xffffffff).into();
+            gl::Finish();
+            let st = Instant::now();
+            self.fr.draw_string(formated,
+                                (100.0, 200.0));
+            gl::Finish();
+            let et = st.elapsed();
+            println!("drawed {:?}", et);
             self.last_fps = context().fps();
-
         }
         Event::PostRender => {
             self.previous_pos = *context().window().mouse().pos();
@@ -240,11 +247,14 @@ impl ScreenTrait for TestScreen {
         let test_vec_1 = self.items.clone();
         let test_vec_2 = self.items.clone();
 
+        let pos_state = Rc::new(RefCell::new(Vec2::zero()));
+        let pos_state_1 = pos_state.clone();
         let el_test = CompElement::new(
             move |mut inner| {
                 let mut lock = test_vec_2.lock();
                 let mut i = 0;
                 let mut state = Vec2::new(0.0, 0.0);
+                pos_state.replace(Vec2::zero());
                 for item in lock.iter_mut() {
                     inner(&mut state, item);
                     i += 1;
@@ -253,26 +263,25 @@ impl ScreenTrait for TestScreen {
                 }
             },
             move |exists, state, item| {
-                let state_c = *state;
                 let num = item.v;
+                let state_c = pos_state_1.clone();
                 if !exists {
                     let mut el = ElementBuilder::new()
                         .handler(move |el, e| {
                             if e.is_render(RenderPass::Main) {
                                 let mut fr = context().fonts().renderer("main");
-                                let (pos, bounds) = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c);
+                                let (pos, bounds) = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c.borrow().clone());
                                 bounds.draw(0xff9020ff);
+                                println!("POS1 {:?}", state_c.borrow());
+                                state_c.borrow_mut().offset((el.bounds().width(), el.bounds().height()));
+                                println!("POS2 {:?}", state_c.borrow());
                                 el.set_bounds(bounds);
-                                println!("set bounds {:?}", bounds);
+                                // println!("set bounds {:?}", bounds);
                             }
-                        }).build();
+                        })
+                        .build();
                     el.handle(&Event::Render(RenderPass::Main));
-                    // println!("bounds {:?}", el.bounds());
-                    // let mut fr = context().fonts().renderer("main");
-                    // let (_, b, bounds) = fr.get_inst((16.0, format!("{}", num), 0xffffffff), state_c, (0,0));
-                    println!("OFFSET {:?}", el.bounds());
-                    state_c.add((el.bounds().width(), el.bounds().height()));
-                    Some(Box::new(el) as Box<dyn UIHandler>)
+                    Some((Box::new(el) as Box<dyn UIHandler>, el.ui_id()))
                 } else { None }
             }
         );

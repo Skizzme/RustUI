@@ -21,6 +21,7 @@ impl Hash for Vec2 {
 impl Eq for Vec2 {}
 
 impl Vec2 {
+    pub fn zero() -> Self { Vec2 { x: 0.0, y: 0.0 } }
     pub fn new(x: f32, y: f32) -> Self { Vec2 { x, y } }
 
     pub fn x(&self) -> f32 { self.x }
@@ -30,6 +31,11 @@ impl Vec2 {
     pub fn set_x(&mut self, x: f32) { self.x = x; }
     pub fn set_y(&mut self, y: f32) { self.y = y; }
 
+    pub fn offset(&mut self, vec2: impl Into<Vec2>) {
+        let vec2 = vec2.into();
+        self.x += vec2.x;
+        self.y += vec2.y;
+    }
     pub fn intersects(&self, vec4: &Vec4) -> bool {
         self.x >= vec4.left() && self.y >= vec4.top() && self.x <= vec4.right() && self.y <= vec4.bottom()
     }
