@@ -76,7 +76,7 @@ impl FontManager {
                 }
 
                 let ft = Font::load(self.mem_atlas_cache.get(&name).unwrap().clone());
-                println!("Font '{}' took {:?} to render and load...", &name, b.elapsed());
+                println!("Font '{}' took {:?} to render and load ({})...", &name, b.elapsed(), ft.glyphs.len());
 
                 self.fonts.insert(name, ft);
             } else {

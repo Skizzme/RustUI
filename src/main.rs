@@ -15,6 +15,7 @@
 // }
 
 use std::cell::RefCell;
+use std::fs;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::Add;
 use std::rc::Rc;
@@ -40,6 +41,7 @@ use RustUI::components::render::renderer::shader_file;
 use RustUI::components::spatial::vec2::Vec2;
 use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::wrapper::shader::Shader;
+use RustUI::text_vec;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -86,7 +88,11 @@ impl TestScreen {
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
         println!("LEN : {}", t.len());
-        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+
+        let bytes = fs::read("C:\\Windows\\Fonts\\consola.ttf").unwrap();
+
+        context().fonts().set_font_bytes("main", bytes);
+        // context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         // context().fonts().load_font("main", true);
 
         let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000)];
@@ -138,14 +144,15 @@ impl ScreenTrait for TestScreen {
             if pass != &RenderPass::Main {
                 return;
             }
+            // context().renderer().draw_rect(context().window().bounds(), 0xff181818);
 
             context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-            self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (200.0, 100.0));
-            let formated: FormattedText = (14.0, "SAMPLE Error: 0.35148287, Learn-Rate: 0.0010 (99.81%), Epoch: 0/1000 (44.96%) Some(0.001) [1.0, 0.0] [0.3240496, 0.039128505] 34734 0.49078798", 0xffffffff).into();
+            self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
+            let formated: FormattedText = (15, "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
+            let pos = 0; //
             gl::Finish();
             let st = Instant::now();
-            self.fr.draw_string(formated,
-                                (100.0, 200.0));
+            self.fr.draw_string(formated, (pos, 300.0));
             gl::Finish();
             let et = st.elapsed();
             println!("drawed {:?}", et);
@@ -170,15 +177,12 @@ impl ScreenTrait for TestScreen {
             .draggable(true)
             .handler(move |el, event| { match event {
                 Event::MousePos(x, y) => {
-                    let st = Instant::now();
-                    let items: Vec<FormattedText> = vec![
-                        (36.0, "before", 0xffffff90).into(),
-                        (context().window().mouse().pos().x() / 400.0 * 40.0, format!("&ff2030ff{} {}", x, y), 0xffffffff).into(),
-                        (36.0, "after ", 0xff90ffff).into(),
-                        (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0xffff2020).into()
+                    *t_test_c.lock() = text_vec![
+                        (36.0, "before", 0xffffff90),
+                        (context().window().mouse().pos().x() / 400.0 * 40.0, format!("&ff2030ff{} {}", x, y), 0xffffffff),
+                        (36.0, "after ", 0xff90ffff),
+                        (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0)
                     ];
-                    let t: FormattedText = items.into();
-                    *t_test_c.lock() = t;
                 }
                 Event::Render(pass) => {
                     if pass != &RenderPass::Main {
@@ -192,7 +196,7 @@ impl ScreenTrait for TestScreen {
                     el.bounds().set_width(vec4.width());
                     el.bounds().set_height(vec4.height());
                     let hovering = el.hovering();
-                    el.bounds().draw(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    el.bounds().debug_draw(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                     *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
                 }
@@ -212,31 +216,29 @@ impl ScreenTrait for TestScreen {
         let el_1_c = ElementBuilder::new()
             .bounds(Vec4::xywh(0.0, 0.0, 40.0, 40.0))
             .draggable(false)
-            .handler(|el, event| {
-                match event {
-                    Event::Render(pass) => {
-                        // context().renderer().draw_rect(*el.vec4(), 0xff90ff20);z
-                        // let hovering = el.hovering();
-                        if pass == &RenderPass::Bloom {
-                            let mut shrunk = el.bounds().clone();
-                            shrunk.expand(-10.0);
-                            context().renderer().draw_rect(*el.bounds(), 0xffffffff);
-                            context().renderer().draw_rect(shrunk, 0xff10ff10);
-                            // el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
-                        }
-                    },
-                    Event::MouseClick(_, action) => {
-                        if el.hovering() && *action == Action::Press {
-                            let v = !context().p_window().uses_raw_mouse_motion();
-                            println!("change {}", v);
-                            context().p_window().set_raw_mouse_motion(v);
-                            // let v = !context().p_window().is_decorated();
-                            // context().p_window().set_decorated(v);
-                        }
+            .handler(|el, event| { match event {
+                Event::Render(pass) => {
+                    // context().renderer().draw_rect(*el.vec4(), 0xff90ff20);z
+                    // let hovering = el.hovering();
+                    if pass == &RenderPass::Bloom {
+                        let mut shrunk = el.bounds().clone();
+                        shrunk.expand(-10.0);
+                        context().renderer().draw_rect(*el.bounds(), 0xffffffff);
+                        context().renderer().draw_rect(shrunk, 0xff10ff10);
+                        // el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
                     }
-                    _ => {}
+                },
+                Event::MouseClick(_, action) => {
+                    if el.hovering() && *action == Action::Press {
+                        let v = !context().p_window().uses_raw_mouse_motion();
+                        println!("change {}", v);
+                        context().p_window().set_raw_mouse_motion(v);
+                        // let v = !context().p_window().is_decorated();
+                        // context().p_window().set_decorated(v);
+                    }
                 }
-            })
+                    _ => {}
+            }})
             .should_render(|_, _| {
                 // println!("c el check");
                 false
@@ -271,17 +273,18 @@ impl ScreenTrait for TestScreen {
                             if e.is_render(RenderPass::Main) {
                                 let mut fr = context().fonts().renderer("main");
                                 let (pos, bounds) = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c.borrow().clone());
-                                bounds.draw(0xff9020ff);
-                                println!("POS1 {:?}", state_c.borrow());
+                                bounds.debug_draw(0xff9020ff);
+                                // println!("POS1 {:?}", state_c.borrow());
                                 state_c.borrow_mut().offset((el.bounds().width(), el.bounds().height()));
-                                println!("POS2 {:?}", state_c.borrow());
+                                // println!("POS2 {:?}", state_c.borrow());
                                 el.set_bounds(bounds);
                                 // println!("set bounds {:?}", bounds);
                             }
                         })
                         .build();
                     el.handle(&Event::Render(RenderPass::Main));
-                    Some((Box::new(el) as Box<dyn UIHandler>, el.ui_id()))
+                    let id = el.ui_id();
+                    Some((Box::new(el) as Box<dyn UIHandler>, id))
                 } else { None }
             }
         );
@@ -295,13 +298,13 @@ impl ScreenTrait for TestScreen {
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        // true
-        if rp == &RenderPass::Main {
-            let res = self.last_fps != context().fps();
-            res
-        } else {
-            false
-        }
+        true
+        // if rp == &RenderPass::Main {
+        //     let res = self.last_fps != context().fps();
+        //     res
+        // } else {
+        //     false
+        // }
     }
 }
 

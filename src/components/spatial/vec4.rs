@@ -1,4 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
+use num_traits::NumCast;
 
 use crate::components::context::context;
 use crate::components::render::color::ToColor;
@@ -13,7 +14,7 @@ pub struct Vec4 {
 }
 
 impl Vec4 {
-    pub unsafe fn draw(&self, color: impl ToColor) {
+    pub unsafe fn debug_draw(&self, color: impl ToColor) {
         context().renderer().draw_rect_outline(self, 1.0, color);
     }
 
@@ -29,7 +30,9 @@ impl Vec4 {
     }
 
 
-    /// Creates a 'Vec4' object from 2 positions. The order does not matter, the object will be created
+    /// Creates a 'Vec4' object from 2 positions.
+    ///
+    /// The order does not matter, the object will be created
     /// by taking the minimum and maximum of the X and Y of both positions. Negative widths and heights
     /// will never occur
     pub fn from_pos<A: Into<Vec2>, B: Into<Vec2>>(pos1: A, pos2: B) -> Vec4 {
@@ -78,9 +81,17 @@ impl Vec4 {
     pub fn center_x(&self) -> f32 { self.x + self.width / 2.0 }
     pub fn center_y(&self) -> f32 { self.y + self.height / 2.0 }
 
-    pub fn set_pos(&mut self, pos: &Vec2) {
+    pub fn set_pos(&mut self, pos: impl Into<Vec2>) {
+        let pos = pos.into();
         self.x = pos.x;
         self.y = pos.y;
+    }
+
+    pub fn zero_pos(&mut self) -> Self {
+        let mut clone = self.clone();
+        clone.x = 0.;
+        clone.y = 0.;
+        clone
     }
 
     pub fn set_x(&mut self, x: f32) { self.x = x; }
@@ -121,13 +132,19 @@ impl Vec4 {
         }
     }
 
-    pub fn shrink(&mut self, other: &Vec4) -> Vec4 {
-        let mut this = self.clone();
-        this.set_x(this.x + other.x);
-        this.set_width(this.width - other.width - other.x);
-        this.set_y(this.y + other.y);
-        this.set_height(this.height - other.height - other.y);
-        this
+    pub fn expand_to<A: Into<Vec2>>(&mut self, pos: A) {
+        let pos = pos.into();
+        self.expand_to_y(pos.y);
+        self.expand_to_x(pos.x);
+    }
+
+    pub fn shrink(&self, other: &Vec4) -> Vec4 {
+        let mut shrunk = self.clone();
+        shrunk.set_x(shrunk.x + other.x);
+        shrunk.set_width(shrunk.width - other.width - other.x);
+        shrunk.set_y(shrunk.y + other.y);
+        shrunk.set_height(shrunk.height - other.height - other.y);
+        shrunk
     }
 
     pub fn offset<A: Into<Vec2>>(&mut self, amount: A) {

@@ -5,7 +5,7 @@ use gl::types::*;
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
 
 use crate::components::framework::event::{Event, RenderPass};
-use crate::components::framework::framework::Framework;
+use crate::components::framework::Framework;
 use crate::components::render::font::manager::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State;
@@ -18,6 +18,12 @@ use crate::gl_binds::gl11::*;
 use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0};
 
 static mut CONTEXT: Option<UIContext> = None;
+
+#[macro_export]
+macro_rules! states {
+    () => { context().framework().states() };
+}
+
 
 #[allow(static_mut_refs)]
 pub unsafe fn context() -> &'static mut UIContext {

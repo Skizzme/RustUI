@@ -98,7 +98,7 @@ impl FontRenderer {
 
             let mut max_line_height = 0f32;
             let mut height = 0f32;
-            let mut vec4 = Vec4::xywh(self.x, self.y, 0.0, 0.0);
+            let mut bounds = Vec4::xywh(self.x, self.y, 0.0, 0.0);
             for item in formatted_text.items() {
                 match item {
                     FormatItem::None => {}
@@ -135,7 +135,7 @@ impl FontRenderer {
                             }
                             max_line_height = max_line_height.max(self.get_line_height() * self.scale);
 
-                            let (c_w, _c_h, _, should_render) = self.get_dimensions(char);
+                            let (c_w, _c_h, c_a, should_render) = self.get_dimensions_scaled(char);
                             if should_render == 2 {
                                 // println!("broken at {}", i);
                                 // break
@@ -151,10 +151,10 @@ impl FontRenderer {
                             let (p_left, p_top, p_right, p_bottom) = (self.x+glyph.bearing_x * self.scale, pos_y, self.x+glyph.width * self.scale, pos_y+glyph.height * self.scale);
                             let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
 
-                            vec4.expand_to_x(p_left);
-                            vec4.expand_to_y(p_top);
-                            vec4.expand_to_x(p_right);
-                            vec4.expand_to_y(p_bottom);
+                            bounds.expand_to_x(p_left);
+                            bounds.expand_to_y(p_top);
+                            bounds.expand_to_x(p_right);
+                            bounds.expand_to_y(p_bottom);
 
                             dims.push([p_left, p_top, p_right-p_left, p_bottom-p_top]);
                             uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
@@ -162,8 +162,8 @@ impl FontRenderer {
                             // optimize to use u32 later
                             colors.push(current_color.rgba());
 
-                            self.x += c_w;
-                            self.line_width += c_w;
+                            self.x += c_a;
+                            self.line_width += c_a;
                             i += 1;
                         }
                     }
@@ -204,7 +204,7 @@ impl FontRenderer {
             vao.add_buffer(t_buf);
             vao.add_buffer(dims_buf);
 
-            map.insert(hashed, (vao, Vec2::new(self.line_width, height), vec4, 0));
+            map.insert(hashed, (vao, Vec2::new(self.line_width, height), bounds, 0));
         }
         map.get_mut(&hashed).unwrap().3 = 0;
         let (vao, end_pos, bounds, _) = map.get(&hashed).unwrap();
@@ -212,7 +212,7 @@ impl FontRenderer {
     }
 
     pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
-        self.draw_string_o(formatted_text, pos, (0,0))
+        self.draw_string_offset(formatted_text, pos, (0, 0))
     }
 
     /// The method to be called to a render a string using modern GL
@@ -221,7 +221,7 @@ impl FontRenderer {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_o(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (Vec2, Vec4) {
+    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (Vec2, Vec4) {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 
@@ -265,7 +265,7 @@ impl FontRenderer {
     /// `should_render` is an integer that is 0, 1, or 2. Is calculated based off of this FontRenderer's current offsets
     /// ```
     /// use RustUI::components::render::font::renderer::FontRenderer;
-    /// let should_render = unsafe { FontRenderer::get_dimensions(FontRenderer::default() /*should be called non-statically*/, 'A') }.2;
+    /// let should_render = unsafe { FontRenderer::get_dimensions_scaled(FontRenderer::default() /*should be called non-statically*/, 'A') }.2;
     /// if should_render == 2 {
     ///     // End the rendering.
     ///     // This text is out of screen and no more will be rendered
@@ -278,7 +278,7 @@ impl FontRenderer {
     ///     // There will still be more characters to be rendered after this one
     /// }
     /// ```
-    pub unsafe fn get_dimensions(&self, char: char) -> (f32, f32, f32, u32) {
+    pub unsafe fn get_dimensions_scaled(&self, char: char) -> (f32, f32, f32, u32) {
         let glyph: &Glyph = match self.font().glyphs.get(&(char as usize)) {
             None => {
                 return (0.0, 0.0, 0.0, 0);
@@ -288,7 +288,7 @@ impl FontRenderer {
             }
         };
 
-        let (c_w, c_h, c_a) = ((glyph.advance - glyph.bearing_x) as f32 * self.scale, glyph.height as f32 * self.scale, glyph.advance as f32 * self.scale);
+        let (c_w, c_h, c_a) = ((glyph.advance - glyph.bearing_x) * self.scale, glyph.height as f32 * self.scale, glyph.advance * self.scale);
         let mut should_render = 0u32;
         if self.y > context().window().width as f32 * self.i_scale {
             should_render = 2;

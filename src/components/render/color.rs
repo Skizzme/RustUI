@@ -5,7 +5,7 @@ use crate::gl_binds::gl30::Color4f;
 /// A struct to convert a color to all necessary forms
 ///
 /// All values are 0 to 1
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Color {
     red: f32,
     green: f32,

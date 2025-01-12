@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
 
 use crate::components::context::context;
+use crate::components::spatial::vec2::Vec2;
 use crate::gl_binds::gl11::{Scalef, Translatef};
 use crate::gl_binds::gl11::types::GLenum;
 
@@ -30,6 +31,7 @@ impl State {
             State::Blend(v) => enable_disable(BLEND, v),
             State::Translate(x, y) => {
                 context().window().mouse.pos += (-x, -y);
+                context().renderer().stack().current_translate += (x, y);
                 Translatef(x, y, 0.0);
             },
             State::Scale(x, y) => {
@@ -45,6 +47,7 @@ impl State {
             State::Blend(v) => enable_disable(BLEND, !v),
             State::Translate(x, y) => {
                 context().window().mouse.pos += (x, y);
+                context().renderer().stack().current_translate += (-x, -y);
                 Translatef(-x, -y, 0.0);
             }
             State::Scale(x, y) => {
@@ -125,6 +128,7 @@ pub struct Stack {
     stack: Vec<GlState>,
     markers: Vec<usize>,
     current: HashMap<u8, GlState>,
+    current_translate: Vec2,
 }
 
 impl Stack {
@@ -133,7 +137,12 @@ impl Stack {
             stack: vec![],
             markers: vec![],
             current: HashMap::new(),
+            current_translate: Vec2::zero(),
         }
+    }
+
+    pub fn current_translate(&self) -> &Vec2 {
+        &self.current_translate
     }
 
     pub fn clear(&mut self) {

@@ -6,6 +6,19 @@ use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::format::FormatItem::{Offset, Size, Text};
 use crate::components::spatial::vec2::Vec2;
 
+#[macro_export]
+macro_rules! text_vec {
+    [$( $expr:expr ),*] => {
+        {
+            let mut formatted: Vec<FormattedText> = Vec::new();
+            $(
+                formatted.push($expr.into());
+            )*
+            formatted.into()
+        }
+    };
+}
+
 pub trait Formatter {
     fn parse(&mut self) -> bool;
     fn parsed(&self) -> &FormattedText;

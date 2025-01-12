@@ -195,7 +195,10 @@ impl Renderer {
         self.stack.pop();
     }
 
+    pub unsafe fn draw_screen_rect(&mut self) {
+        self.draw_texture_rect_uv(&context().window().bounds(), &Vec4::ltrb(0.0, 0.0, 1.0, 1.0), 0xffffffff);
+    }
     pub unsafe fn draw_screen_rect_flipped(&mut self) {
-        self.draw_texture_rect_uv(&Vec4::xywh(0.0, 0.0, context().window().width as f32, context().window().height as f32), &Vec4::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
+        self.draw_texture_rect_uv(&context().window().bounds(), &Vec4::ltrb(0.0, 1.0, 1.0, 0.0), 0xffffffff);
     }
 }

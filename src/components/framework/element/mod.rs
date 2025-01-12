@@ -22,16 +22,21 @@ pub mod comp_element;
 pub struct Element {
     id: u64,
     bounds: Changing<Vec4>,
-    handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
-    should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
     hovering: bool,
     children: Vec<Box<dyn UIHandler>>,
+
+    pub active: bool,
     pub draggable: bool,
     pub scrollable: bool,
+
     scroll: Changing<(f32, f32)>,
     dragging: (bool, Vec2),
     has_rendered: bool,
     animations: AnimationRegistry,
+
+    handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
+    should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
+    active_fn: Option<Box<dyn FnMut() -> bool>>,
 }
 
 impl Element {
@@ -47,12 +52,14 @@ impl Element {
             should_render_fn: Arc::new(Mutex::new(Box::new(|_, _| false))),
             hovering: false,
             children,
+            active: true,
             draggable,
             scrollable: false,
             scroll: Changing::new((0.0, 0.0)),
             dragging: (false, Vec2::new(0.0, 0.0)),
             has_rendered: false,
             animations: AnimationRegistry::new(),
+            active_fn: None,
         }
     }
     pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Vec2>, color: impl ToColor) -> Element {
@@ -68,7 +75,7 @@ impl Element {
                     Event::Render(pass) => {
                         match pass {
                             RenderPass::Main => {
-                                let (_, b) = fr.draw_string((size, &text_c, color), el.bounds.current().top_left());
+                                let (_, b) = fr.draw_string((size, &text_c, color), el.bounds.current_mut().top_left());
                                 el.bounds().set_width(b.width());
                                 el.bounds().set_height(b.height());
                             }
@@ -87,7 +94,7 @@ impl Element {
         self.bounds.set(vec4);
     }
     pub fn bounds(&mut self) -> &mut Vec4 {
-        self.bounds.current()
+        self.bounds.current_mut()
     }
     pub fn hovering(&self) -> bool {
         self.hovering
@@ -95,11 +102,32 @@ impl Element {
     pub fn scroll(&mut self) -> &mut Changing<(f32, f32)> {
         &mut self.scroll
     }
+    pub fn set_active_fn<Fn: FnMut() -> bool + 'static>(&mut self, active_fn: Option<Fn>) {
+        match active_fn {
+            None => self.active_fn = None,
+            Some(active_fn) => {
+                self.active_fn = Some(Box::new(active_fn));
+            }
+        }
+    }
 }
 
 impl UIHandler for Element {
     unsafe fn handle(&mut self, event: &Event) -> bool {
         let mut handled = false;
+        match event {
+            Event::PreRender => {
+                if let Some(active_fn) = &mut self.active_fn {
+                    self.active = active_fn();
+                }
+            }
+            _ => {}
+        }
+
+        if !self.active {
+            return false;
+        }
+
         let mouse = context().window().mouse();
         match event {
             Event::PreRender => {
@@ -108,14 +136,14 @@ impl UIHandler for Element {
                 if self.dragging.0 {
                     // Set the dragging offset
                     let new = mouse.pos().clone() - self.dragging.1;
-                    self.bounds().set_pos(&new);
+                    self.bounds().set_pos(new);
                     handled = true;
                 }
             }
             Event::Render(pass) => {
             match pass {
                 RenderPass::Main => {
-                    self.bounds().draw(0xffffffff)
+                    // self.bounds().debug_draw(0xffffffff)
                 },
                 _ => {}
             }
@@ -175,7 +203,7 @@ impl UIHandler for Element {
             },
             Event::Scroll(x, y) => {
                 if self.hovering {
-                    let mut updated = *self.scroll.current();
+                    let mut updated = *self.scroll.current_mut();
                     updated.0 += *x;
                     updated.1 += *y;
                     self.scroll().set(updated);
@@ -256,6 +284,12 @@ impl ElementBuilder {
     }
     pub fn scrollable(mut self, scrollable: bool) -> Self {
         self.element.scrollable = scrollable; self
+    }
+    pub fn active(mut self, active: bool) -> Self {
+        self.element.active = active; self
+    }
+    pub fn active_fn<Fn: FnMut() -> bool + 'static>(mut self, active_fn: Option<Fn>) -> Self {
+        self.element.set_active_fn(active_fn); self
     }
     pub fn animations(&mut self) -> &mut AnimationRegistry {
         &mut self.element.animations

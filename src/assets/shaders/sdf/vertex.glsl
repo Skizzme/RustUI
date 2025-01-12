@@ -6,6 +6,7 @@ attribute vec4 uvs;
 attribute float ind;
 
 varying vec4 fragColor;
+varying vec2 uvDims;
 
 void main() {
     vec4 pos = vec4(0, 0, 0, 0);
@@ -19,6 +20,7 @@ void main() {
         pos = vec4(dims.x, dims.y, uvs.x, uvs.y);
 
     gl_Position = gl_ModelViewProjectionMatrix * vec4(pos.xy, 0.0, 1.0);
-    gl_TexCoord[0] = vec4(pos.zw, dims.zw);
+    gl_TexCoord[0] = vec4(pos.zw, dims.zw); // dims.zw is glyph width and height
     fragColor = color;
+    uvDims = vec2(uvs.z, uvs.w);
 }

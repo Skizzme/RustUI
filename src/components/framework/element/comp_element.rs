@@ -4,12 +4,14 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::time::Instant;
 
 use parking_lot::Mutex;
 
 use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::element::ui_traits::{random_id, UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
+use crate::components::framework::state::ChangingRegistry;
 
 /// An easy way to handle the UI representation of any sort of collections.
 ///
@@ -115,6 +117,7 @@ pub struct CompElement<IterFn, State, Item, New> {
     changed: bool,
     iter_fn: IterFn,
     item_construct: Arc<Mutex<New>>,
+    states: ChangingRegistry,
     _phantom: PhantomData<(State, Item)>,
 }
 
@@ -132,6 +135,7 @@ impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
             changed: true,
             iter_fn,
             item_construct: Arc::new(Mutex::new(item_construct)),
+            states: ChangingRegistry::new(),
             _phantom: PhantomData::default(),
         }
     }
@@ -157,6 +161,7 @@ impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
                 None => (id, c_elements.borrow_mut().remove(&id)),
                 Some((el, order)) => {
                     (*c_changed.borrow_mut()) = true;
+                    c_render_order.borrow_mut().push(order);
                     (id, Some(el))
                 },
             };
@@ -191,15 +196,19 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
     unsafe fn handle(&mut self, event: &Event) -> bool {
         match event {
             Event::PreRender => {
+                let st = Instant::now();
                 self.update_elements();
+                println!("1 {:?}", st.elapsed());
             }
             _ => {}
         }
 
+        let st = Instant::now();
         let mut handled = false;
         for el in self.elements.values_mut() {
             handled = el.handle(event);
         }
+        println!("2 {:?}", st.elapsed());
 
         match event {
             Event::PostRender => {

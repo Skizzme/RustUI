@@ -137,6 +137,7 @@ impl Framebuffer {
     pub unsafe fn copy_bind(&self, target_fb: u32, target_tex: u32) {
         // Finish();
         // let st = Instant::now();
+
         Disable(BLEND);
         BindFramebuffer(FRAMEBUFFER, target_fb);
 

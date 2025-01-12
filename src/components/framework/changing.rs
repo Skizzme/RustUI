@@ -30,9 +30,14 @@ impl<T: Clone + PartialEq + Debug> Changing<T> {
         self.last = self.current.clone();
     }
 
-    pub fn current(&mut self) -> &mut T {
+    pub fn current(&self) -> &T {
+        &self.current
+    }
+
+    pub fn current_mut(&mut self) -> &mut T {
         &mut self.current
     }
+
     pub fn last(&self) -> &T {
         &self.last
     }

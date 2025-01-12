@@ -296,7 +296,7 @@ impl Textbox {
             text.push(FormatItem::Text(self.editor.chunks().get(index).unwrap().string.clone()));
 
             //self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string)
-            let (pos, _) = self.fr.draw_string_o(text.clone(), (0, 0), last_offset);
+            let (pos, _) = self.fr.draw_string_offset(text.clone(), (0, 0), last_offset);
 
             let mut chunk = (
                 text,
@@ -352,7 +352,7 @@ impl UIHandler for Textbox {
                                     continue;
                                 }
 
-                                let (offset, vec4) = self.fr.draw_string_o(text.clone(), start_pos, last_offset);
+                                let (offset, vec4) = self.fr.draw_string_offset(text.clone(), start_pos, last_offset);
 
                                 if context().window().mouse().pos().intersects(&vec4) {
                                     // println!("clicked on {:?}", text);
@@ -396,7 +396,7 @@ impl UIHandler for Textbox {
                         if *size != self.font_size.borrow().value() {
                             to_update_indices.push(i);
                         }
-                        let (offset, _) = self.fr.draw_string_o(text.clone(), start_pos, last_offset);
+                        let (offset, _) = self.fr.draw_string_offset(text.clone(), start_pos, last_offset);
 
                         last_offset = (offset.x, last_offset.y + offset.y).into();
 
