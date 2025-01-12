@@ -173,6 +173,7 @@ impl UIHandler for Element {
                 }
                 _ => {}
             }
+            // TODO maybe this should only return once all children are handled?
             if c.handle(event) {
                 context().renderer().stack().pop();
                 return true;

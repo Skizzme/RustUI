@@ -196,19 +196,15 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
     unsafe fn handle(&mut self, event: &Event) -> bool {
         match event {
             Event::PreRender => {
-                let st = Instant::now();
                 self.update_elements();
-                println!("1 {:?}", st.elapsed());
             }
             _ => {}
         }
 
-        let st = Instant::now();
         let mut handled = false;
         for el in self.elements.values_mut() {
             handled = el.handle(event);
         }
-        println!("2 {:?}", st.elapsed());
 
         match event {
             Event::PostRender => {
