@@ -26,6 +26,7 @@ pub struct Element {
     children: Vec<Box<dyn UIHandler>>,
 
     pub active: bool,
+    last_active: bool,
     pub draggable: bool,
     pub scrollable: bool,
 
@@ -35,6 +36,7 @@ pub struct Element {
     animations: AnimationRegistry,
 
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
+    render_handler: Option<Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass)>>>>,
     should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
     active_fn: Option<Box<dyn FnMut() -> bool>>,
 }
@@ -49,10 +51,12 @@ impl Element {
             id: ui_traits::random_id(),
             bounds: Changing::new(b.clone()),
             handler: Arc::new(Mutex::new(Box::new(handler))),
+            render_handler: None,
             should_render_fn: Arc::new(Mutex::new(Box::new(|_, _| false))),
             hovering: false,
             children,
             active: true,
+            last_active: true,
             draggable,
             scrollable: false,
             scroll: Changing::new((0.0, 0.0)),
@@ -110,16 +114,38 @@ impl Element {
             }
         }
     }
+    fn dispatch_event(&mut self, event: &Event) {
+        // Arc mutex so that can be called with self ref
+        let h = self.handler.clone();
+        (h.lock())(self, event);
+        match event {
+            Event::Render(pass) => {
+                match self.render_handler.clone() {
+                    None => {}
+                    Some(r) => {
+                        (r.lock())(self, pass)
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 impl UIHandler for Element {
     unsafe fn handle(&mut self, event: &Event) -> bool {
         let mut handled = false;
+        let mouse = context().window().mouse();
         match event {
             Event::PreRender => {
                 if let Some(active_fn) = &mut self.active_fn {
                     self.active = active_fn();
                 }
+                self.hovering = mouse.pos().intersects(self.bounds());
+                self.dispatch_event(event);
+            }
+            Event::PostRender => {
+                self.last_active = self.active;
             }
             _ => {}
         }
@@ -128,10 +154,8 @@ impl UIHandler for Element {
             return false;
         }
 
-        let mouse = context().window().mouse();
         match event {
             Event::PreRender => {
-                self.hovering = mouse.pos().intersects(self.bounds());
 
                 if self.dragging.0 {
                     // Set the dragging offset
@@ -140,14 +164,12 @@ impl UIHandler for Element {
                     handled = true;
                 }
             }
-            Event::Render(pass) => {
-            match pass {
+            Event::Render(pass) => { match pass {
                 RenderPass::Main => {
                     // self.bounds().debug_draw(0xffffffff)
                 },
                 _ => {}
-            }
-            }
+            }}
             Event::PostRender => {
                 self.has_rendered = true;
                 self.scroll().update();
@@ -156,9 +178,12 @@ impl UIHandler for Element {
             _ => {}
         }
 
-        // Arc mutex so that can be called with self ref
-        let h = self.handler.clone();
-        (h.lock())(self, event);
+        match event {
+            Event::PreRender => {} // dont dispatch pre render twice
+            _ => {
+                self.dispatch_event(event);
+            }
+        }
 
         // Translate child positions, which also offsets mouse correctly
         context().renderer().stack().push(State::Translate(self.bounds().x(), self.bounds().y()));
@@ -221,7 +246,11 @@ impl UIHandler for Element {
 
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        if !self.has_rendered || self.bounds.changed() || self.scroll.changed()  {
+        let changed_active = self.last_active != self.active;
+        if !self.active && !changed_active {
+            return false;
+        }
+        if !self.has_rendered || self.scroll.changed() || self.bounds.changed() || changed_active {
             return true;
         }
 
@@ -270,6 +299,9 @@ impl ElementBuilder {
 
     pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self {
         self.element.handler = Arc::new(Mutex::new(Box::new(handler))); self
+    }
+    pub fn render_handler<R: FnMut(&mut Element, &RenderPass) + 'static>(mut self, render_handler: R) -> Self {
+        self.element.render_handler = Some(Arc::new(Mutex::new(Box::new(render_handler)))); self
     }
     pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self {
         self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); self

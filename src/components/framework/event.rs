@@ -40,4 +40,8 @@ impl RenderPass {
             RenderPass::Post,
         ]
     }
+
+    pub fn is_main(&self) -> bool {
+        self == &RenderPass::Main
+    }
 }

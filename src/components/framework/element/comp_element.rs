@@ -181,10 +181,10 @@ impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
         }
 
         let new_elements = Rc::into_inner(new_elements).unwrap().into_inner();
-        std::mem::replace(&mut self.elements, new_elements);
+        self.elements = new_elements;
 
         let new_ord = Rc::into_inner(render_order).unwrap().into_inner();
-        std::mem::replace(&mut self.render_order, new_ord);
+        self.render_order = new_ord;
     }
 }
 
@@ -202,9 +202,12 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
         }
 
         let mut handled = false;
-        for el in self.elements.values_mut() {
+        let st = Instant::now();
+        for (id, el) in &mut self.elements {
             handled = el.handle(event);
         }
+        let et = st.elapsed();
+        // println!("iter took {:?}", et);
 
         match event {
             Event::PostRender => {

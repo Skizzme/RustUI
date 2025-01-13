@@ -117,14 +117,14 @@ impl StateRegistry for UnchangingRegistry {
 #[derive(Debug)]
 pub struct ChangingRegistry {
     states: HashMap<String, Changing<State>>,
-    child_registries: HashMap<String, ChangingRegistry>,
+    sub_registries: HashMap<String, ChangingRegistry>,
 }
 
 impl ChangingRegistry {
     pub fn new() -> Self {
         ChangingRegistry {
             states: HashMap::new(),
-            child_registries: HashMap::new(),
+            sub_registries: HashMap::new(),
         }
     }
 
@@ -133,6 +133,9 @@ impl ChangingRegistry {
             if state.changed() {
                 state.update()
             }
+        }
+        for (_, mut sub) in &mut self.sub_registries {
+            sub.update();
         }
     }
 
@@ -155,10 +158,10 @@ impl ChangingRegistry {
 
     pub fn sub(&mut self, key: impl ToString) -> &mut ChangingRegistry {
         let key = key.to_string();
-        if !self.child_registries.contains_key(&key) {
-            self.child_registries.insert(key.clone(), ChangingRegistry::new());
+        if !self.sub_registries.contains_key(&key) {
+            self.sub_registries.insert(key.clone(), ChangingRegistry::new());
         }
-        self.child_registries.get_mut(&key).unwrap()
+        self.sub_registries.get_mut(&key).unwrap()
     }
 }
 

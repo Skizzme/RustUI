@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+//#![windows_subsystem = "windows"] // TO STOP EXTERNAL CONSOLE FROM OPENING WHEN RUNNING
+
 // GENERATE OPEN GL BINDINGS FOR ANY VERSION
 // extern crate gl_generator;
 // use gl_generator::{Registry, Api, Profile, Fallbacks, GlobalGenerator};

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, LinkedList};
 
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
 
@@ -125,7 +125,7 @@ impl GlState {
 
 #[derive(Debug)]
 pub struct Stack {
-    stack: Vec<GlState>,
+    stack: LinkedList<GlState>,
     markers: Vec<usize>,
     current: HashMap<u8, GlState>,
     current_translate: Vec2,
@@ -134,7 +134,7 @@ pub struct Stack {
 impl Stack {
     pub fn new() -> Self {
         Stack {
-            stack: vec![],
+            stack: LinkedList::new(),
             markers: vec![],
             current: HashMap::new(),
             current_translate: Vec2::zero(),
@@ -173,7 +173,7 @@ impl Stack {
             // }
         }
 
-        self.stack.push(state)
+        self.stack.push_back(state)
     }
 
     /// Pop all states since the most recent marker
@@ -197,7 +197,7 @@ impl Stack {
     }
 
     pub unsafe fn pop(&mut self) -> Option<GlState> {
-        match self.stack.pop() {
+        match self.stack.pop_back() {
             None => {
                 println!("popped on empty stack");
                 None

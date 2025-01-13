@@ -86,7 +86,13 @@ impl UIContext {
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            if !self.frame() {
+            // Finish();
+            // let st = Instant::now();
+            let rendered = self.frame();
+            // Finish();
+            // let et = st.elapsed();
+            // println!("Frame Time: {:?}", et);
+            if !rendered {
                 thread::sleep(Duration::from_secs_f32(1.0/200.0));
             }
 
@@ -95,25 +101,31 @@ impl UIContext {
             }
             // Finish();
             self.glfw.set_swap_interval(SwapInterval::Adaptive);
-            // self.glfw.set_swap_interval(SwapInterval::None);
+            // self.glfw.set_swap_interval(SwapInterval::Sync(2));
         }
     }
 
     pub unsafe fn frame(&mut self) -> bool {
 
-        let st = Instant::now();
         self.handle_events();
         self.window.mouse.frame();
 
+        // let st = Instant::now();
         self.framework.event(Event::PreRender);
+        // println!("EVENT PRE: {:?}", st.elapsed());
+
+        // let st = Instant::now();
         let should_render = self.should_render();
+        // println!("CHECK RENDER: {:?}", st.elapsed());
+
         if should_render {
             self.render();
             self.last_render = Instant::now();
         }
+        // let st = Instant::now();
         self.framework.event(Event::PostRender);
-
-        // println!("FRAMETIME: {:?}", st.elapsed());
+        // println!("EVENT POST: {:?}", st.elapsed());
+;
         should_render
     }
 
