@@ -11,7 +11,6 @@ use crate::components::framework::changing::Changing;
 use crate::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::render::color::ToColor;
-use crate::components::render::font::renderer::FontRenderer;
 use crate::components::render::stack::State;
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
@@ -66,34 +65,34 @@ impl Element {
             active_fn: None,
         }
     }
-    pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Vec2>, color: impl ToColor) -> Element {
-        let pos = pos.into();
-        let text = text.to_string();
-        let color = color.to_color();
-
-        let text_c = text.clone();
-        let builder = ElementBuilder::new()
-            .bounds(Vec4::xywh(pos.x, pos.y, 0.0, 0.0))
-            .handler(move |el, event| unsafe {
-                match event {
-                    Event::Render(pass) => {
-                        match pass {
-                            RenderPass::Main => {
-                                let (_, b) = fr.draw_string((size, &text_c, color), el.bounds.current_mut().top_left());
-                                el.bounds().set_width(b.width());
-                                el.bounds().set_height(b.height());
-                            }
-                            _ => {}
-                        }
-                    }
-                    _ => {}
-                }
-            })
-            .draggable(true)
-            .should_render(|_, _| true);
-
-        builder.build()
-    }
+    // pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Vec2>, color: impl ToColor) -> Element {
+    //     let pos = pos.into();
+    //     let text = text.to_string();
+    //     let color = color.to_color();
+    //
+    //     let text_c = text.clone();
+    //     let builder = ElementBuilder::new()
+    //         .bounds(Vec4::xywh(pos.x, pos.y, 0.0, 0.0))
+    //         .handler(move |el, event| unsafe {
+    //             match event {
+    //                 Event::Render(pass) => {
+    //                     match pass {
+    //                         RenderPass::Main => {
+    //                             let (_, b) = fr.draw_string((size, &text_c, color), el.bounds.current_mut().top_left());
+    //                             el.bounds().set_width(b.width());
+    //                             el.bounds().set_height(b.height());
+    //                         }
+    //                         _ => {}
+    //                     }
+    //                 }
+    //                 _ => {}
+    //             }
+    //         })
+    //         .draggable(true)
+    //         .should_render(|_, _| true);
+    //
+    //     builder.build()
+    // }
     pub fn set_bounds(&mut self, vec4: Vec4) {
         self.bounds.set(vec4);
     }

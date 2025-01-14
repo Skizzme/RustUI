@@ -7,18 +7,18 @@ use crate::gl_binds::gl30::Color4f;
 /// All values are 0 to 1
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Color {
-    red: f32,
-    green: f32,
-    blue: f32,
-    alpha: f32,
+    r: f32,
+    g: f32,
+    b: f32,
+    a: f32,
 }
 
 impl Hash for Color {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        state.write(&self.red.to_be_bytes());
-        state.write(&self.green.to_be_bytes());
-        state.write(&self.blue.to_be_bytes());
-        state.write(&self.alpha.to_be_bytes());
+        state.write(&self.r.to_be_bytes());
+        state.write(&self.g.to_be_bytes());
+        state.write(&self.b.to_be_bytes());
+        state.write(&self.a.to_be_bytes());
     }
 }
 
@@ -26,94 +26,105 @@ impl Color {
     /// The constructor to create a color from a u32, like 0xff909090
     pub fn from_u32(color: u32) -> Color {
         Color {
-            red: (color >> 16 & 255) as f32 / 255f32,
-            green: (color >> 8 & 255) as f32 / 255f32,
-            blue: (color & 255) as f32 / 255f32,
-            alpha: (color >> 24 & 255) as f32 / 255f32,
+            r: (color >> 16 & 255) as f32 / 255f32,
+            g: (color >> 8 & 255) as f32 / 255f32,
+            b: (color & 255) as f32 / 255f32,
+            a: (color >> 24 & 255) as f32 / 255f32,
         }
     }
 
     /// The constructor to create a color from 0-255 u8 values
     pub fn from_u8(red: u8, green: u8, blue: u8, alpha: u8) -> Color {
         Color {
-            red: (red as f32/255f32).clamp(0.0, 1.0),
-            green: (green as f32/255f32).clamp(0.0, 1.0),
-            blue: (blue as f32/255f32).clamp(0.0, 1.0),
-            alpha: (alpha as f32/255f32).clamp(0.0, 1.0),
+            r: (red as f32/255f32).clamp(0.0, 1.0),
+            g: (green as f32/255f32).clamp(0.0, 1.0),
+            b: (blue as f32/255f32).clamp(0.0, 1.0),
+            a: (alpha as f32/255f32).clamp(0.0, 1.0),
         }
     }
 
     /// The constructor to create a color for 0 - 1 f32 values
     pub fn from_f32(red: f32, green: f32, blue: f32, alpha: f32) -> Color {
         Color {
-            red: red.clamp(0.0, 1.0),
-            green: green.clamp(0.0, 1.0),
-            blue: blue.clamp(0.0, 1.0),
-            alpha: alpha.clamp(0.0, 1.0),
+            r: red.clamp(0.0, 1.0),
+            g: green.clamp(0.0, 1.0),
+            b: blue.clamp(0.0, 1.0),
+            a: alpha.clamp(0.0, 1.0),
         }
     }
 
     pub fn from_hsv(hue: f32, saturation: f32, value: f32) -> Color {
         Color {
-            red: ((((hue * 6.0 - 3.0).abs() - 1.0).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
-            green: (((2.0 - (hue * 6.0 - 2.0).abs()).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
-            blue: (((2.0 - (hue * 6.0 - 4.0).abs()).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
-            alpha: 1.0,
+            r: ((((hue * 6.0 - 3.0).abs() - 1.0).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
+            g: (((2.0 - (hue * 6.0 - 2.0).abs()).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
+            b: (((2.0 - (hue * 6.0 - 4.0).abs()).clamp(0.0, 1.0) - 1.0) * saturation + 1.0) * value,
+            a: 1.0,
         }
     }
 
     pub fn red(&self) -> f32 {
-        self.red
+        self.r
     }
     pub fn green(&self) -> f32 {
-        self.green
+        self.g
     }
     pub fn blue(&self) -> f32 {
-        self.blue
+        self.b
     }
     pub fn alpha(&self) -> f32 {
-        self.alpha
+        self.a
     }
     pub fn rgba(&self) -> [f32; 4] {
-        [self.red, self.green, self.blue, self.alpha]
+        [self.r, self.g, self.b, self.a]
     }
     pub fn rgba_u8(&self) -> Vec<u8> {
-        vec![(self.red*255.0).round() as u8, (self.green*255.0).round() as u8, (self.blue*255.0).round() as u8, (self.alpha*255.0).round() as u8]
+        vec![(self.r *255.0).round() as u8, (self.g *255.0).round() as u8, (self.b *255.0).round() as u8, (self.a *255.0).round() as u8]
     }
     pub fn rgba_u32(&self) -> u32 {
-        (((self.alpha * 255f32).round() as u32) << 24)
-            | (((self.red * 255f32).round() as u32) << 16)
-            | (((self.green * 255f32).round() as u32) << 8)
-            | ((self.blue * 255f32).round() as u32)
+        (((self.a * 255f32).round() as u32) << 24)
+            | (((self.r * 255f32).round() as u32) << 16)
+            | (((self.g * 255f32).round() as u32) << 8)
+            | ((self.b * 255f32).round() as u32)
     }
 
-    pub fn set_red_f32(mut self, red: f32) -> Color { self.red = red; self }
-    pub fn set_green_f32(mut self, green: f32) -> Color { self.green = green; self }
-    pub fn set_blue_f32(mut self, blue: f32) -> Color { self.blue = blue; self }
-    pub fn set_alpha_f32(mut self, alpha: f32) -> Color { self.alpha = alpha; self }
-    pub fn set_red_u8(mut self, red: u8) -> Color { self.red = (red as f32/255f32).clamp(0.0, 1.0); self }
-    pub fn set_green_u8(mut self, green: u8) -> Color { self.green = (green as f32/255f32).clamp(0.0, 1.0); self }
-    pub fn set_blue_u8(mut self, blue: u8) -> Color { self.blue = (blue as f32/255f32).clamp(0.0, 1.0); self }
-    pub fn set_alpha_u8(mut self, alpha: u8) -> Color { self.alpha = (alpha as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_red_f32(mut self, red: f32) -> Color { self.r = red; self }
+    pub fn set_green_f32(mut self, green: f32) -> Color { self.g = green; self }
+    pub fn set_blue_f32(mut self, blue: f32) -> Color { self.b = blue; self }
+    pub fn set_alpha_f32(mut self, alpha: f32) -> Color { self.a = alpha; self }
+    pub fn set_red_u8(mut self, red: u8) -> Color { self.r = (red as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_green_u8(mut self, green: u8) -> Color { self.g = (green as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_blue_u8(mut self, blue: u8) -> Color { self.b = (blue as f32/255f32).clamp(0.0, 1.0); self }
+    pub fn set_alpha_u8(mut self, alpha: u8) -> Color { self.a = (alpha as f32/255f32).clamp(0.0, 1.0); self }
     pub fn set_color_u32(mut self, color: u32) -> Color {
-        self.alpha = (color >> 24 & 255) as f32 / 255f32;
-        self.red = (color >> 16 & 255) as f32 / 255f32;
-        self.green = (color >> 8 & 255) as f32 / 255f32;
-        self.blue = (color & 255) as f32 / 255f32;
+        self.a = (color >> 24 & 255) as f32 / 255f32;
+        self.r = (color >> 16 & 255) as f32 / 255f32;
+        self.g = (color >> 8 & 255) as f32 / 255f32;
+        self.b = (color & 255) as f32 / 255f32;
         self
     }
 
     pub fn mult_rgb(self, mult: f32) -> Color {
         Color {
-            red: self.red * mult,
-            green: self.green * mult,
-            blue: self.blue * mult,
-            alpha: self.alpha,
+            r: self.r * mult,
+            g: self.g * mult,
+            b: self.b * mult,
+            a: self.a,
         }
     }
 
     pub unsafe fn apply(&self) {
-        Color4f(self.red, self.green, self.blue, self.alpha);
+        Color4f(self.r, self.g, self.b, self.a);
+    }
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        Color {
+            r: 1.,
+            g: 1.,
+            b: 1.,
+            a: 1.,
+        }
     }
 }
 

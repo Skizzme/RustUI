@@ -3,6 +3,8 @@ extern crate freetype;
 use std::cmp::Ordering;
 use std::cmp::Ordering::{Equal, Greater, Less};
 use std::collections::HashMap;
+use std::hash;
+use std::hash::{Hash, Hasher};
 use std::io::Write;
 use std::sync::mpsc::channel;
 use std::time::Instant;
@@ -10,14 +12,20 @@ use std::time::Instant;
 use freetype::face::LoadFlag;
 use freetype::RenderMode;
 use gl::*;
+use crate::components::context::context;
+use crate::components::render::color::Color;
+use crate::components::render::font::format::{AlignH, AlignV, FormatItem, FormattedText};
+use crate::components::render::stack::State::{Blend, Texture2D};
 
-use crate::components::render::font::renderer::Glyph;
 use crate::components::spatial::vec2::Vec2;
+use crate::components::spatial::vec4::Vec4;
+use crate::components::wrapper::buffer::{Buffer, VertexArray};
+use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
+use crate::gl_binds::gl11::types::{GLsizei, GLuint};
 
 pub mod format;
 pub mod manager;
-pub mod renderer;
 
 const FONT_RES: u32 = 48u32;
 const MAX_ATLAS_WIDTH: i32 = 2000;
@@ -73,11 +81,33 @@ pub struct FontMetrics {
     decent: f32,
 }
 
+#[derive(Default)]
+struct RenderData {
+    scale: f32,
+    i_scale: f32,
+    x: f32,
+    y: f32,
+    start_x: f32,
+    comb_scale_x: f32,
+    comb_scale_y: f32,
+    line_width: f32,
+
+    current_color: Color,
+    current_size: f32,
+    current_offset: Vec2,
+    current_align_h: f32,
+    current_align_v: f32,
+    current_tab_length: u32,
+    current_line_spacing: f32,
+}
+
 /// Only holds the data per font to be used by the font renderer
 pub struct Font {
     pub glyphs: HashMap<usize, Glyph>,
     metrics: FontMetrics,
     pub atlas_tex: Option<Texture>,
+
+    draw_data: RenderData,
 }
 
 impl Font {
@@ -291,6 +321,8 @@ impl Font {
                 decent,
             },
             atlas_tex: None,
+
+            draw_data: Default::default(),
         };
 
         let mut atlas_height = 0f32;
@@ -355,8 +387,350 @@ impl Font {
 
         font
     }
+
+
+    /// Get (or create if it doesn't exist) the data for the text render batch
+    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
+        let offset = offset.into();
+        let pos = pos.into();
+        let formatted_text = formatted_text.into();
+        let len = formatted_text.visible_length();
+        let mut hasher = hash::DefaultHasher::new();
+        offset.hash(&mut hasher);
+        pos.hash(&mut hasher);
+
+        formatted_text.hash(&mut hasher);
+
+        let hashed = hasher.finish();
+
+        self.draw_data = RenderData::default();
+
+        let map = &mut context().fonts().cached_inst;
+        if !map.contains_key(&hashed) {
+            let (x, y) = pos.xy();
+
+            self.draw_data.start_x = x;
+            self.draw_data.line_width = offset.x;
+            self.draw_data.x = x + offset.x;
+            self.draw_data.y = y + offset.y;
+
+            let mut current_color = Color::from_u32(0);
+
+            self.draw_data.scale = 1.0;
+            self.draw_data.i_scale = 1.0;
+            self.draw_data.comb_scale_x = 1.0;
+            self.draw_data.comb_scale_y = 1.0;
+
+            let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(len);
+
+            let (a_width, a_height) = {
+                let atlas = self.atlas_tex.as_ref().unwrap();
+                (atlas.width as f32, atlas.height as f32)
+            };
+
+            let mut max_line_height = 0f32;
+            let mut height = 0f32;
+            let mut bounds = Vec4::xywh(self.draw_data.x, self.draw_data.y, 0.0, 0.0);
+            for item in formatted_text.items() {
+                match item {
+                    FormatItem::None => {}
+                    FormatItem::Color(v) => current_color = v.clone(),
+                    FormatItem::AlignH(alignment) => self.draw_data.current_align_h = alignment.get_value(),
+                    FormatItem::AlignV(alignment) => self.draw_data.current_align_v = alignment.get_value(),
+                    FormatItem::TabLength(v) => self.draw_data.current_tab_length = *v,
+                    FormatItem::LineSpacing(v) => self.draw_data.current_line_spacing = *v,
+                    FormatItem::Size(size) => {
+                        let matrix: [f64; 16] = context().renderer().get_transform_matrix();
+                        let scaled_factor_x = (matrix[0]*context().window().width as f64/2.0) as f32;
+                        let scaled_factor_y = (matrix[5]*context().window().height as f64/-2.0) as f32;
+
+                        self.draw_data.scale = size / FONT_RES as f32 * scaled_factor_x;
+                        self.draw_data.i_scale = 1.0/ self.draw_data.scale;
+
+                        self.draw_data.comb_scale_x = scaled_factor_x * self.draw_data.scale;
+                        self.draw_data.comb_scale_y = scaled_factor_y * self.draw_data.scale;
+
+                        max_line_height = max_line_height.max(self.get_line_height() * self.draw_data.scale);
+                    }
+                    FormatItem::Offset(amount) => {
+                        self.draw_data.x += amount.x;
+                        self.draw_data.y += amount.y;
+                    }
+                    FormatItem::Text(string) => {
+                        let mut i = 0;
+                        for char in string.chars() {
+                            if char == '\n' {
+                                self.draw_data.y += max_line_height;
+                                height += max_line_height;
+                                max_line_height = 0f32;
+                                self.draw_data.line_width = 0.0;
+                                self.draw_data.x = self.draw_data.start_x;
+                                continue;
+                            }
+
+                            max_line_height = max_line_height.max(self.get_line_height() * self.draw_data.scale);
+
+                            let (c_w, _c_h, c_a, should_render) = self.get_dimensions_scaled(char);
+                            if should_render == 2 {
+                                // println!("broken at {}", i);
+                                // break
+                            }
+
+                            let glyph: &Glyph = match self.glyphs.get(&(char as usize)) {
+                                None => continue,
+                                Some(glyph) => glyph
+                            };
+
+                            let pos_y = self.draw_data.y + (self.get_height() - glyph.top) * self.draw_data.scale;
+
+                            let (p_left, p_top, p_width, p_height) = (self.draw_data.x+glyph.bearing_x * self.draw_data.scale, pos_y, glyph.width * self.draw_data.scale, glyph.height * self.draw_data.scale);
+                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
+
+                            bounds.expand_to_x(p_left);
+                            bounds.expand_to_y(p_top);
+                            bounds.expand_to_x(p_left+p_width);
+                            bounds.expand_to_y(p_top+p_height);
+
+                            dims.push([p_left, p_top, p_width, p_height]);
+                            uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
+
+                            // optimize to use u32 later
+                            colors.push(current_color.rgba());
+
+                            self.draw_data.x += c_a;
+                            self.draw_data.line_width += c_a;
+                            i += 1;
+                        }
+                    }
+                }
+            }
+
+            let shader = &context().fonts().sdf_shader;
+            let mut vao = VertexArray::new();
+            vao.bind();
+
+            let mut dims_buf = Buffer::new(ARRAY_BUFFER);
+            let (len, cap) = (dims.len(), dims.capacity());
+            dims_buf.set_values(dims);
+            dims_buf.attribPointer(shader.get_attrib_location("dims") as GLuint, 4, FLOAT, crate::gl_binds::gl11::FALSE, 1);
+
+            let mut uvs_buf = Buffer::new(ARRAY_BUFFER);
+            uvs_buf.set_values(uvs);
+            uvs_buf.attribPointer(shader.get_attrib_location("uvs") as GLuint, 4, FLOAT, crate::gl_binds::gl11::FALSE, 1);
+
+            let mut color = Buffer::new(ARRAY_BUFFER);
+            color.set_values(colors);
+            color.attribPointer(shader.get_attrib_location("color") as GLuint, 4, FLOAT, crate::gl_binds::gl11::FALSE, 1);
+
+            let mut t_buf = Buffer::new(ARRAY_BUFFER);
+            t_buf.set_values(vec![0f32, 1f32, 2f32, 0f32, 2f32, 3f32]);
+            t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, FLOAT, crate::gl_binds::gl11::FALSE, 0);
+
+            // Unbind VAO
+            VertexArray::unbind();
+
+            // Unbind buffers
+            color.unbind();
+            uvs_buf.unbind();
+
+            // Add buffers to VAO object so they can be managed together
+            vao.add_buffer(color);
+            vao.add_buffer(uvs_buf);
+            vao.add_buffer(t_buf);
+            vao.add_buffer(dims_buf);
+
+            map.insert(hashed, (vao, Vec2::new(self.draw_data.line_width, height), bounds, 0));
+        }
+        map.get_mut(&hashed).unwrap().3 = 0;
+        let (vao, end_pos, bounds, _) = map.get(&hashed).unwrap();
+        (vao.gl_ref(), *end_pos, bounds.clone())
+    }
+
+    /// Calls [`draw_string_offset()`] with an offset of `(0, 0)`
+    ///
+    /// [`draw_string_offset()`]: Font::draw_string_offset
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
+        self.draw_string_offset(formatted_text, pos, (0, 0))
+    }
+
+    /// The method to be called to a render a string using modern GL
+    ///
+    /// Also caches the VAOs in order for faster rendering times,
+    /// but is deleted if not used within 10 frames
+    ///
+    /// Returns width, height
+    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (Vec2, Vec4) {
+        let formatted_text = formatted_text.into();
+        let pos = pos.into();
+
+        let len = formatted_text.visible_length();
+
+        let (vao, end_pos, bounds) = self.get_inst(formatted_text, pos, offset);
+        // vec4.draw_vec4(0xffffffff);
+        context().renderer().stack().begin();
+        context().renderer().stack().push(Blend(true));
+        context().renderer().stack().push(Texture2D(true));
+        self.bind_shader();
+        let atlas = self.atlas_tex.as_ref().unwrap();
+
+        ActiveTexture(TEXTURE0);
+        atlas.bind();
+
+        BindVertexArray(vao);
+        // Finish();
+        // let st = Instant::now();
+        crate::gl_binds::gl41::DrawArraysInstanced(TRIANGLES, 0, 6, len as GLsizei);
+        // Finish();
+        // println!("draw {} {:?}", len, st.elapsed());
+        BindVertexArray(0);
+        context().renderer().stack().end();
+
+        Texture::unbind();
+        self.end();
+        (end_pos, bounds)
+        // (0f32, 0f32)
+    }
+
+    unsafe fn bind_shader(&self) {
+        context().fonts().sdf_shader.bind();
+        context().fonts().sdf_shader.u_put_float("u_res", vec![FONT_RES as f32]);
+    }
+
+    /// Returns the necessary dimensions of a glyph / character
+    ///
+    /// Returns `char_width, char_height, should_render`
+    ///
+    /// `should_render` is an integer that is 0, 1, or 2. Is calculated based off of this Font's current draw data
+    /// ```
+    /// use RustUI::components::render::font::Font;
+    /// let should_render = unsafe { Font::get_dimensions_scaled('A') }.3;
+    /// if should_render == 2 {
+    ///     // End the rendering.
+    ///     // This text is out of screen and no more will be rendered
+    /// }
+    /// if should_render <= 1 {
+    ///     if should_render == 0 {
+    ///         // Actually draw the char
+    ///     }
+    ///     // Calculate next positions, because here is either in screen, or out of screen.
+    ///     // There will still be more characters to be rendered after this one
+    /// }
+    /// ```
+    pub unsafe fn get_dimensions_scaled(&self, char: char) -> (f32, f32, f32, u32) {
+        let glyph: &Glyph = match self.glyphs.get(&(char as usize)) {
+            None => {
+                return (0.0, 0.0, 0.0, 0);
+            }
+            Some(glyph) => {
+                glyph
+            }
+        };
+
+        let (c_w, c_h, c_a) = ((glyph.advance - glyph.bearing_x) * self.draw_data.scale, glyph.height as f32 * self.draw_data.scale, glyph.advance * self.draw_data.scale);
+        let mut should_render = 0u32;
+        if self.draw_data.y > context().window().width as f32 * self.draw_data.i_scale {
+            should_render = 2;
+        }
+        else if self.draw_data.y > -c_h {
+            should_render = 0;
+        }
+        else if self.draw_data.x <= context().window().height as f32 * self.draw_data.i_scale {
+            should_render = 1;
+        }
+        (c_w, c_h, c_a, should_render)
+    }
+
+    pub unsafe fn end(&self) {
+        // context().renderer().stack().pop();
+        Shader::unbind();
+        BindTexture(TEXTURE_2D, 0);
+        Texture::unbind();
+        Disable(BLEND);
+    }
+
+    /// Returns the width, in pixels, of a string at a specific size
+    pub unsafe fn get_width(&self, size: f32, string: impl ToString) -> f32 {
+        let string = string.to_string();
+        let scale = size/FONT_RES as f32;
+        let mut width = 0.0f32;
+
+        for char in string.chars() {
+            let glyph =  self.glyphs.get(&(char as usize)).unwrap();
+            width += (glyph.advance - glyph.bearing_x) as f32;
+        }
+
+        width*scale
+    }
+
+    pub unsafe fn get_end_pos(&self, size: f32, string: impl ToString) -> Vec2 {
+        let string = string.to_string();
+        let scale = size/FONT_RES as f32;
+        let mut width = 0f32;
+        let mut height = 0f32;
+
+        for char in string.chars() {
+            let glyph =  self.glyphs.get(&(char as usize)).unwrap();
+            if char == '\n' {
+                width = 0f32;
+                height += self.get_line_height();
+                continue;
+            }
+            width += (glyph.advance - glyph.bearing_x) as f32;
+        }
+
+        (width*scale, height*scale).into()
+    }
+
+    pub unsafe fn add_end_pos(&self, current: Vec2, size: f32, string: impl ToString) -> Vec2 {
+        let string = string.to_string();
+        let scale = size/FONT_RES as f32;
+        let mut width = current.x;
+        let mut height = current.y;
+
+        for char in string.chars() {
+            let glyph = match self.glyphs.get(&(char as usize)) {
+                None => continue,
+                Some(v) => v
+            };
+            if char == '\n' {
+                width = 0f32;
+                height += self.get_line_height() * scale;
+                continue;
+            }
+            width += (glyph.advance - glyph.bearing_x) * scale;
+        }
+
+        (width, height).into()
+    }
+
+    pub unsafe fn get_sized_height(&self, size: f32) -> f32 {
+        let scale = size / FONT_RES as f32;
+        self.get_height() * scale
+    }
+
+    /// Returns the height, in pixels, of the font. Unscaled
+    pub unsafe fn get_height(&self) -> f32 {
+        self.metrics.ascent + self.metrics.decent
+        // self.glyphs.get('H' as usize).unwrap().top as f32 * scale
+    }
+
+    pub unsafe fn get_line_height(&self) -> f32 {
+        self.get_height() * self.draw_data.current_line_spacing
+    }
 }
 
 fn i32_from_bytes(index: usize, bytes: &Vec<u8>) -> i32 {
     i32::from_be_bytes(bytes[index..index+4].try_into().unwrap())
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Glyph {
+    pub atlas_pos: Vec2,
+    pub width: f32,
+    pub height: f32,
+    pub advance: f32,
+    pub bearing_x: f32,
+    pub top: f32,
 }

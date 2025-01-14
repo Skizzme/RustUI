@@ -5,7 +5,6 @@ use num_traits::NumCast;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::format::FormatItem::{Offset, Size, Text};
 use crate::components::spatial::vec2::Vec2;
-use crate::components::render::font::renderer;
 
 #[macro_export]
 macro_rules! text_vec {
@@ -26,9 +25,12 @@ pub trait Formatter {
     fn parse_all(&mut self);
 }
 
-/// The simplest form of passing text to the [`FontRenderer`]
+/// The simplest form of render-able text. Uses [`FormatItem`] to
+/// split each item, including color, formatting, and actual text into
+/// their own parts.
 ///
-/// [`FontRenderer`]: renderer::FontRenderer
+/// This is done as a "universal" form of rendering, allowing for implementations
+/// of the [`Formatter`] to create this from any text format that exists.
 #[derive(Debug, Clone, Hash)]
 pub struct FormattedText {
     items: Vec<FormatItem>,
@@ -108,12 +110,92 @@ impl Into<FormattedText> for Vec<FormattedText> {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+pub enum AlignH {
+    #[default]
+    Left,
+    Middle,
+    Right,
+    Custom(f32)
+}
+
+impl AlignH {
+    pub fn get_value(&self) -> f32 {
+        match self {
+            AlignH::Left => 0.,
+            AlignH::Middle => 0.5,
+            AlignH::Right => 1.,
+            AlignH::Custom(v) => *v,
+        }
+    }
+}
+
+impl Hash for AlignH {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            AlignH::Left => state.write_u8(0),
+            AlignH::Middle => state.write_u8(1),
+            AlignH::Right => state.write_u8(2),
+            AlignH::Custom(v) => state.write(&v.to_be_bytes()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub enum AlignV {
+    Top,
+    #[default]
+    Middle,
+    Bottom,
+    Custom(f32),
+}
+
+impl AlignV {
+    pub fn get_value(&self) -> f32 {
+        match self {
+            AlignV::Top => 0.,
+            AlignV::Middle => 0.5,
+            AlignV::Bottom => 1.,
+            AlignV::Custom(v) => *v,
+        }
+    }
+}
+
+impl Hash for AlignV {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            AlignV::Top => state.write_u8(0),
+            AlignV::Middle => state.write_u8(1),
+            AlignV::Bottom => state.write_u8(2),
+            AlignV::Custom(v) => state.write(&v.to_be_bytes()),
+        }
+    }
+}
+
+/// Wrapping to be used for rendering
+///
+/// When not [Wrapping::None], the enum should contain the maximum line length (in pixels)
+pub enum Wrapping {
+    /// No wrapping
+    None,
+    /// Will wrap at any character, and could split words up
+    Hard(f32),
+    /// Will wrap only at spaces. Will not break up words
+    Soft(f32),
+    /// Will try to wrap only at spaces, but if one word is longer than the maximum line length, it would resort to hard wrapping
+    SoftHard(f32),
+}
+
 #[derive(Debug, Clone)]
 pub enum FormatItem {
     Color(Color),
     Size(f32),
     Text(String),
     Offset(Vec2),
+    AlignH(AlignH),
+    AlignV(AlignV),
+    TabLength(u32),
+    LineSpacing(f32),
     None,
 }
 
@@ -148,7 +230,11 @@ impl Hash for FormatItem {
             Text(v) => v.hash(state),
             Offset(v) => v.hash(state),
             Size(v) => state.write(&v.to_be_bytes()),
-            FormatItem::None => state.write(&[0u8])
+            FormatItem::None => state.write(&[0u8]),
+            FormatItem::AlignH(v) => v.hash(state),
+            FormatItem::AlignV(v) => v.hash(state),
+            FormatItem::TabLength(v) => v.hash(state),
+            FormatItem::LineSpacing(v) => state.write(&v.to_be_bytes()),
         }
     }
 }

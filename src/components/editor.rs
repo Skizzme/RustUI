@@ -11,7 +11,6 @@ use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::render::color::Color;
 use crate::components::render::font::format::{FormatItem, FormattedText};
-use crate::components::render::font::renderer::FontRenderer;
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::gl_binds::gl11::Translatef;
@@ -245,7 +244,7 @@ pub enum Change {
 
 pub struct Textbox {
     editor: StringEditor,
-    fr: FontRenderer,
+    font_id: String,
     text_chunks: Vec<(FormattedText, Vec2, f32)>,
     animations: AnimationRegistry,
     changed: bool,
@@ -256,7 +255,7 @@ pub struct Textbox {
 }
 
 impl Textbox {
-    pub unsafe fn new(fr: FontRenderer, init: String) -> Self {
+    pub unsafe fn new(font_id: String, init: String) -> Self {
         // println!("EDIT {:?}", init.chars());
         let mut anims = AnimationRegistry::new();
         let font_size = anims.new_anim();
@@ -264,7 +263,7 @@ impl Textbox {
         let scroll = anims.new_anim();
         Textbox {
             editor: StringEditor::new(init.clone()),
-            fr,
+            font_id,
             text_chunks: Vec::new(),
             animations: anims,
             changed: true,
@@ -296,7 +295,7 @@ impl Textbox {
             text.push(FormatItem::Text(self.editor.chunks().get(index).unwrap().string.clone()));
 
             //self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string)
-            let (pos, _) = self.fr.draw_string_offset(text.clone(), (0, 0), last_offset);
+            let (pos, _) = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), (0, 0), last_offset);
 
             let mut chunk = (
                 text,
@@ -352,7 +351,7 @@ impl UIHandler for Textbox {
                                     continue;
                                 }
 
-                                let (offset, vec4) = self.fr.draw_string_offset(text.clone(), start_pos, last_offset);
+                                let (offset, vec4) = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset);
 
                                 if context().window().mouse().pos().intersects(&vec4) {
                                     // println!("clicked on {:?}", text);
@@ -396,7 +395,7 @@ impl UIHandler for Textbox {
                         if *size != self.font_size.borrow().value() {
                             to_update_indices.push(i);
                         }
-                        let (offset, _) = self.fr.draw_string_offset(text.clone(), start_pos, last_offset);
+                        let (offset, _) = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset);
 
                         last_offset = (offset.x, last_offset.y + offset.y).into();
 
@@ -437,12 +436,13 @@ impl UIHandler for Textbox {
                         (0, 0).into()
                     };
 
+                    let mut font = context().fonts().font(&self.font_id).unwrap();
                     let current = self.editor.chunks().get(self.editor.search_chunk(self.index)).unwrap();
-                    let cursor_pos = self.fr.add_end_pos(last_chunk_offset, self.font_size.borrow().value(), current.get_to_index(self.index));
+                    let cursor_pos = font.add_end_pos(last_chunk_offset, self.font_size.borrow().value(), current.get_to_index(self.index));
 
                     Translatef(0.0, self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
                     // println!("current ch sec {:?}", current.get_to_index(self.index));
-                    context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, self.fr.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
+                    context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, font.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
 
                     Translatef(0.0, -self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
                     true

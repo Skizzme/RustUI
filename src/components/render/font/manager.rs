@@ -3,7 +3,6 @@ use std::path::Path;
 use std::time::Instant;
 
 use crate::components::render::font::{Font, FONT_RES};
-use crate::components::render::font::renderer::FontRenderer;
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::VertexArray;
@@ -50,8 +49,14 @@ impl FontManager {
         });
     }
 
-    pub fn font(&self, name: impl ToString) -> Option<&Font> {
-        self.fonts.get(&name.to_string())
+    pub fn font(&mut self, name: impl ToString) -> Option<&mut Font> {
+        let name = name.to_string();
+        if !self.fonts.contains_key(&name) {
+            unsafe {
+                self.load_font(name.clone(), false);
+            }
+        }
+        self.fonts.get_mut(&name)
     }
 
     /// Sets the byte-data for a font to be used by the loader so that fonts don't have to be files
@@ -98,17 +103,5 @@ impl FontManager {
             }
         }
         return None
-    }
-
-    /// Creates a new FontRenderer object every call
-    ///
-    /// This should not be called every frame, but is just a way to create a fond renderer with the needed options
-    ///
-    /// `name` references the name specified when calling `set_font_bytes`
-    pub unsafe fn renderer(&mut self, name: &str) -> FontRenderer {
-        if !self.fonts.contains_key(name) {
-            self.load_font(name, false);
-        }
-        FontRenderer::new(name.to_string())
     }
 }

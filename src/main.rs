@@ -36,8 +36,7 @@ use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier}
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
-use RustUI::components::render::font::format::FormattedText;
-use RustUI::components::render::font::renderer::FontRenderer;
+use RustUI::components::render::font::format::{FormatItem, FormattedText};
 use RustUI::components::render::mask::FramebufferMask;
 use RustUI::components::render::renderer::shader_file;
 use RustUI::components::spatial::vec2::Vec2;
@@ -67,7 +66,6 @@ fn main() {
 
 pub struct TestScreen {
     pub text: String,
-    fr: FontRenderer,
     previous_pos: Vec2,
     previous_tex: Arc<Mutex<String>>,
     t_size: AnimationRef,
@@ -101,7 +99,6 @@ impl TestScreen {
         let test_vec = Arc::new(Mutex::new(v));
         TestScreen {
             text: t,
-            fr: context().fonts().renderer("main"),
             previous_pos: Vec2::new(0.0, 0.0),
             previous_tex: Arc::new(Mutex::new("".to_string())),
             t_size: Rc::new(RefCell::new(Animation::zero())),
@@ -148,13 +145,21 @@ impl ScreenTrait for TestScreen {
             }
             // context().renderer().draw_rect(context().window().bounds(), 0xff181818);
 
+            let mut fr = context().fonts().font("main").unwrap();
+
+            context().renderer().draw_rect(Vec4::xywh(100., 100., 2., 100.), 0xffffffff);
+            // let text = text_vec!(
+            //     FormatItem::AlignH()
+            // );
+            // context().fonts().font("main").unwrap().draw_string(text, (100., 100.));
+
             context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-            self.fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
+            fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
             let formated: FormattedText = (15, "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
             let pos = 0; //
             gl::Finish();
             let st = Instant::now();
-            self.fr.draw_string(formated, (pos, 300.0));
+            fr.draw_string(formated, (pos, 300.0));
             gl::Finish();
             let et = st.elapsed();
             println!("drawed {:?}", et);
@@ -193,7 +198,7 @@ impl ScreenTrait for TestScreen {
                     let mouse = context().window().mouse();
                     // context().renderer().draw_rect(*el.vec4(), 0xff00ff00);
                     let st = Instant::now();
-                    let (end_pos, vec4) = context().fonts().renderer("main").draw_string(t_test_c.lock().clone(), el.bounds());
+                    let (end_pos, vec4) = context().fonts().font("main").unwrap().draw_string(t_test_c.lock().clone(), el.bounds());
                     // println!("{:?}", st.elapsed());
                     el.bounds().set_width(vec4.width());
                     el.bounds().set_height(vec4.height());
@@ -273,7 +278,7 @@ impl ScreenTrait for TestScreen {
                     let mut el = ElementBuilder::new()
                         .handler(move |el, e| {
                             if e.is_render(RenderPass::Main) {
-                                let mut fr = context().fonts().renderer("main");
+                                let mut fr = context().fonts().font("main").unwrap();
                                 let (pos, bounds) = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c.borrow().clone());
                                 bounds.debug_draw(0xff9020ff);
                                 // println!("POS1 {:?}", state_c.borrow());
@@ -293,7 +298,7 @@ impl ScreenTrait for TestScreen {
 
         layer_0.add(el_test);
         layer_0.add(el_1.build());
-        // layer_0.add(Textbox::new(context().fonts().renderer("main"), self.text.clone())); // "".to_string() self.text.clone()
+        // layer_0.add(Textbox::new(context().fonts().font("main").unwrap(), self.text.clone())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 
         vec![layer_0]
