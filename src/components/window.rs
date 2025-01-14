@@ -3,6 +3,9 @@ use glfw::WindowEvent;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::mouse::Mouse;
 
+/// A simple struct that provides the mouse, width, and height of the current [`Glfw`] window
+///
+/// [`Glfw`]: glfw::Glfw
 pub struct Window {
     pub(super) width: i32,
     pub(super) height: i32,

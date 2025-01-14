@@ -5,6 +5,7 @@ use num_traits::NumCast;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::format::FormatItem::{Offset, Size, Text};
 use crate::components::spatial::vec2::Vec2;
+use crate::components::render::font::renderer;
 
 #[macro_export]
 macro_rules! text_vec {
@@ -25,6 +26,9 @@ pub trait Formatter {
     fn parse_all(&mut self);
 }
 
+/// The simplest form of passing text to the [`FontRenderer`]
+///
+/// [`FontRenderer`]: renderer::FontRenderer
 #[derive(Debug, Clone, Hash)]
 pub struct FormattedText {
     items: Vec<FormatItem>,

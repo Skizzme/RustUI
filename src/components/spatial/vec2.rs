@@ -5,6 +5,7 @@ use num_traits::NumCast;
 
 use crate::components::spatial::vec4::Vec4;
 
+/// Stores x and y values as f32 values
 #[derive(Clone, Debug, Copy, PartialEq, Default)]
 pub struct Vec2 {
     pub(crate) x: f32,
@@ -31,11 +32,14 @@ impl Vec2 {
     pub fn set_x(&mut self, x: f32) { self.x = x; }
     pub fn set_y(&mut self, y: f32) { self.y = y; }
 
+    /// Adds the components of both [`Vec2`]
     pub fn offset(&mut self, vec2: impl Into<Vec2>) {
         let vec2 = vec2.into();
         self.x += vec2.x;
         self.y += vec2.y;
     }
+
+    /// Returns if this [`Vec2`] is inside the bounds of the [`Vec4`]
     pub fn intersects(&self, vec4: &Vec4) -> bool {
         self.x >= vec4.left() && self.y >= vec4.top() && self.x <= vec4.right() && self.y <= vec4.bottom()
     }

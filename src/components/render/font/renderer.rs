@@ -58,6 +58,7 @@ impl FontRenderer {
         }
     }
 
+    /// Get (or create if it doesn't exist) the data for the text render batch
     pub unsafe fn get_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
         let offset = offset.into();
         let pos = pos.into();
@@ -211,13 +212,16 @@ impl FontRenderer {
         (vao.gl_ref(), *end_pos, bounds.clone())
     }
 
+    /// Calls [`draw_string_offset()`] with an offset of `(0, 0)`
+    ///
+    /// [`draw_string_offset()`]: FontRenderer::draw_string_offset
     pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
         self.draw_string_offset(formatted_text, pos, (0, 0))
     }
 
     /// The method to be called to a render a string using modern GL
     ///
-    /// Also caches the VAOs in order to be even more effective,
+    /// Also caches the VAOs in order for faster rendering times,
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height

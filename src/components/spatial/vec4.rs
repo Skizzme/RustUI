@@ -2,9 +2,14 @@ use std::ops::{Add, Div, Mul, Sub};
 use num_traits::NumCast;
 
 use crate::components::context::context;
+use crate::components::framework::element::ui_traits::UIIdentifier;
 use crate::components::render::color::ToColor;
 use crate::components::spatial::vec2::Vec2;
 
+/// Stores x, y, width, height as f32 values
+///
+/// Methods also allow it to be used as a
+/// left, top, right, bottom object.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Vec4 {
     x: f32,
@@ -87,6 +92,7 @@ impl Vec4 {
         self.y = pos.y;
     }
 
+    /// Returns a clone but with the position set to `(0,0)`
     pub fn zero_pos(&mut self) -> Self {
         let mut clone = self.clone();
         clone.x = 0.;
@@ -109,13 +115,15 @@ impl Vec4 {
         self.y = top;
     }
 
-    pub fn expand(&mut self, value: f32) {
-        self.x -= value;
-        self.y -= value;
-        self.width += value*2.0;
-        self.height += value*2.0;
+    pub fn padded(&mut self, value: f32) {
+        self.x += value;
+        self.y += value;
+        self.width -= value * 2.;
+        self.height -= value * 2.;
     }
 
+    /// Sets the left and right to include the x value.
+    /// If the value is already "inside" the vec4, nothing changes
     pub fn expand_to_x(&mut self, x: f32) {
         if self.x > x {
             self.set_left(x);
@@ -124,6 +132,8 @@ impl Vec4 {
         }
     }
 
+    /// Sets the top and bottom to include the y value.
+    /// If the value is already "inside" the vec4, nothing changes
     pub fn expand_to_y(&mut self, y: f32) {
         if self.y > y {
             self.set_top(y);
@@ -132,13 +142,20 @@ impl Vec4 {
         }
     }
 
+    /// Expands to include a position by calling [`expand_to_x()`] and [`expand_to_y()`] on
+    /// the x and y component of the [`Vec2`]
+    ///
+    /// [`expand_to_x()`]: Vec4::expand_to_x
+    /// [`expand_to_y()`]: Vec4::expand_to_y
     pub fn expand_to<A: Into<Vec2>>(&mut self, pos: A) {
         let pos = pos.into();
         self.expand_to_y(pos.y);
         self.expand_to_x(pos.x);
     }
 
-    pub fn shrink(&self, other: &Vec4) -> Vec4 {
+    /// Creates a clone of the [`Vec4`] and shrinks its components by
+    /// each component of the other [`Vec4`]
+    pub fn shrink_by(&self, other: &Vec4) -> Vec4 {
         let mut shrunk = self.clone();
         shrunk.set_x(shrunk.x + other.x);
         shrunk.set_width(shrunk.width - other.width - other.x);

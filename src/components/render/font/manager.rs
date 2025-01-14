@@ -10,6 +10,7 @@ use crate::components::wrapper::buffer::VertexArray;
 use crate::components::wrapper::shader::Shader;
 use crate::test_ui::asset_manager;
 
+/// An easy-to-use system for loading and getting fonts
 pub struct FontManager {
     pub(crate) fonts: HashMap<String, Font>,
     cache_location: String,
@@ -62,6 +63,10 @@ impl FontManager {
         self
     }
 
+
+    /// Loads a font using the same name specified when specifying font bytes using [`set_font_bytes()`]
+    ///
+    /// [`set_font_bytes()`]: FontManager::set_font_bytes
     pub unsafe fn load_font(&mut self, name: impl ToString, from_cache: bool) -> Option<String> {
         let name = name.to_string();
         if !self.fonts.contains_key(&name) {

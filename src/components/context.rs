@@ -33,6 +33,12 @@ pub unsafe fn context() -> &'static mut UIContext {
     }
 }
 
+/// The main object of the UI.
+///
+/// Handles the [`Glfw`] context, events, window etc.
+///
+/// Has a [`Window`], [`Renderer`], [`FontManager`], [`Framework`], and [`FramebufferManager`]
+/// which provides almost all necessary functionality for a UI.
 pub struct UIContext {
     glfw: Glfw,
     p_window: PWindow,

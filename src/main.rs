@@ -223,10 +223,10 @@ impl ScreenTrait for TestScreen {
                     // context().renderer().draw_rect(*el.vec4(), 0xff90ff20);z
                     // let hovering = el.hovering();
                     if pass == &RenderPass::Bloom {
-                        let mut shrunk = el.bounds().clone();
-                        shrunk.expand(-10.0);
+                        let mut padded = el.bounds().clone();
+                        padded.padded(10.0);
                         context().renderer().draw_rect(*el.bounds(), 0xffffffff);
-                        context().renderer().draw_rect(shrunk, 0xff10ff10);
+                        context().renderer().draw_rect(padded, 0xff10ff10);
                         // el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
                     }
                 },

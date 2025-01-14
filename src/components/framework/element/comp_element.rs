@@ -21,7 +21,7 @@ use crate::components::framework::state::ChangingRegistry;
 ///
 /// ### [`Item`]
 /// [`Item`] is the thing that is being represented, and only needs to implement [`UIIdentifier`]. The value returned by [`ui_id()`]
-/// is only used by this single [`CompElement`]. This way there could be many different representations of the same [`Item`] across
+/// is locally used by in a specific [`CompElement`], so none are shared. This way there could be many different representations of the same [`Item`] across
 /// multiple [`CompElement`].
 ///
 /// In the example of representing a collection of users with [`UIIdentifier`] implemented, [`ui_id()`]
@@ -38,7 +38,7 @@ use crate::components::framework::state::ChangingRegistry;
 ///
 /// ### [`IterFn`]
 /// The closure [`IterFn`] provides the functionality of any kind of iterator, without copying or cloning any values,
-/// by being structured in a way that the closure provided by the [`IterFn`] type is called on every iteration in an external iteration.
+/// by being structured in a way that the closure provided to the [`IterFn`] must be called on every iteration of an external iteration.
 /// The closure handles the calling of [`New`] and updating of the element list.
 ///
 /// Similar to generators.
