@@ -14,7 +14,7 @@ use freetype::RenderMode;
 use gl::*;
 use crate::components::context::context;
 use crate::components::render::color::Color;
-use crate::components::render::font::format::{AlignH, AlignV, FormatItem, FormattedText};
+use crate::components::render::font::format::{Alignment, FormatItem, Text};
 use crate::components::render::stack::State::{Blend, Texture2D};
 
 use crate::components::spatial::vec2::Vec2;
@@ -81,7 +81,7 @@ pub struct FontMetrics {
     decent: f32,
 }
 
-#[derive(Default)]
+#[derive( Debug)]
 struct RenderData {
     scale: f32,
     i_scale: f32,
@@ -99,6 +99,28 @@ struct RenderData {
     current_align_v: f32,
     current_tab_length: u32,
     current_line_spacing: f32,
+}
+
+impl Default for RenderData {
+    fn default() -> Self {
+        RenderData {
+            scale: 1.,
+            i_scale: 1.,
+            x: 0.0,
+            y: 0.0,
+            start_x: 0.0,
+            comb_scale_x: 1.0,
+            comb_scale_y: 1.0,
+            line_width: 0.0,
+            current_color: Color::from_u32(0xffffffff),
+            current_size: 16.0,
+            current_offset: Default::default(),
+            current_align_h: 0.0,
+            current_align_v: 0.0,
+            current_tab_length: 0,
+            current_line_spacing: 1.5,
+        }
+    }
 }
 
 /// Only holds the data per font to be used by the font renderer
@@ -390,7 +412,7 @@ impl Font {
 
 
     /// Get (or create if it doesn't exist) the data for the text render batch
-    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
+    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
         let offset = offset.into();
         let pos = pos.into();
         let formatted_text = formatted_text.into();
@@ -424,6 +446,9 @@ impl Font {
             let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut colors: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut render_index = 0;
+            let mut line_offsets = vec![];
+            let mut line_start_index = 0;
 
             let (a_width, a_height) = {
                 let atlas = self.atlas_tex.as_ref().unwrap();
@@ -433,12 +458,24 @@ impl Font {
             let mut max_line_height = 0f32;
             let mut height = 0f32;
             let mut bounds = Vec4::xywh(self.draw_data.x, self.draw_data.y, 0.0, 0.0);
+
             for item in formatted_text.items() {
                 match item {
                     FormatItem::None => {}
                     FormatItem::Color(v) => current_color = v.clone(),
-                    FormatItem::AlignH(alignment) => self.draw_data.current_align_h = alignment.get_value(),
-                    FormatItem::AlignV(alignment) => self.draw_data.current_align_v = alignment.get_value(),
+                    FormatItem::AlignH(alignment) => {
+                        if self.draw_data.current_align_h != 0. {
+                            line_offsets.push((line_start_index, render_index, self.draw_data.line_width * self.draw_data.current_align_h));
+                            self.draw_data.line_width = 0.0;
+                            self.draw_data.x = self.draw_data.start_x;
+                        }
+                        self.draw_data.current_align_h = alignment.get_value();
+                        line_start_index = render_index;
+                    },
+                    FormatItem::AlignV(alignment) => {
+                        self.draw_data.current_align_v = alignment.get_value();
+                        line_start_index = render_index;
+                    },
                     FormatItem::TabLength(v) => self.draw_data.current_tab_length = *v,
                     FormatItem::LineSpacing(v) => self.draw_data.current_line_spacing = *v,
                     FormatItem::Size(size) => {
@@ -458,15 +495,21 @@ impl Font {
                         self.draw_data.x += amount.x;
                         self.draw_data.y += amount.y;
                     }
-                    FormatItem::Text(string) => {
-                        let mut i = 0;
+                    FormatItem::String(string) => {
                         for char in string.chars() {
                             if char == '\n' {
+                                if self.draw_data.current_align_h != 0. {
+                                    line_offsets.push((line_start_index, render_index, self.draw_data.line_width * self.draw_data.current_align_h));
+                                }
+
                                 self.draw_data.y += max_line_height;
                                 height += max_line_height;
                                 max_line_height = 0f32;
+
+                                line_start_index = render_index;
                                 self.draw_data.line_width = 0.0;
                                 self.draw_data.x = self.draw_data.start_x;
+
                                 continue;
                             }
 
@@ -498,12 +541,23 @@ impl Font {
 
                             // optimize to use u32 later
                             colors.push(current_color.rgba());
+                            // colors.push(0x00000000);
 
                             self.draw_data.x += c_a;
                             self.draw_data.line_width += c_a;
-                            i += 1;
+                            render_index += 1;
                         }
                     }
+                }
+            }
+            if self.draw_data.current_align_h != 0. {
+                line_offsets.push((line_start_index, render_index, self.draw_data.line_width * self.draw_data.current_align_h));
+            }
+
+            for (start, end, offset) in line_offsets {
+                for i in start..end {
+                    let mut dim = dims.get_mut(i).unwrap();
+                    dim[0] -= offset;
                 }
             }
 
@@ -514,19 +568,19 @@ impl Font {
             let mut dims_buf = Buffer::new(ARRAY_BUFFER);
             let (len, cap) = (dims.len(), dims.capacity());
             dims_buf.set_values(dims);
-            dims_buf.attribPointer(shader.get_attrib_location("dims") as GLuint, 4, FLOAT, crate::gl_binds::gl11::FALSE, 1);
+            dims_buf.attribPointer(shader.get_attrib_location("dims") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut uvs_buf = Buffer::new(ARRAY_BUFFER);
             uvs_buf.set_values(uvs);
-            uvs_buf.attribPointer(shader.get_attrib_location("uvs") as GLuint, 4, FLOAT, crate::gl_binds::gl11::FALSE, 1);
+            uvs_buf.attribPointer(shader.get_attrib_location("uvs") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut color = Buffer::new(ARRAY_BUFFER);
             color.set_values(colors);
-            color.attribPointer(shader.get_attrib_location("color") as GLuint, 4, FLOAT, crate::gl_binds::gl11::FALSE, 1);
+            color.attribPointer(shader.get_attrib_location("color") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut t_buf = Buffer::new(ARRAY_BUFFER);
             t_buf.set_values(vec![0f32, 1f32, 2f32, 0f32, 2f32, 3f32]);
-            t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, FLOAT, crate::gl_binds::gl11::FALSE, 0);
+            t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, FLOAT, FALSE, 0);
 
             // Unbind VAO
             VertexArray::unbind();
@@ -551,7 +605,7 @@ impl Font {
     /// Calls [`draw_string_offset()`] with an offset of `(0, 0)`
     ///
     /// [`draw_string_offset()`]: Font::draw_string_offset
-    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
         self.draw_string_offset(formatted_text, pos, (0, 0))
     }
 
@@ -561,7 +615,7 @@ impl Font {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<FormattedText>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (Vec2, Vec4) {
+    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (Vec2, Vec4) {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 

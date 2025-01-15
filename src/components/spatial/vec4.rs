@@ -4,6 +4,7 @@ use num_traits::NumCast;
 use crate::components::context::context;
 use crate::components::framework::element::ui_traits::UIIdentifier;
 use crate::components::render::color::ToColor;
+use crate::components::render::font::format::Alignment;
 use crate::components::spatial::vec2::Vec2;
 
 /// Stores x, y, width, height as f32 values
@@ -162,6 +163,16 @@ impl Vec4 {
         shrunk.set_y(shrunk.y + other.y);
         shrunk.set_height(shrunk.height - other.height - other.y);
         shrunk
+    }
+
+    /// Calculates the line position of the given alignment on the horizontal axis
+    pub fn alignment_h(&self, alignment: Alignment) -> f32 {
+        self.x + self.width * alignment.get_value()
+    }
+
+    /// Calculates the line position of the given alignment on the vertical axis
+    pub fn alignment_v(&self, alignment: Alignment) -> f32 {
+        self.y + self.height * alignment.get_value()
     }
 
     pub fn offset<A: Into<Vec2>>(&mut self, amount: A) {

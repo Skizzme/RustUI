@@ -36,13 +36,16 @@ use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier}
 use RustUI::components::framework::event::{Event, RenderPass};
 use RustUI::components::framework::layer::Layer;
 use RustUI::components::framework::screen::ScreenTrait;
-use RustUI::components::render::font::format::{FormatItem, FormattedText};
+use RustUI::components::render::color::ToColor;
+use RustUI::components::render::font::format::{Alignment, DefaultFormatter, FormatItem, Text};
+use RustUI::components::render::font::format::Alignment::{Left, Center, Right, Custom};
+use RustUI::components::render::font::format::FormatItem::{AlignH, Color, LineSpacing, Size};
 use RustUI::components::render::mask::FramebufferMask;
 use RustUI::components::render::renderer::shader_file;
 use RustUI::components::spatial::vec2::Vec2;
 use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::wrapper::shader::Shader;
-use RustUI::text_vec;
+use RustUI::text;
 
 fn main() {
     let args : Vec<String> = std::env::args().collect();
@@ -70,7 +73,7 @@ pub struct TestScreen {
     previous_tex: Arc<Mutex<String>>,
     t_size: AnimationRef,
     last_fps: u32,
-    t_text: Arc<Mutex<FormattedText>>,
+    t_text: Arc<Mutex<Text>>,
     mask: FramebufferMask,
     t_shader: Shader,
     items: Arc<Mutex<Vec<Test>>>,
@@ -103,7 +106,7 @@ impl TestScreen {
             previous_tex: Arc::new(Mutex::new("".to_string())),
             t_size: Rc::new(RefCell::new(Animation::zero())),
             last_fps: 0,
-            t_text: Arc::new(Mutex::new(FormattedText::new())),
+            t_text: Arc::new(Mutex::new(Text::new())),
             mask: FramebufferMask::new(),
             t_shader: Shader::new(shader_file("shaders/vertex.glsl"), shader_file("shaders/test.frag")),
             items: test_vec,
@@ -147,22 +150,46 @@ impl ScreenTrait for TestScreen {
 
             let mut fr = context().fonts().font("main").unwrap();
 
-            context().renderer().draw_rect(Vec4::xywh(100., 100., 2., 100.), 0xffffffff);
-            // let text = text_vec!(
-            //     FormatItem::AlignH()
-            // );
-            // context().fonts().font("main").unwrap().draw_string(text, (100., 100.));
-
-            context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-            fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
-            let formated: FormattedText = (15, "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
-            let pos = 0; //
+            let text: Text = text!(
+                AlignH(Center),
+                (20., "aligned middle? with some\nextra lines\nto spare", 0xffffffff),
+                (36., "along with some\nLARGER ", 0xffffffff),
+                (18., "text...\n", 0xffffffff),
+                AlignH(Left),
+                Size(16.),
+                "left\n",
+                AlignH(Center),
+                "center\n",
+                AlignH(Right),
+                "right\n",
+                AlignH(Custom(0.75)),
+                "0.75\n",
+                AlignH(Custom(2.)),
+                "this is a 2.",
+                AlignH(Custom(-1.)),
+                "this is a -1.\n",
+                AlignH(Custom(2.)),
+                "this is another 2.",
+                AlignH(Custom(-1.)),
+                "this is another -1.\n\n",
+                AlignH(Right),
+                "and now inline",
+                AlignH(Center),
+                "and it should work"
+            );
             gl::Finish();
             let st = Instant::now();
-            fr.draw_string(formated, (pos, 300.0));
+            let (end_pos, bounds) = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
             gl::Finish();
             let et = st.elapsed();
             println!("drawed {:?}", et);
+            context().renderer().draw_rect(Vec4::xywh(500., 100., 2., bounds.height()), 0xffffffff);
+
+            context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
+            fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
+            let formated: Text = (15, "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
+            let pos = 0; //
+            fr.draw_string(formated, (pos, 300.0));
             self.last_fps = context().fps();
         }
         Event::PostRender => {
@@ -184,12 +211,12 @@ impl ScreenTrait for TestScreen {
             .draggable(true)
             .handler(move |el, event| { match event {
                 Event::MousePos(x, y) => {
-                    *t_test_c.lock() = text_vec![
+                    *t_test_c.lock() = text!(
                         (36.0, "before", 0xffffff90),
                         (context().window().mouse().pos().x() / 400.0 * 40.0, format!("&ff2030ff{} {}", x, y), 0xffffffff),
                         (36.0, "after ", 0xff90ffff),
                         (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0)
-                    ];
+                    ).with_formatter(&mut DefaultFormatter::new());
                 }
                 Event::Render(pass) => {
                     if pass != &RenderPass::Main {
@@ -302,6 +329,7 @@ impl ScreenTrait for TestScreen {
         self.text = "".to_string();
 
         vec![layer_0]
+        // vec![]
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {

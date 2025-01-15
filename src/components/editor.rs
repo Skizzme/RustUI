@@ -10,7 +10,7 @@ use crate::components::framework::animation::{AnimationRef, AnimationRegistry, A
 use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::render::color::Color;
-use crate::components::render::font::format::{FormatItem, FormattedText};
+use crate::components::render::font::format::{FormatItem, Text};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::gl_binds::gl11::Translatef;
@@ -245,7 +245,7 @@ pub enum Change {
 pub struct Textbox {
     editor: StringEditor,
     font_id: String,
-    text_chunks: Vec<(FormattedText, Vec2, f32)>,
+    text_chunks: Vec<(Text, Vec2, f32)>,
     animations: AnimationRegistry,
     changed: bool,
     index: usize,
@@ -288,11 +288,11 @@ impl Textbox {
                 return 2;
             }
 
-            let mut text = FormattedText::new();
+            let mut text = Text::new();
             // text.push(FormatItem::Offset(last_offset));
             text.push(FormatItem::Size(self.font_size.borrow().value()));
             text.push(FormatItem::Color(Color::from_hsv(thread_rng().random::<f32>(), 1.0, 1.0)));
-            text.push(FormatItem::Text(self.editor.chunks().get(index).unwrap().string.clone()));
+            text.push(FormatItem::String(self.editor.chunks().get(index).unwrap().string.clone()));
 
             //self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string)
             let (pos, _) = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), (0, 0), last_offset);

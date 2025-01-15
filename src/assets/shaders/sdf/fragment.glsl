@@ -9,7 +9,7 @@ void main() {
     float width = gl_TexCoord[0].z;
     float height = gl_TexCoord[0].w;
 
-    float smoothing = (1.0 / width + 1.0 / height) / 2 * (u_res / 48) * 1.8;
+    float smoothing = (1.0 / width + 1.0 / height) / 2 * (u_res / 48) * 1.7;
 
     float distance = texture2D(u_texture, gl_TexCoord[0].xy).a;
     float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);
