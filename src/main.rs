@@ -99,7 +99,7 @@ impl TestScreen {
         // let bytes = fs::read("C:\\Windows\\Fonts\\consola.ttf").unwrap();
         // before
         // context().fonts().set_font_bytes("main", bytes);
-        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/Comfortaa-Light.ttf").to_vec());
         // context().fonts().load_font("main", true);
 
         let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000)];
@@ -324,7 +324,9 @@ impl ScreenTrait for TestScreen {
                         .handler(move |el, e| {
                             if e.is_render(RenderPass::Main) {
                                 let mut fr = context().fonts().font("main").unwrap();
-                                let (pos, bounds) = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c.borrow().clone());
+                                let render_data = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c.borrow().clone());
+
+                                let bounds = render_data.bounds();
                                 bounds.debug_draw(0xff9020ff);
                                 // println!("POS1 {:?}", state_c.borrow());
                                 state_c.borrow_mut().offset((el.bounds().width(), el.bounds().height()));

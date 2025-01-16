@@ -10,6 +10,7 @@ use crate::components::framework::animation::{AnimationRef, AnimationRegistry, A
 use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::render::color::Color;
+use crate::components::render::font::FontRenderData;
 use crate::components::render::font::format::{FormatItem, Text};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
@@ -245,7 +246,7 @@ pub enum Change {
 pub struct Textbox {
     editor: StringEditor,
     font_id: String,
-    text_chunks: Vec<(Text, Vec2, f32)>,
+    text_chunks: Vec<(Text, FontRenderData, f32)>,
     animations: AnimationRegistry,
     changed: bool,
     index: usize,
@@ -278,7 +279,7 @@ impl Textbox {
         let last_offset = if index > 0 {
             match self.text_chunks.get(index - 1) {
                 None => return 1,
-                Some(c) => c.1,
+                Some(c) => c.1.end_char_pos(),
             }
         } else { (0, 0).into() };
 
@@ -295,11 +296,11 @@ impl Textbox {
             text.push(FormatItem::String(self.editor.chunks().get(index).unwrap().string.clone()));
 
             //self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string)
-            let (pos, _) = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), (0, 0), last_offset);
+            let render_data = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), (0, 0), last_offset);
 
             let mut chunk = (
                 text,
-                pos,
+                render_data,
                 self.font_size.borrow().value(),
             );
 
@@ -344,16 +345,19 @@ impl UIHandler for Textbox {
                             // println!("{:?} {:?}", self.text_chunks.len(), start_pos);
                             let mut to_update = Vec::new();
                             let mut i = 0;
-                            for (text, t_pos, size) in &self.text_chunks {
+                            for (text, render_data, size) in &self.text_chunks {
+                                let t_pos = render_data.end_char_pos();
                                 if t_pos.y + start_pos.y < 0.0 {
                                     last_offset = (t_pos.x, t_pos.y).into();
                                     i += 1;
                                     continue;
                                 }
 
-                                let (offset, vec4) = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset);
+                                let render_data = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset);
+                                let bounds = render_data.bounds();
+                                let offset = render_data.end_char_pos();
 
-                                if context().window().mouse().pos().intersects(&vec4) {
+                                if context().window().mouse().pos().intersects(&bounds) {
                                     // println!("clicked on {:?}", text);
                                     to_update.push(i);
                                     let chunk = self.editor.chunks.get(i).unwrap();
@@ -386,7 +390,8 @@ impl UIHandler for Textbox {
                     // println!("{:?} {:?}", self.text_chunks.len(), start_pos);
                     let mut to_update_indices = Vec::new();
                     let mut i = 0;
-                    for (text, t_pos, size) in &self.text_chunks {
+                    for (text, render_data, size) in &self.text_chunks {
+                        let t_pos = render_data.end_char_pos();
                         if t_pos.y + start_pos.y < 0.0 {
                             last_offset = (t_pos.x, t_pos.y).into();
                             i += 1;
@@ -395,7 +400,7 @@ impl UIHandler for Textbox {
                         if *size != self.font_size.borrow().value() {
                             to_update_indices.push(i);
                         }
-                        let (offset, _) = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset);
+                        let offset = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset).end_char_pos();
 
                         last_offset = (offset.x, last_offset.y + offset.y).into();
 
@@ -417,7 +422,7 @@ impl UIHandler for Textbox {
                                     break;
                                 }
 
-                                if v.1.y + start_pos.y < context().window().height as f32 + 10f32 {
+                                if v.1.end_char_pos().y + start_pos.y < context().window().height as f32 + 10f32 {
                                     self.update_chunk(self.text_chunks.len());
                                 } else {
                                     break;
@@ -427,9 +432,9 @@ impl UIHandler for Textbox {
                     }
 
                     let current_chunk = self.editor.search_chunk(self.index);
-                    let last_chunk_offset = if current_chunk != 0 {
+                    let mut last_chunk_offset = if current_chunk != 0 {
                         match self.text_chunks.get(self.editor.search_chunk(self.index) - 1) {
-                            Some((_, offset, _)) => offset.clone(),
+                            Some((_, offset, _)) => offset.end_char_pos().clone(),
                             None => (0, 0).into()
                         }
                     } else {
@@ -437,14 +442,20 @@ impl UIHandler for Textbox {
                     };
 
                     let mut font = context().fonts().font(&self.font_id).unwrap();
-                    let current = self.editor.chunks().get(self.editor.search_chunk(self.index)).unwrap();
-                    let cursor_pos = font.add_end_pos(last_chunk_offset, self.font_size.borrow().value(), current.get_to_index(self.index));
+                    let current_chunk_index = self.editor.search_chunk(self.index);
+                    let current = self.editor.chunks().get(current_chunk_index).unwrap();
+                    // let cursor_pos = font.add_end_pos(last_chunk_offset, self.font_size.borrow().value(), current.get_to_index(self.index));
+                    if let Some(current_t_chunk) = self.text_chunks.get(current_chunk_index) {
+                        let current_chunk_cursor = current_t_chunk.1.get_data_at_index(self.index);
+                        let mut cursor_pos = last_chunk_offset.clone();
+                        cursor_pos.offset((current_chunk_cursor[0], current_chunk_cursor[1] + current_chunk_cursor[3] - font.get_sized_height(self.font_size.borrow().value())));
 
-                    Translatef(0.0, self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
-                    // println!("current ch sec {:?}", current.get_to_index(self.index));
-                    context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, font.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
+                        Translatef(0.0, self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
+                        // println!("current ch sec {:?}", current.get_to_index(self.index));
+                        context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, font.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
 
-                    Translatef(0.0, -self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
+                        Translatef(0.0, -self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
+                    }
                     true
                 },
                 _ => false

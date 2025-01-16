@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::hash;
 use std::hash::{Hash, Hasher};
 use std::io::Write;
+use std::rc::Rc;
 use std::sync::mpsc::channel;
 use std::time::Instant;
 use freetype::{Library, RenderMode};
@@ -120,6 +121,59 @@ impl Default for RenderData {
             current_tab_length: 0,
             current_line_spacing: 1.5,
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct FontRenderData {
+    end_char_pos: Vec2,
+    bounds: Vec4,
+
+    char_positions: Rc<Vec<[f32; 4]>>,
+    line_ranges: Rc<Vec<(usize, usize)>>,
+}
+
+impl FontRenderData {
+    pub fn end_char_pos(&self) -> Vec2 {
+        self.end_char_pos
+    }
+    pub fn bounds(&self) -> Vec4 {
+        self.bounds
+    }
+
+    pub fn char_positions(&self) -> &Rc<Vec<[f32; 4]>> {
+        &self.char_positions
+    }
+    pub fn line_ranges(&self) -> &Rc<Vec<(usize, usize)>> {
+        &self.line_ranges
+    }
+
+    pub fn get_data_at(&self, column: usize, line: usize) -> [f32; 4] {
+        let mut out = [0., 0., 0., 0.];
+        match self.line_ranges.get(line) {
+            None => {}
+            Some((start, end)) => {
+                let index = column + start;
+                if index < *end {
+                    out = self.char_positions.get(index).unwrap().clone();
+                }
+            }
+        }
+        out
+    }
+
+    pub fn get_data_at_index(&self, global_index: usize) -> [f32; 4] {
+        let mut out = [0., 0., 0., 0.];
+        let start_index = match self.line_ranges.first() {
+            None => 0,
+            Some(o) => o.0
+        };
+        let local_index = global_index - start_index;
+        match self.char_positions.get(local_index) {
+            None => {}
+            Some(v) => out = v.clone(),
+        }
+        out
     }
 }
 
@@ -412,7 +466,7 @@ impl Font {
 
 
     /// Get (or create if it doesn't exist) the data for the text render batch
-    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, Vec2, Vec4) {
+    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, FontRenderData) {
         let offset = offset.into();
         let pos = pos.into();
         let formatted_text = formatted_text.into();
@@ -448,6 +502,7 @@ impl Font {
             let mut colors: Vec<[u32; 4]> = Vec::with_capacity(len);
             let mut render_index = 0;
             let mut line_offsets = vec![];
+            let mut line_ranges = vec![];
             let mut line_start_index = 0;
 
             let (a_width, a_height) = {
@@ -465,7 +520,8 @@ impl Font {
                     FormatItem::Color(v) => current_color = v.clone(),
                     FormatItem::AlignH(alignment) => {
                         if self.draw_data.current_align_h != 0. {
-                            line_offsets.push((line_start_index, render_index, self.draw_data.line_width * self.draw_data.current_align_h));
+                            line_offsets.push( self.draw_data.line_width * self.draw_data.current_align_h);
+                            line_ranges.push((line_start_index, render_index));
                             self.draw_data.line_width = 0.0;
                             self.draw_data.x = self.draw_data.start_x;
                         }
@@ -499,7 +555,9 @@ impl Font {
                         for char in string.chars() {
                             if char == '\n' {
                                 if self.draw_data.current_align_h != 0. {
-                                    line_offsets.push((line_start_index, render_index, self.draw_data.line_width * self.draw_data.current_align_h));
+                                    line_offsets.push( self.draw_data.line_width * self.draw_data.current_align_h);
+                                    line_ranges.push((line_start_index, render_index));
+                                    // TODO track line heights
                                 }
 
                                 self.draw_data.y += max_line_height;
@@ -551,14 +609,17 @@ impl Font {
                 }
             }
             if self.draw_data.current_align_h != 0. {
-                line_offsets.push((line_start_index, render_index, self.draw_data.line_width * self.draw_data.current_align_h));
+                line_offsets.push( self.draw_data.line_width * self.draw_data.current_align_h);
+                line_ranges.push((line_start_index, render_index));
             }
 
-            for (start, end, offset) in line_offsets {
-                for i in start..end {
+            let mut line_index = 0;
+            for (start, end) in &line_ranges {
+                for i in *start..*end {
                     let mut dim = dims.get_mut(i).unwrap();
-                    dim[0] -= offset;
+                    dim[0] -= line_offsets[line_index];
                 }
+                line_index += 1;
             }
 
             let shader = &context().fonts().sdf_shader;
@@ -567,19 +628,19 @@ impl Font {
 
             let mut dims_buf = Buffer::new(ARRAY_BUFFER);
             let (len, cap) = (dims.len(), dims.capacity());
-            dims_buf.set_values(dims);
+            dims_buf.set_values(&dims);
             dims_buf.attribPointer(shader.get_attrib_location("dims") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut uvs_buf = Buffer::new(ARRAY_BUFFER);
-            uvs_buf.set_values(uvs);
+            uvs_buf.set_values(&uvs);
             uvs_buf.attribPointer(shader.get_attrib_location("uvs") as GLuint, 4, FLOAT, FALSE, 1);
 
             let mut color = Buffer::new(ARRAY_BUFFER);
-            color.set_values(colors);
+            color.set_values(&colors);
             color.attribIPointer(shader.get_attrib_location("colors") as GLuint, 4, UNSIGNED_INT, 1);
 
             let mut t_buf = Buffer::new(ARRAY_BUFFER);
-            t_buf.set_values(vec![0u8, 1u8, 2u8, 0u8, 2u8, 3u8]);
+            t_buf.set_values(&vec![0u8, 1u8, 2u8, 0u8, 2u8, 3u8]);
             t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, UNSIGNED_BYTE, FALSE, 0);
 
             // Unbind VAO
@@ -595,17 +656,25 @@ impl Font {
             vao.add_buffer(t_buf);
             vao.add_buffer(dims_buf);
 
-            map.insert(hashed, (vao, Vec2::new(self.draw_data.line_width, height), bounds, 0));
+            // VertexArray, Vec2, Vec4, u32
+            // (vao, Vec2::new(self.draw_data.line_width, height), bounds, 0)
+            map.insert(hashed, (vao, 0, FontRenderData {
+                end_char_pos: Vec2::new(self.draw_data.line_width, height),
+                bounds,
+
+                char_positions: Rc::new(dims),
+                line_ranges: Rc::new(line_ranges),
+            }));
         }
-        map.get_mut(&hashed).unwrap().3 = 0;
-        let (vao, end_pos, bounds, _) = map.get(&hashed).unwrap();
-        (vao.gl_ref(), *end_pos, bounds.clone())
+        map.get_mut(&hashed).unwrap().1 = 0;
+        let res = map.get(&hashed).unwrap();
+        (res.0.gl_ref(), res.2.clone())
     }
 
     /// Calls [`draw_string_offset()`] with an offset of `(0, 0)`
     ///
     /// [`draw_string_offset()`]: Font::draw_string_offset
-    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>) -> (Vec2, Vec4) {
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>) -> FontRenderData {
         self.draw_string_offset(formatted_text, pos, (0, 0))
     }
 
@@ -615,27 +684,28 @@ impl Font {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (Vec2, Vec4) {
+    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> FontRenderData {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 
         let len = formatted_text.visible_length();
 
-        let (vao, end_pos, bounds) = self.get_inst(formatted_text, pos, offset);
-        // vec4.draw_vec4(0xffffffff);
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
         context().renderer().stack().push(Texture2D(true));
         self.bind_shader();
+        // vec4.draw_vec4(0xffffffff);
+
         let atlas = self.atlas_tex.as_ref().unwrap();
 
         ActiveTexture(TEXTURE0);
         atlas.bind();
 
+        let (vao, render_data) = self.get_inst(formatted_text, pos, offset);
         BindVertexArray(vao);
         // Finish();
         // let st = Instant::now();
-        crate::gl_binds::gl41::DrawArraysInstanced(TRIANGLES, 0, 6, len as GLsizei);
+        DrawArraysInstanced(TRIANGLES, 0, 6, len as GLsizei);
         // Finish();
         // println!("draw {} {:?}", len, st.elapsed());
         BindVertexArray(0);
@@ -643,7 +713,7 @@ impl Font {
 
         Texture::unbind();
         self.end();
-        (end_pos, bounds)
+        render_data
         // (0f32, 0f32)
     }
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::time::Instant;
 
-use crate::components::render::font::{Font, FONT_RES};
+use crate::components::render::font::{Font, FONT_RES, FontRenderData};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::VertexArray;
@@ -16,7 +16,7 @@ pub struct FontManager {
     mem_atlas_cache: HashMap<String, Vec<u8>>,
     pub(crate) sdf_shader: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
-    pub(crate) cached_inst: HashMap<u64, (VertexArray, Vec2, Vec4, u32)>,
+    pub(crate) cached_inst: HashMap<u64, (VertexArray, u32, FontRenderData)>,
 }
 
 impl FontManager {
@@ -39,16 +39,16 @@ impl FontManager {
 
     pub unsafe fn cleanup(&mut self) {
         let mut remove = vec![];
-        for (hash, (_, _, _, frames_elapsed)) in &mut self.cached_inst {
-            if *frames_elapsed > 10 {
+        for (hash, (_, elapsed_frames, _)) in &mut self.cached_inst {
+            if *elapsed_frames > 10 {
                 remove.push(*hash);
             } else {
-                *frames_elapsed += 1;
+                *elapsed_frames += 1;
             }
         }
 
         remove.iter().for_each(|key| unsafe {
-            let (vao, _, _, _) = self.cached_inst.remove(&key).unwrap();
+            let (vao, _, _) = self.cached_inst.remove(&key).unwrap();
             vao.delete();
         });
     }

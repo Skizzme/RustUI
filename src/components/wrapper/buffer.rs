@@ -9,6 +9,7 @@ use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
 use crate::gl_binds::gl30::{DeleteVertexArrays, INT, VertexAttribIPointer};
 use crate::gl_binds::gl41::VertexAttribDivisor;
 
+#[derive(Clone)]
 pub struct Buffer {
     gl_ref: u32,
     gl_type: GLenum,
@@ -25,7 +26,7 @@ impl Buffer {
             type_size: 0,
         }
     }
-    pub unsafe fn set_values<T: Sized>(&mut self, v: Vec<T>) {
+    pub unsafe fn set_values<T: Sized>(&mut self, v: &Vec<T>) {
         self.bind();
         BufferData(
             self.gl_type,
@@ -74,6 +75,7 @@ impl Buffer {
     }
 }
 
+#[derive(Clone)]
 pub struct VertexArray {
     gl_ref: u32,
     buffers: Vec<Buffer>
