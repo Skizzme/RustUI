@@ -43,7 +43,7 @@ impl Shader {
             GetShaderInfoLog(shader.fragment_shader, 1024, &mut log_len, v.as_mut_ptr().cast());
             v.set_len(log_len.try_into().unwrap());
 
-            panic!("Fragment Shader Compile Error: {}", String::from_utf8_lossy(&v));
+            panic!("Fragment Shader Compile Error:\n{}", String::from_utf8_lossy(&v));
         }
 
         AttachShader(shader.program, shader.vertex_shader);

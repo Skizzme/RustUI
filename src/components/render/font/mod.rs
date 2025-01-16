@@ -8,9 +8,9 @@ use std::hash::{Hash, Hasher};
 use std::io::Write;
 use std::sync::mpsc::channel;
 use std::time::Instant;
-
+use freetype::{Library, RenderMode};
 use freetype::face::LoadFlag;
-use freetype::RenderMode;
+
 use gl::*;
 use crate::components::context::context;
 use crate::components::render::color::Color;
@@ -170,7 +170,7 @@ impl Font {
             let t_bytes = font_bytes.clone();
             let thread_chars = all_chars[offset..offset + batch_size].to_vec();
             let thread = std::thread::spawn(move || {
-                let lib = freetype::Library::init().unwrap();
+                let lib = Library::init().unwrap();
 
                 let face = lib.new_memory_face(t_bytes, 0).unwrap();
 
@@ -445,7 +445,7 @@ impl Font {
 
             let mut dims: Vec<[f32; 4]> = Vec::with_capacity(len);
             let mut uvs: Vec<[f32; 4]> = Vec::with_capacity(len);
-            let mut colors: Vec<[f32; 4]> = Vec::with_capacity(len);
+            let mut colors: Vec<[u32; 4]> = Vec::with_capacity(len);
             let mut render_index = 0;
             let mut line_offsets = vec![];
             let mut line_start_index = 0;
@@ -540,8 +540,8 @@ impl Font {
                             uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
 
                             // optimize to use u32 later
-                            colors.push(current_color.rgba());
-                            // colors.push(0x00000000);
+
+                            colors.push([current_color.rgba_u32(), 0x20ffffff, 0xfffffff0, 0xfffffff0]);
 
                             self.draw_data.x += c_a;
                             self.draw_data.line_width += c_a;
@@ -576,11 +576,11 @@ impl Font {
 
             let mut color = Buffer::new(ARRAY_BUFFER);
             color.set_values(colors);
-            color.attribPointer(shader.get_attrib_location("color") as GLuint, 4, FLOAT, FALSE, 1);
+            color.attribIPointer(shader.get_attrib_location("colors") as GLuint, 4, UNSIGNED_INT, 1);
 
             let mut t_buf = Buffer::new(ARRAY_BUFFER);
-            t_buf.set_values(vec![0f32, 1f32, 2f32, 0f32, 2f32, 3f32]);
-            t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, FLOAT, FALSE, 0);
+            t_buf.set_values(vec![0u8, 1u8, 2u8, 0u8, 2u8, 3u8]);
+            t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, UNSIGNED_BYTE, FALSE, 0);
 
             // Unbind VAO
             VertexArray::unbind();

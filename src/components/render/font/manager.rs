@@ -33,6 +33,10 @@ impl FontManager {
         }
     }
 
+    pub fn sdf_shader(&self) -> &Shader {
+        &self.sdf_shader
+    }
+
     pub unsafe fn cleanup(&mut self) {
         let mut remove = vec![];
         for (hash, (_, _, _, frames_elapsed)) in &mut self.cached_inst {

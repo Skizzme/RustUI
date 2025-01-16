@@ -23,6 +23,7 @@ use std::ops::Add;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Instant, UNIX_EPOCH};
+use gl::Enable;
 
 use glfw::{Action, Key, WindowHint};
 use parking_lot::Mutex;
@@ -45,6 +46,8 @@ use RustUI::components::render::renderer::shader_file;
 use RustUI::components::spatial::vec2::Vec2;
 use RustUI::components::spatial::vec4::Vec4;
 use RustUI::components::wrapper::shader::Shader;
+use RustUI::components::wrapper::texture::Texture;
+use RustUI::gl_binds::gl11::{ALPHA, BLEND};
 use RustUI::text;
 
 fn main() {
@@ -148,6 +151,19 @@ impl ScreenTrait for TestScreen {
             }
             // context().renderer().draw_rect(context().window().bounds(), 0xff181818);
 
+            match &context().fonts().font("main").unwrap().atlas_tex {
+                None => {}
+                Some(t) => {
+                    Enable(BLEND);
+                    self.t_shader.bind();
+                    t.bind();
+                    let dim = context().window().height().min(context().window().width());
+                    context().renderer().draw_texture_rect(Vec4::xywh(10., 10., dim as f32, dim as f32), 0xffffffff);
+                    Texture::unbind();
+                    Shader::unbind();
+                }
+            }
+
             let mut fr = context().fonts().font("main").unwrap();
 
             let text: Text = text!(
@@ -182,7 +198,7 @@ impl ScreenTrait for TestScreen {
             let (end_pos, bounds) = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
             gl::Finish();
             let et = st.elapsed();
-            println!("drawed {:?}", et);
+            // println!("drawed {:?}", et);
             context().renderer().draw_rect(Vec4::xywh(500., 100., 2., bounds.height()), 0xffffffff);
 
             context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);

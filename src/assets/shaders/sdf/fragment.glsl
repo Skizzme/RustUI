@@ -1,9 +1,18 @@
-#version 120
+#version 130
 
-varying vec2 uvDims;
-varying vec4 fragColor;
 uniform sampler2D u_texture;
 uniform float u_res;
+
+flat in uvec4 textColors;
+in vec2 uvDims;
+
+vec4 unpackColor(uint packedColor) {
+    float a = ((packedColor >> 24) & 0xFFu) / 255.0;
+    float r = ((packedColor >> 16) & 0xFFu) / 255.0;
+    float g = ((packedColor >> 8) & 0xFFu) / 255.0;
+    float b = (packedColor & 0xFFu) / 255.0;
+    return vec4(r, g, b, a);
+}
 
 void main() {
     float width = gl_TexCoord[0].z;
@@ -14,25 +23,26 @@ void main() {
     float distance = texture2D(u_texture, gl_TexCoord[0].xy).a;
     float alpha = smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);
 
-    // subpixel processing cannot be done in shader as the alphas need to be calculated
-    // in a way that takes the neighbouring pixels into account in order to keep the target color.
-    // for example, if the "stroke" of a glyph is in between the red and green pixel, this shader would
-    // make the output a yellow-ish colour, but a proper subpixel processor would ensure that it also
-    // maintains the blue-subpixel somewhere
-//    float subpixel_amount = uvDims.x / (width * 3);
-//
-//    float r_distance = texture2D(u_texture, gl_TexCoord[0].xy + vec2(-subpixel_amount, 0)).a;
-//    float r_alpha = r_distance;
-//
-//    float g_distance = texture2D(u_texture, gl_TexCoord[0].xy).a;
-//    float g_alpha = g_distance;
-//
-//    float b_distance = texture2D(u_texture, gl_TexCoord[0].xy + vec2(subpixel_amount, 0)).a;
-//    float b_alpha = b_distance;
-//
-//    float increase = 1.9;
-//
-//    vec3 subpixeled = vec3(fragColor.r * r_distance, fragColor.g * g_distance, fragColor.b * b_distance);
-//    gl_FragColor = vec4(subpixeled * increase, fragColor.a * alpha);
+    vec4 textColor = unpackColor(textColors.x);
+    vec4 outlineColor = unpackColor(textColors.y);
+    vec4 fragColor = textColor;
+
+    float outlineDistance = 0.0;
+    if (outlineColor.a > 0) {
+        if (distance < 0.5) {
+            outlineDistance = distance;
+        } else {
+            outlineDistance = 0.5 - (distance - 0.5);
+        }
+        outlineDistance = sqrt(outlineDistance) * 1.0 + outlineColor.a / 10;
+
+        float outlineAlpha = smoothstep(0.70710 - smoothing, 0.70710 + smoothing, outlineDistance);
+
+        if (outlineAlpha > 0.0) {
+            alpha = max(outlineAlpha, alpha);
+            fragColor = vec4(mix(textColor.rgb, outlineColor.rgb, outlineAlpha), textColor.a);
+        }
+    }
+
     gl_FragColor = vec4(fragColor.rgb, fragColor.a * alpha);
 }

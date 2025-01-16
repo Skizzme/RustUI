@@ -4,8 +4,9 @@ use gl::{BindBuffer, BindVertexArray, BufferData, DeleteBuffers, DYNAMIC_DRAW, G
 use gl::types::GLsizeiptr;
 
 use crate::gl_binds::gl11::types::{GLboolean, GLenum, GLint, GLuint};
+use crate::gl_binds::gl11::UNSIGNED_INT;
 use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
-use crate::gl_binds::gl30::DeleteVertexArrays;
+use crate::gl_binds::gl30::{DeleteVertexArrays, INT, VertexAttribIPointer};
 use crate::gl_binds::gl41::VertexAttribDivisor;
 
 pub struct Buffer {
@@ -36,10 +37,19 @@ impl Buffer {
         self.unbind();
     }
 
+
     pub unsafe fn attribPointer(&self, attrib: GLuint, size: GLint, type_: GLenum, normalized: GLboolean, divisor: GLuint) {
         self.bind();
         EnableVertexAttribArray(attrib);
         VertexAttribPointer(attrib, size, type_, normalized, self.type_size as GLint, ptr::null());
+        VertexAttribDivisor(attrib, divisor);
+        self.unbind();
+    }
+
+    pub unsafe fn attribIPointer(&self, attrib: GLuint, size: GLint, type_: GLenum, divisor: GLuint) {
+        self.bind();
+        EnableVertexAttribArray(attrib);
+        VertexAttribIPointer(attrib, size, type_, self.type_size as GLint, ptr::null());
         VertexAttribDivisor(attrib, divisor);
         self.unbind();
     }

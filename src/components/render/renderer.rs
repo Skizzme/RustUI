@@ -156,7 +156,6 @@ impl Renderer {
         let vec4 = vec4.into();
         self.stack.push(Texture2D(false));
 
-        Disable(TEXTURE_2D);
         Begin(QUADS);
         color.apply_color();
         TexCoord2d(0.0, 1.0);
