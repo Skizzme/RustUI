@@ -20,7 +20,7 @@ void main() {
         pos = vec4(dims.x, dims.y, uvs.x, uvs.y);
 
     gl_Position = gl_ModelViewProjectionMatrix * vec4(pos.xy, 0.0, 1.0);
-    gl_TexCoord[0] = vec4(pos.zw, dims.zw); // dims.zw is glyph width and height
+    gl_TexCoord[0] = vec4(pos.zw, 0.0, 0.0); // dims.zw is glyph width and height
     textColors = colors;
     uvDims = vec2(uvs.z, uvs.w);
 }

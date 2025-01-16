@@ -16,34 +16,20 @@ vec4 unpackColor(uint packedColor) {
 }
 
 void main() {
-    float width = gl_TexCoord[0].z;
-    float height = gl_TexCoord[0].w;
-
-    // Calculate screen-space derivatives of the texture coordinates
     vec2 texCoord = gl_TexCoord[0].xy;
+
     vec2 screenDerivatives = vec2(length(dFdx(texCoord)), length(dFdy(texCoord)));
     vec2 normalizedDerivates = screenDerivatives * u_atlas_dims;
 
     float distance = texture2D(u_texture, texCoord).a;
-    // Determine the smoothing factor (approximate the ratio of SDF pixels to screen pixels)
-    // + 0.2 * (u_res / 48)
-    float contrast = sqrt(normalizedDerivates.x * normalizedDerivates.x + normalizedDerivates.y * normalizedDerivates.y);
-//    float contrast = fwidth(distance);
 
-    // Adjust the SDF distance value for the zero-level and bleed
+    float contrast = length(normalizedDerivates);
+
     float zero_level = 0.5;
     float adjustedDistance = (distance - zero_level) / contrast + zero_level;
 
-    // Compute alpha with smoothstep for anti-aliased edges
-    float bleed = 0.04;
-    float alpha = min(smoothstep(0.5 - bleed, 0.5 + bleed, adjustedDistance), 1.0);
-//    alpha = distance;
-//    float alpha = adjustedDistance;
-//    if (alpha > 0) {
-//        alpha += 0.25;
-//    }
-//    alpha = distance;
-//    float alpha = adjustedDistance;
+    float bleed = 0.023 + max((contrast - 1) * 0.002, 0.0);
+    float alpha = smoothstep(0.5 - bleed, 0.5 + bleed, adjustedDistance);
 
     vec4 textColor = unpackColor(textColors.x);
     vec4 outlineColor = unpackColor(textColors.y);
