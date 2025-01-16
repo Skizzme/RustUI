@@ -650,6 +650,9 @@ impl Font {
     unsafe fn bind_shader(&self) {
         context().fonts().sdf_shader.bind();
         context().fonts().sdf_shader.u_put_float("u_res", vec![FONT_RES as f32]);
+        let t = self.atlas_tex.as_ref().unwrap();
+        let dims = vec![t.width as f32, t.height as f32];
+        context().fonts().sdf_shader.u_put_float("u_atlas_dims", dims);
     }
 
     /// Returns the necessary dimensions of a glyph / character

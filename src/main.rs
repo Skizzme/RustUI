@@ -154,13 +154,13 @@ impl ScreenTrait for TestScreen {
             match &context().fonts().font("main").unwrap().atlas_tex {
                 None => {}
                 Some(t) => {
-                    Enable(BLEND);
-                    self.t_shader.bind();
-                    t.bind();
-                    let dim = context().window().height().min(context().window().width());
-                    context().renderer().draw_texture_rect(Vec4::xywh(10., 10., dim as f32, dim as f32), 0xffffffff);
-                    Texture::unbind();
-                    Shader::unbind();
+                    // Enable(BLEND);
+                    // self.t_shader.bind();
+                    // t.bind();
+                    // let dim = context().window().height().min(context().window().width());
+                    // context().renderer().draw_texture_rect(Vec4::xywh(10., 10., dim as f32, dim as f32), 0xffffffff);
+                    // Texture::unbind();
+                    // Shader::unbind();
                 }
             }
 
@@ -201,9 +201,12 @@ impl ScreenTrait for TestScreen {
             // println!("drawed {:?}", et);
             context().renderer().draw_rect(Vec4::xywh(500., 100., 2., bounds.height()), 0xffffffff);
 
+            let (_, bounds) = context().fonts().font("main").unwrap().draw_string((32., "32 size", 0xffffffff), (200., 200.));
+            context().renderer().draw_rect(bounds, (1., 0.25, 0., 1.));
+
             context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
             fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
-            let formated: Text = (15, "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
+            let formated: Text = (self.t_size.borrow().value(), "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
             let pos = 0; //
             fr.draw_string(formated, (pos, 300.0));
             self.last_fps = context().fps();
@@ -246,7 +249,7 @@ impl ScreenTrait for TestScreen {
                     el.bounds().set_width(vec4.width());
                     el.bounds().set_height(vec4.height());
                     let hovering = el.hovering();
-                    el.bounds().debug_draw(if hovering { 0xff10ff10 } else { 0xffffffff });
+                    // el.bounds().debug_draw(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                     *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
                 }
