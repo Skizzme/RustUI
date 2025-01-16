@@ -30,6 +30,7 @@ use parking_lot::Mutex;
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::context::{context, ContextBuilder};
+use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationType};
 use RustUI::components::framework::element::ElementBuilder;
 use RustUI::components::framework::element::comp_element::CompElement;
@@ -94,11 +95,11 @@ impl TestScreen {
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
         println!("LEN : {}", t.len());
-
-        let bytes = fs::read("C:\\Windows\\Fonts\\consola.ttf").unwrap();
-
-        context().fonts().set_font_bytes("main", bytes);
-        // context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+        // before
+        // let bytes = fs::read("C:\\Windows\\Fonts\\consola.ttf").unwrap();
+        // before
+        // context().fonts().set_font_bytes("main", bytes);
+        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         // context().fonts().load_font("main", true);
 
         let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000)];
@@ -137,7 +138,7 @@ impl ScreenTrait for TestScreen {
                         None => 0,
                         Some(v) => v.v + 1,
                     };
-                    lock.push(Test::new(new));
+                    // lock.push(Test::new(new));
                 }
             }
         }
@@ -195,21 +196,21 @@ impl ScreenTrait for TestScreen {
             );
             gl::Finish();
             let st = Instant::now();
-            let (end_pos, bounds) = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
+            // let (end_pos, bounds) = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
             gl::Finish();
             let et = st.elapsed();
             // println!("drawed {:?}", et);
-            context().renderer().draw_rect(Vec4::xywh(500., 100., 2., bounds.height()), 0xffffffff);
-
-            let (_, bounds) = context().fonts().font("main").unwrap().draw_string((32., "32 size", 0xffffffff), (200., 200.));
-            context().renderer().draw_rect(bounds, (1., 0.25, 0., 1.));
-
-            context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-            fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
-            let formated: Text = (self.t_size.borrow().value(), "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
-            let pos = 0; //
-            fr.draw_string(formated, (pos, 300.0));
-            self.last_fps = context().fps();
+            // context().renderer().draw_rect(Vec4::xywh(500., 100., 2., bounds.height()), 0xffffffff);
+            //
+            // let (_, bounds) = context().fonts().font("main").unwrap().draw_string((32., "32 size", 0xffffffff), (200., 200.));
+            // context().renderer().draw_rect(bounds, (1., 0.25, 0., 1.));
+            //
+            // context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
+            // fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
+            // let formated: Text = (self.t_size.borrow().value(), "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
+            // let pos = 0; //
+            // fr.draw_string(formated, (pos, 300.0));
+            // self.last_fps = context().fps();
         }
         Event::PostRender => {
             self.previous_pos = *context().window().mouse().pos();
@@ -241,14 +242,12 @@ impl ScreenTrait for TestScreen {
                     if pass != &RenderPass::Main {
                         return;
                     }
-                    let mouse = context().window().mouse();
-                    // context().renderer().draw_rect(*el.vec4(), 0xff00ff00);
-                    let st = Instant::now();
-                    let (end_pos, vec4) = context().fonts().font("main").unwrap().draw_string(t_test_c.lock().clone(), el.bounds());
-                    // println!("{:?}", st.elapsed());
-                    el.bounds().set_width(vec4.width());
-                    el.bounds().set_height(vec4.height());
-                    let hovering = el.hovering();
+                    // let mouse = context().window().mouse();
+                    // let st = Instant::now();
+                    // let (end_pos, vec4) = context().fonts().font("main").unwrap().draw_string(t_test_c.lock().clone(), el.bounds());
+                    // el.bounds().set_width(vec4.width());
+                    // el.bounds().set_height(vec4.height());
+                    // let hovering = el.hovering();
                     // el.bounds().debug_draw(if hovering { 0xff10ff10 } else { 0xffffffff });
 
                     *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
@@ -344,7 +343,7 @@ impl ScreenTrait for TestScreen {
 
         layer_0.add(el_test);
         layer_0.add(el_1.build());
-        // layer_0.add(Textbox::new(context().fonts().font("main").unwrap(), self.text.clone())); // "".to_string() self.text.clone()
+        layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 
         vec![layer_0]

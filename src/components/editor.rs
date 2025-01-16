@@ -255,15 +255,15 @@ pub struct Textbox {
 }
 
 impl Textbox {
-    pub unsafe fn new(font_id: String, init: String) -> Self {
+    pub unsafe fn new(font_id: impl ToString, init: impl ToString) -> Self {
         // println!("EDIT {:?}", init.chars());
         let mut anims = AnimationRegistry::new();
         let font_size = anims.new_anim();
         font_size.borrow_mut().set_target(16.0);
         let scroll = anims.new_anim();
         Textbox {
-            editor: StringEditor::new(init.clone()),
-            font_id,
+            editor: StringEditor::new(init.to_string()),
+            font_id: font_id.to_string(),
             text_chunks: Vec::new(),
             animations: anims,
             changed: true,
