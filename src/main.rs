@@ -99,7 +99,7 @@ impl TestScreen {
         // let bytes = fs::read("C:\\Windows\\Fonts\\consola.ttf").unwrap();
         // before
         // context().fonts().set_font_bytes("main", bytes);
-        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/Comfortaa-Light.ttf").to_vec());
+        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         // context().fonts().load_font("main", true);
 
         let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000)];

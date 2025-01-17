@@ -28,7 +28,7 @@ void main() {
     float zero_level = 0.5;
     float adjustedDistance = (distance - zero_level) / contrast + zero_level;
 
-    float bleed = 0.023 + max((contrast - 1) * 0.002, 0.0);
+    float bleed = 0.025 + max((contrast - 1) * 0.002, 0.0);
     float alpha = smoothstep(0.5 - bleed, 0.5 + bleed, adjustedDistance);
 
     vec4 textColor = unpackColor(textColors.x);
