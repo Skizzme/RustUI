@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
+use std::ops::Add;
 use std::time::Instant;
 
 use glfw::{Action, Key, Modifiers, MouseButton};
@@ -32,35 +33,46 @@ pub fn get_shifted(c: char) -> char {
 pub struct Chunk {
     string: String,
     range: (usize, usize),
-    changes: HashMap<usize, Vec<Change>>,
+    line_ranges: Vec<(usize, usize)>,
+    lines: (usize, usize),
 }
 
 impl Chunk {
-    pub fn new(range: (usize, usize), string: String) -> Self {
-        Chunk {
+    pub fn new(range: (usize, usize), line_offset: usize, string: String) -> Self {
+        let mut c = Chunk {
             string,
             range,
-            changes: HashMap::new(),
+            line_ranges: vec![],
+            lines: (line_offset, 0),
+        };
+        c.cache_lines();
+        c
+    }
+
+    pub fn cache_lines(&mut self) {
+        let mut current_range = (0, 0);
+        let mut ranges = vec![];
+        for c in self.string.chars() {
+            current_range.1 += 1;
+            if c == '\n' {
+                let new_index = current_range.1;
+                ranges.push(current_range);
+                current_range = (new_index, new_index);
+            }
         }
+        self.lines.1 = ranges.len();
+        self.line_ranges = ranges;
     }
 
     pub fn get_to_index(&self, str_index: usize) -> String {
         self.string.get(0..(str_index.max(self.range.0)-self.range.0)).unwrap_or("").to_string()
     }
 
-    pub fn add_change(&mut self, index: usize, change: Change) {
-        if !self.changes.contains_key(&index) {
-            self.changes.insert(index, vec![]);
-            // println!("ins");
-        }
-        self.changes.get_mut(&index).unwrap().push(change);
-    }
-
-    pub fn apply(&mut self) {
+    pub fn apply(&mut self, changes: &mut HashMap<usize, Vec<Change>>) {
         let mut new = String::new();
         let mut i = 0;
         for c in self.string.chars() {
-            match self.changes.remove(&i) {
+            match changes.remove(&(i + self.range.0)) {
                 None => add_char_at(i, &self.string, &mut new),
                 Some(changes) => {
                     // println!("I {:?} C {:?}", i, changes);
@@ -69,14 +81,55 @@ impl Chunk {
             }
             i += 1;
         }
-        for (k, v) in &self.changes {
-            apply_changes_at(v, *k, &self.string, &mut new);
+        for (k, v) in changes {
+            let k = *k;
+            if k >= self.range.0 && k < self.range.1 {
+                apply_changes_at(v, k, &self.string, &mut new);
+            }
         }
-        self.changes.clear();
-        self.changes.shrink_to_fit();
+
         self.string = new;
         self.range.1 = self.range.0 + self.string.len();
     }
+}
+
+#[derive(Debug)]
+pub struct Cursor {
+    pos: Vec2,
+    select_pos: Vec2,
+}
+
+impl Cursor {
+    pub fn new(position: Vec2) -> Self {
+        Cursor {
+            pos: position.clone(),
+            select_pos: position,
+        }
+    }
+
+    pub fn position(&mut self, pos: impl Into<Vec2>, expand: bool) {
+        let pos = pos.into();
+        if expand {
+            self.pos = pos;
+        } else {
+            self.pos = pos.clone();
+            self.select_pos = pos;
+        }
+    }
+
+    pub fn left(&mut self, expand: bool) {
+        self.position((-1., 0.), expand);
+    }
+    pub fn right(&mut self, expand: bool) {
+        self.position((1., 0.), expand);
+    }
+    pub fn down(&mut self, expand: bool) {
+        self.position((0., 1.), expand);
+    }
+    pub fn up(&mut self, expand: bool) {
+        self.position((0., -1.), expand);
+    }
+
 }
 
 #[derive(Debug)]
@@ -84,6 +137,8 @@ pub struct StringEditor {
     chunks: Vec<Chunk>,
     changed: HashSet<usize>,
     current_chunk: usize,
+    cursors: HashMap<usize, Cursor>,
+    changes: HashMap<usize, Vec<Change>>,
 }
 
 impl StringEditor {
@@ -106,7 +161,7 @@ impl StringEditor {
             }
             // let sub = string.char.get(i..end_index).unwrap().to_string();
             // changed.insert(chunks.len());
-            chunks.push(Chunk::new((i, end_index), sub));
+            chunks.push(Chunk::new((i, end_index), i, sub));
 
             if end_index == length {
                 break;
@@ -118,46 +173,31 @@ impl StringEditor {
             chunks,
             changed,
             current_chunk: 0,
+            cursors: HashMap::new(),
+            changes: HashMap::new(),
         }
     }
 
-    pub fn search_chunk(&self, str_index: usize) -> usize {
-        for i in 0..self.chunks.len() {
-            let c = &self.chunks.get(i).unwrap();
-            let (min, max) = c.range;
-            // println!("MIN {min} MAX {max} IND {str_index} CHU {i}");
-            if str_index >= min && str_index < max {
-                return i;
-            }
+    fn correct_pos(&mut self, pos: &mut Vec2) {
+        if pos.x() < 0. {
+            pos.y -= 1.;
+            pos.x =
         }
-        // println!("NO FOUND");
-        self.chunks.len()-1
     }
 
-    pub fn set_chunk(&mut self, c_index: usize) {
-        self.current_chunk = c_index;
-    }
-
-    pub fn add_change(&mut self, str_index: usize, change: Change) {
-        self.set_chunk(self.search_chunk(str_index));
-        // println!("IND {} CHUNK {}", str_index, self.current_chunk);
-        let chunk = self.chunks.get_mut(self.current_chunk).unwrap();
-        let index = str_index.max(chunk.range.0) - chunk.range.0;
-        self.changed.insert(self.current_chunk);
-        chunk.add_change(index, change);
-    }
-
-    pub fn apply_changes(&mut self, c_index: usize) {
-        // println!("c_index {c_index}");
-        let chunk = self.chunks.get_mut(c_index).unwrap();
-        chunk.apply();
+    pub fn update_cursors(&mut self) {
+        for (index, cursor) in &mut self.cursors {
+            cursor.
+        }
     }
 
     pub fn apply_all_changes(&mut self) -> Vec<usize> {
         let changed = std::mem::take(&mut self.changed);
+        let mut changes = std::mem::take(&mut self.changes);
         let mut min_changed = self.chunks.len().max(1)-1;
         for c in &changed {
-            self.apply_changes(*c);
+            // self.apply_changes(*c);
+            self.chunks.get(*c).unwrap().apply(&mut changes);
             min_changed = min_changed.min(*c);
         }
         let mut min_added = self.chunks.len().max(1)-1;
@@ -249,7 +289,6 @@ pub struct Textbox {
     text_chunks: Vec<(Text, FontRenderData, f32)>,
     animations: AnimationRegistry,
     changed: bool,
-    index: usize,
     scroll: AnimationRef,
     font_size: AnimationRef,
     holding_ctrl: bool,
@@ -268,7 +307,6 @@ impl Textbox {
             text_chunks: Vec::new(),
             animations: anims,
             changed: true,
-            index: 0,
             scroll,
             font_size,
             holding_ctrl: false,
@@ -431,31 +469,9 @@ impl UIHandler for Textbox {
                         }
                     }
 
-                    let current_chunk = self.editor.search_chunk(self.index);
-                    let mut last_chunk_offset = if current_chunk != 0 {
-                        match self.text_chunks.get(self.editor.search_chunk(self.index) - 1) {
-                            Some((_, offset, _)) => offset.end_char_pos().clone(),
-                            None => (0, 0).into()
-                        }
-                    } else {
-                        (0, 0).into()
-                    };
 
-                    let mut font = context().fonts().font(&self.font_id).unwrap();
-                    let current_chunk_index = self.editor.search_chunk(self.index);
-                    let current = self.editor.chunks().get(current_chunk_index).unwrap();
-                    // let cursor_pos = font.add_end_pos(last_chunk_offset, self.font_size.borrow().value(), current.get_to_index(self.index));
-                    if let Some(current_t_chunk) = self.text_chunks.get(current_chunk_index) {
-                        let current_chunk_cursor = current_t_chunk.1.get_data_at_index(self.index);
-                        let mut cursor_pos = last_chunk_offset.clone();
-                        cursor_pos.offset((current_chunk_cursor[0], current_chunk_cursor[1] + current_chunk_cursor[3] - font.get_sized_height(self.font_size.borrow().value())));
 
-                        Translatef(0.0, self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
-                        // println!("current ch sec {:?}", current.get_to_index(self.index));
-                        context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, font.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
-
-                        Translatef(0.0, -self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0), 0.0);
-                    }
+                    // context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, font.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
                     true
                 },
                 _ => false
