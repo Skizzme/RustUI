@@ -17,11 +17,10 @@ use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::gl_binds::gl11::Translatef;
 
-const CHUNK_SIZE: usize = 256; // 1024*2
+const CHUNK_SIZE: usize = 1024; // 1024*2
 // static SHIFT_MAP: HashMap<char, char> = ;
 
 pub fn get_shifted(c: char) -> char {
-
     let shifted: HashMap<char, char> = [
         ('1', '!'), ('2', '@'), ('3', '#'), ('4', '$'), ('5', '%'), ('6', '^'), ('7', '&'), ('8', '*'), ('9', 's'), ('0', ')'), ('=', '+'),
         ('-', '_'), ('`', '~'), (',', '<'), ('.', '>'), (';', ':'), ('/', '?'), ('\'', '"'), ('[', '{'), (']', '}'), ('\\', '|')
@@ -29,85 +28,88 @@ pub fn get_shifted(c: char) -> char {
     *shifted.get(&c).unwrap_or(&c.to_ascii_uppercase())
 }
 
+#[derive(Clone, Debug)]
+pub enum Change {
+    Delete,
+    Add(String),
+}
+
 #[derive(Debug)]
 pub struct Chunk {
-    string: String,
-    range: (usize, usize),
-    line_ranges: Vec<(usize, usize)>,
-    lines: (usize, usize),
+    str: String,
+    updated: String,
 }
 
 impl Chunk {
-    pub fn new(range: (usize, usize), line_offset: usize, string: String) -> Self {
+    pub fn new(str: String) -> Self {
         let mut c = Chunk {
-            string,
-            range,
-            line_ranges: vec![],
-            lines: (line_offset, 0),
+            str,
+            updated: "".to_string(),
         };
-        c.cache_lines();
         c
     }
 
-    pub fn cache_lines(&mut self) {
-        let mut current_range = (0, 0);
-        let mut ranges = vec![];
-        for c in self.string.chars() {
-            current_range.1 += 1;
-            if c == '\n' {
-                let new_index = current_range.1;
-                ranges.push(current_range);
-                current_range = (new_index, new_index);
-            }
-        }
-        self.lines.1 = ranges.len();
-        self.line_ranges = ranges;
-    }
-
-    pub fn get_to_index(&self, str_index: usize) -> String {
-        self.string.get(0..(str_index.max(self.range.0)-self.range.0)).unwrap_or("").to_string()
-    }
-
-    pub fn apply(&mut self, changes: &mut HashMap<usize, Vec<Change>>) {
+    pub fn calculate_changes(&mut self, changes: &mut HashMap<usize, (usize, usize, Change)>, info: &ChunkInfo)  {
         let mut new = String::new();
-        let mut i = 0;
-        for c in self.string.chars() {
-            match changes.remove(&(i + self.range.0)) {
-                None => add_char_at(i, &self.string, &mut new),
-                Some(changes) => {
-                    // println!("I {:?} C {:?}", i, changes);
-                    apply_changes_at(&changes, i, &self.string, &mut new);
+
+        let mut i = info.ind_start;
+        let mut skip = 0;
+        for c in self.str.chars() {
+            match changes.remove(&i) {
+                None => {},
+                Some((length, _, change)) => {
+                    skip = length;
+                    match change {
+                        Change::Delete => {
+                            skip = skip.max(1);
+                        }
+                        Change::Add(add) => {
+                            new.push_str(&add);
+                            // new.push(c);
+                        }
+                    }
                 }
+            }
+            if skip == 0 {
+                new.push(c)
+            } else {
+                skip -= 1;
             }
             i += 1;
         }
-        for (k, v) in changes {
-            let k = *k;
-            if k >= self.range.0 && k < self.range.1 {
-                apply_changes_at(v, k, &self.string, &mut new);
-            }
-        }
+        self.updated = new;
+    }
 
-        self.string = new;
-        self.range.1 = self.range.0 + self.string.len();
+    pub fn update(&mut self) {
+        std::mem::swap(&mut self.updated, &mut self.str);
+        self.updated = String::new();
     }
 }
 
 #[derive(Debug)]
 pub struct Cursor {
-    pos: Vec2,
-    select_pos: Vec2,
+    pos: Vec2<usize>,
+    select_pos: Vec2<usize>,
 }
 
 impl Cursor {
-    pub fn new(position: Vec2) -> Self {
+    pub fn new(position: Vec2<usize>) -> Self {
         Cursor {
             pos: position.clone(),
             select_pos: position,
         }
     }
 
-    pub fn position(&mut self, pos: impl Into<Vec2>, expand: bool) {
+
+    pub fn start_pos(&self) -> Vec2<usize> {
+        self.pos.min(self.select_pos)
+    }
+
+    pub fn end_pos(&self) -> Vec2<usize> {
+        self.pos.max(self.select_pos)
+    }
+
+    pub fn position(&mut self, pos: impl Into<Vec2<usize>>, expand: bool) {
         let pos = pos.into();
         if expand {
             self.pos = pos;
@@ -118,480 +120,245 @@ impl Cursor {
     }
 
     pub fn left(&mut self, expand: bool) {
-        self.position((-1., 0.), expand);
+        self.position((self.pos.x()-1, self.pos.y()), expand);
     }
     pub fn right(&mut self, expand: bool) {
-        self.position((1., 0.), expand);
+        self.position((self.pos.x()+1, self.pos.y()), expand);
     }
     pub fn down(&mut self, expand: bool) {
-        self.position((0., 1.), expand);
+        self.position((self.pos.x(), self.pos.y()+1), expand);
     }
     pub fn up(&mut self, expand: bool) {
-        self.position((0., -1.), expand);
+        self.position((self.pos.x(), self.pos.y()-1), expand);
     }
 
 }
 
 #[derive(Debug)]
-pub struct StringEditor {
-    chunks: Vec<Chunk>,
-    changed: HashSet<usize>,
-    current_chunk: usize,
-    cursors: HashMap<usize, Cursor>,
-    changes: HashMap<usize, Vec<Change>>,
+pub struct ChunkInfo {
+    ind_start: usize,
+    ind_end: usize,
+
+    start: Vec2<usize>,
+    end: Vec2<usize>,
+
+    lines: Vec<(usize, usize)>,
 }
 
-impl StringEditor {
-    pub fn new(string: String) -> Self {
-        let mut chunks = Vec::new();
-        let mut changed = HashSet::new();
-        let mut i = 0;
-        let length = string.chars().count();
-        loop {
-            let end_index = (i+CHUNK_SIZE).min(length);
-            let mut sub = String::new();
-            for (ind, char) in string.char_indices() {
-                if ind < i {
-                    continue
-                }
-                if ind >= end_index {
-                    break
-                }
-                sub.push(char);
-            }
-            // let sub = string.char.get(i..end_index).unwrap().to_string();
-            // changed.insert(chunks.len());
-            chunks.push(Chunk::new((i, end_index), i, sub));
+impl ChunkInfo {
+    pub fn new(chunk: &Chunk, index: usize, start: Vec2<usize>) -> Self {
+        let mut inf = ChunkInfo {
+            ind_start: 0,
+            ind_end: 0,
+            start: Default::default(),
+            end: Default::default(),
+            lines: vec![],
+        };
+        // TODO optimize this so that creating the editor doesn't take so long
+        inf.update_info(chunk, index, start);
+        inf
+    }
 
-            if end_index == length {
-                break;
+    pub fn update_info(&mut self, chunk: &Chunk, start_index: usize, start: Vec2<usize>) {
+        self.ind_start = start_index;
+        self.ind_end = start_index+chunk.str.len();
+
+        self.start = start;
+        self.end = start;
+
+        let mut line_start_ind = start_index;
+        let mut i = start_index;
+        for c in chunk.str.chars() {
+            if c == '\n' {
+                self.lines.push((line_start_ind, i));
+                line_start_ind = i;
+                self.end.y += 1;
+                self.end.x = 0;
             }
+            self.end.x += 1;
+            i += 1;
+        }
+        self.lines.push((line_start_ind, i));
+        // self.end.y += 1;
+    }
+
+    pub fn ind_of_pos(&self, pos: Vec2<usize>) -> usize {
+        let line = pos.y();
+        let local_line = line - self.start.y;
+        let (_, ln_end) = self.lines[local_line.min(self.lines.len().max(1)-1)];
+
+        (pos.x()).min(ln_end) + local_line
+    }
+}
+
+#[derive(Debug)]
+pub struct Editor {
+    cursors: Vec<Cursor>,
+    chunks: Vec<Chunk>,
+    chunk_info: Vec<ChunkInfo>,
+    changes: HashMap<usize, (usize, usize, Change)>,
+}
+
+impl Editor {
+
+    pub fn new<T: AsRef<str>>(str: T) -> Self {
+        let str = str.as_ref();
+        let mut editor = Editor {
+            cursors: vec![],
+            chunks: vec![],
+            chunk_info: vec![],
+            changes: Default::default(),
+        };
+
+        let mut i = 0;
+        let mut pos = Vec2::new(0,0);
+        while i < str.len() {
+            let chunk_str = &str[i..(i+CHUNK_SIZE).min(str.len())];
+            let chunk = Chunk::new(chunk_str.to_string());
+
+            let chunk_info = ChunkInfo::new(&chunk, i, pos.clone());
+            pos = chunk_info.end.clone();
+
+            editor.chunks.push(chunk);
+            editor.chunk_info.push(chunk_info);
+
             i += CHUNK_SIZE;
         }
 
-        StringEditor {
-            chunks,
-            changed,
-            current_chunk: 0,
-            cursors: HashMap::new(),
-            changes: HashMap::new(),
-        }
+        editor
     }
 
-    fn correct_pos(&mut self, pos: &mut Vec2) {
-        if pos.x() < 0. {
-            pos.y -= 1.;
-            pos.x =
-        }
+
+    pub fn add_cursor(&mut self, pos: impl Into<Vec2<usize>>) {
+        self.cursors.push(Cursor::new(pos.into()));
     }
 
-    pub fn update_cursors(&mut self) {
-        for (index, cursor) in &mut self.cursors {
-            cursor.
-        }
-    }
+    pub fn pos_index(&self, pos: impl Into<Vec2<usize>>) -> (usize, usize) {
+        let pos = pos.into();
 
-    pub fn apply_all_changes(&mut self) -> Vec<usize> {
-        let changed = std::mem::take(&mut self.changed);
-        let mut changes = std::mem::take(&mut self.changes);
-        let mut min_changed = self.chunks.len().max(1)-1;
-        for c in &changed {
-            // self.apply_changes(*c);
-            self.chunks.get(*c).unwrap().apply(&mut changes);
-            min_changed = min_changed.min(*c);
-        }
-        let mut min_added = self.chunks.len().max(1)-1;
-        let mut changed_rev: Vec<usize> = changed.iter().map(|v| *v).collect();
-        changed_rev.sort();
-        let mut total_changes = Vec::new();
-        for c in changed_rev.iter() {
-            let c = *c;
-            let chunk = match self.chunks.get_mut(c) {
-                None => continue,
-                Some(v) => v,
-            };
-            total_changes.push(c);
-            if chunk.string.len() > CHUNK_SIZE {
-                let (start, mid, end) = (chunk.range.0, (chunk.range.0 + chunk.range.1) / 2, chunk.range.1);
-                let mut chunk0 = Chunk::new((start, mid), chunk.string.get(0..(chunk.string.len()/2)).unwrap().to_string());
-                let chunk1 = Chunk::new((mid, end), chunk.string.get((chunk.string.len()/2)..chunk.string.len()).unwrap().to_string());
-                std::mem::swap(chunk, &mut chunk0); // replaced the old chunk in the list with chunk0
-                min_added = min_added.min(c+1);
-                total_changes.push(c+1);
-                self.chunks.insert(c+1, chunk1);
+        let mut index = 0;
+        let mut i = 0;
+        for ci in &self.chunk_info {
+            if pos.y() == ci.start.y && pos.x() >= ci.start.x && pos.x() < ci.end.x ||
+                pos.y() > 0 && pos.y() > ci.start.y && (pos.y() < ci.end.y-1 || (pos.y() == ci.end.y-1 && pos.x() < ci.end.x)) {
+                index = ci.ind_of_pos(pos);
+                break;
             }
-            else if chunk.string.len() == 0 && self.chunks.len() > 1 {
-                min_added = min_added.min(c+1);
-                self.chunks.remove(c);
-                self.chunks.get_mut(0).unwrap().range.0 = 0;
-            }
+            i += 1;
         }
-        let mut index = self.chunks.get(min_changed.min(self.chunks.len().max(1)-1)).unwrap().range.0;
-        for i in min_changed..self.chunks.len() {
-            let c = self.chunks.get_mut(i).unwrap();
-            c.range = (index, index + c.string.len());
-            index += c.string.len();
-        }
-        for i in min_added..self.chunks.len() {
-            total_changes.push(i);
-        }
-        self.changed.clear();
-        self.chunks.shrink_to_fit();
-        total_changes
+
+        (index, i)
     }
 
-    pub fn string(&self) -> String {
-        let mut str = String::new();
-        for c in &self.chunks {
-            str.push_str(&c.string);
-        }
-        str
-    }
+    pub fn add_change(&mut self, change: Change) {
+        for c in &self.cursors {
+            let (start_index, start_chunk) = self.pos_index(c.start_pos());
+            let (end_index, end_chunk) = self.pos_index(c.end_pos());
 
-    pub fn str_len(&self) -> usize {
-        self.chunks.last().unwrap().range.1
-    }
+            for chunk_index in start_chunk..=end_chunk {
+                let chunk_info = &self.chunk_info[chunk_index];
+                let start_index = start_index.max(chunk_info.ind_start);
+                let end_index = end_index.min(chunk_info.ind_end);
 
-    pub fn chunks(&self) -> &Vec<Chunk> {
-        &self.chunks
-    }
+                let chunk_change = match &change {
+                    Change::Delete => Change::Delete,
+                    Change::Add(str) => {
+                        let mut sub = String::new();
+                        let mut i = 0;
+                        for c in str.chars() {
+                            if i >= start_index && i < end_index {
+                                sub.push(c);
+                            }
+                            i += 1;
+                        }
+                        Change::Add(sub)
+                    }
+                };
 
-}
-
-fn apply_changes_at(changes: &Vec<Change>, index: usize, current: &String, new: &mut String) {
-    for change in changes {
-        match change {
-            Change::Delete => {}
-            Change::Add(addition) => {
-                new.push_str(&addition);
-                add_char_at(index, current, new);
-                // println!("added {}", addition);
+                self.changes.insert(start_index, (end_index - start_index, chunk_index, chunk_change));
             }
         }
     }
-}
 
-fn add_char_at(index: usize, current: &String, new: &mut String) {
-    if index < current.len() && index >= 0 {
-        new.push(current.chars().nth(index).unwrap());
+    pub fn apply_changes(&mut self) {
+        let mut changed_chunks = vec![];
+        for (_, (_, chunk, _)) in &mut self.changes {
+            changed_chunks.push(*chunk);
+        }
+
+        for chunk in &changed_chunks {
+            let ci = &self.chunk_info[*chunk];
+            self.chunks[*chunk].calculate_changes(&mut self.changes, ci);
+        }
+
+        let (mut ind, mut pos) = (0, Vec2::new(0,0));
+        for chunk in changed_chunks {
+            let ci = &mut self.chunk_info[chunk];
+            let c = &mut self.chunks[chunk];
+            c.update();
+            ci.update_info(c, ind, pos.clone());
+            ind = ci.ind_end;
+            pos = ci.end;
+        }
     }
-}
-
-#[derive(Debug)]
-pub enum Change {
-    Delete,
-    Add(String),
 }
 
 pub struct Textbox {
-    editor: StringEditor,
-    font_id: String,
-    text_chunks: Vec<(Text, FontRenderData, f32)>,
-    animations: AnimationRegistry,
-    changed: bool,
-    scroll: AnimationRef,
-    font_size: AnimationRef,
-    holding_ctrl: bool,
+    editor: Editor,
+
 }
 
 impl Textbox {
-    pub unsafe fn new(font_id: impl ToString, init: impl ToString) -> Self {
-        // println!("EDIT {:?}", init.chars());
-        let mut anims = AnimationRegistry::new();
-        let font_size = anims.new_anim();
-        font_size.borrow_mut().set_target(16.0);
-        let scroll = anims.new_anim();
-        Textbox {
-            editor: StringEditor::new(init.to_string()),
-            font_id: font_id.to_string(),
-            text_chunks: Vec::new(),
-            animations: anims,
-            changed: true,
-            scroll,
-            font_size,
-            holding_ctrl: false,
-        }
-    }
 
-    pub unsafe fn update_chunk(&mut self, index: usize) -> u32 {
-        let last_offset = if index > 0 {
-            match self.text_chunks.get(index - 1) {
-                None => return 1,
-                Some(c) => c.1.end_char_pos(),
-            }
-        } else { (0, 0).into() };
-
-        if index < self.editor.chunks.len() {
-            // println!("{} {} {}", index, last_offset.y + self.scroll.value(), context().window().height as f32);
-            if last_offset.y + self.scroll.borrow().value() > context().window().height as f32 + 200f32 {
-                return 2;
-            }
-
-            let mut text = Text::new();
-            // text.push(FormatItem::Offset(last_offset));
-            text.push(FormatItem::Size(self.font_size.borrow().value()));
-            text.push(FormatItem::Color(Color::from_hsv(thread_rng().random::<f32>(), 1.0, 1.0)));
-            text.push(FormatItem::String(self.editor.chunks().get(index).unwrap().string.clone()));
-
-            //self.fr.add_end_pos(last_offset, self.font_size.borrow().value(), &self.editor.chunks().get(index).unwrap().string)
-            let render_data = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), (0, 0), last_offset);
-
-            let mut chunk = (
-                text,
-                render_data,
-                self.font_size.borrow().value(),
-            );
-
-            if index < self.text_chunks.len() {
-                std::mem::swap(self.text_chunks.get_mut(index).unwrap(), &mut chunk);
-            } else {
-                self.text_chunks.push(chunk);
-            }
-        } else {
-            self.text_chunks.pop();
-        }
-        return 0;
-    }
-
-    pub unsafe fn update_loaded(&mut self) {
-        for i in 0..self.text_chunks.len() {
-            self.update_chunk(i);
-        }
-    }
 }
 
 impl UIHandler for Textbox {
     unsafe fn handle(&mut self, event: &Event) -> bool {
-        match event {
-            Event::PreRender => {
-                // println!("{} {}", self.scroll.target(), self.scroll.value());
-                self.scroll.borrow_mut().animate(10.0, AnimationType::Sin);
-                self.font_size.borrow_mut().animate(2.0, AnimationType::Sin);
-                false
-            },
-            Event::PostRender => {
-                self.changed = false;
-                false
-            }
-            Event::MouseClick(button, action) => {
-                let scroll_amount = self.scroll.borrow().value();
-                match button {
-                    MouseButton::Button1 => {
-                        if action == &Action::Press {
-                            let start_pos: Vec2 = (10, 100.0 + self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0)).into();
-                            let mut last_offset: Vec2 = (0, 0).into();
-                            // println!("{:?} {:?}", self.text_chunks.len(), start_pos);
-                            let mut to_update = Vec::new();
-                            let mut i = 0;
-                            for (text, render_data, size) in &self.text_chunks {
-                                let t_pos = render_data.end_char_pos();
-                                if t_pos.y + start_pos.y < 0.0 {
-                                    last_offset = (t_pos.x, t_pos.y).into();
-                                    i += 1;
-                                    continue;
-                                }
-
-                                let render_data = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset);
-                                let bounds = render_data.bounds();
-                                let offset = render_data.end_char_pos();
-
-                                if context().window().mouse().pos().intersects(&bounds) {
-                                    // println!("clicked on {:?}", text);
-                                    to_update.push(i);
-                                    let chunk = self.editor.chunks.get(i).unwrap();
-                                    for c in chunk.string.chars() {
-
-                                    }
-                                }
-
-                                last_offset = (offset.x, last_offset.y + offset.y).into();
-
-                                if t_pos.y + start_pos.y > context().window().height as f32 + 100f32 {
-                                    break;
-                                }
-                                i += 1;
-                            }
-                            for i in to_update {
-                                self.update_chunk(i);
-                            }
-                        }
-                    }
-                    MouseButton::Button2 => {}
-                    _ => {}
-                }
-                false
-            }
-            Event::Render(pass) => match pass {
-                RenderPass::Main => {
-                    let start_pos: Vec2 = (10, 100.0 + self.scroll.borrow().value() * (self.font_size.borrow().value() / 16.0)).into();
-                    let mut last_offset: Vec2 = (0, 0).into();
-                    // println!("{:?} {:?}", self.text_chunks.len(), start_pos);
-                    let mut to_update_indices = Vec::new();
-                    let mut i = 0;
-                    for (text, render_data, size) in &self.text_chunks {
-                        let t_pos = render_data.end_char_pos();
-                        if t_pos.y + start_pos.y < 0.0 {
-                            last_offset = (t_pos.x, t_pos.y).into();
-                            i += 1;
-                            continue;
-                        }
-                        if *size != self.font_size.borrow().value() {
-                            to_update_indices.push(i);
-                        }
-                        let offset = context().fonts().font(&self.font_id).unwrap().draw_string_offset(text.clone(), start_pos, last_offset).end_char_pos();
-
-                        last_offset = (offset.x, last_offset.y + offset.y).into();
-
-                        if t_pos.y + start_pos.y > context().window().height as f32 + 100f32 {
-                            break;
-                        }
-                        i += 1;
-                    }
-                    for index in to_update_indices {
-                        self.update_chunk(index);
-                    }
-
-                    // load any chunks that have come into screen
-                    loop {
-                        match self.text_chunks.last() {
-                            None => break,
-                            Some(v) => {
-                                if self.text_chunks.len() == self.editor.chunks.len() {
-                                    break;
-                                }
-
-                                if v.1.end_char_pos().y + start_pos.y < context().window().height as f32 + 10f32 {
-                                    self.update_chunk(self.text_chunks.len());
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-
-
-                    // context().renderer().draw_rect(Vec4::xywh(10.0 + cursor_pos.x() + 3.0, 100.0 + cursor_pos.y(), 1.0, font.get_sized_height(self.font_size.borrow().value())), 0xffff20a0);
-                    true
-                },
-                _ => false
-            },
-            Event::Keyboard(key, action, mods) => {
-                // println!("{:?} {:?} {:?} {:?} {:?}", key, action, mods, key.get_scancode(), key.get_name());
-                match key {
-                    Key::LeftControl => self.holding_ctrl = action != &Action::Release,
-                    _ => {}
-                }
-                if action == &Action::Release {
-                    return false;
-                }
-                // for (ind, ch) in self.editor.chunks[0].string.char_indices() {
-                //     println!("IND {ind}, {ch}");
-                // }
-                match key.get_name() {
-                    None => {
-                        match key {
-                            Key::Left => if self.index > 0 {
-                                self.index = self.index.max(1) - 1;
-                            },
-                            Key::Right => if self.index < self.editor.str_len() {
-                                self.index = self.index + 1;
-                            },
-                            Key::Backspace => {
-                                if self.index > 0 {
-                                    self.index = self.index - 1;
-                                    self.editor.add_change(self.index, Change::Delete);
-                                }
-                            },
-                            Key::Delete => {
-                                for i in 0..1000 {
-                                    self.editor.add_change(self.index + i, Change::Delete);
-                                }
-                            },
-                            Key::Enter => {
-                                self.editor.add_change(self.index, Change::Add("\n".to_string()));
-                                self.index += 1;
-                            }
-                            Key::Space => {
-                                self.editor.add_change(self.index, Change::Add(" ".to_string()));
-                                self.index += 1;
-                            }
-                            _ => {}
-                        }
-                    }
-                    Some(pressed) => {
-                        let char = pressed.as_bytes()[0] as char;
-                        let char = if mods.contains(Modifiers::Shift) {
-                            get_shifted(char)
-                        } else { char };
-                        self.editor.add_change(self.index, Change::Add(char.to_string()));
-                        self.index += 1;
-                    }
-                }
-                println!("INDEX {}", self.index);
-                let st = Instant::now();
-                // println!("{:?}", self.editor);
-                // println!("0");
-                let mut changed = self.editor.apply_all_changes();
-                // println!("1");
-                for i in self.text_chunks.len()..self.editor.chunks.len() {
-                    changed.push(i);
-                }
-                // println!("2");
-                for i in self.editor.chunks.len()..self.text_chunks.len() {
-                    self.text_chunks.pop();
-                }
-                // println!("3");
-                println!("CHANGED {:?}", changed);
-                for c in &changed {
-                    self.changed = true;
-                    match self.update_chunk(*c) {
-                        1 => continue,
-                        2 => break,
-                        _ => {}
-                    }
-                }
-                println!("applied in {:?} {:?} {:?}", st.elapsed(), self.editor.chunks.len(), self.editor.current_chunk);
-                // println!("{:?}", self.editor);
-                // println!("{:?}", self.text_chunks);
-                true
-            },
-            Event::Scroll(_, y) => {
-                if self.holding_ctrl {
-                    let mut anim = self.font_size.borrow_mut();
-                    let last_target = anim.target();
-                    anim.set_target((y + last_target).max(1.0));
-                } else {
-                    let mut anim = self.scroll.borrow_mut();
-                    let last_target = anim.target();
-                    anim.set_target(y * 100.0 + last_target);
-                }
-                true
-            }
-            _ => false,
-        }
+        false
     }
 
     unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
-        self.changed
+        true
     }
 
     fn animations(&mut self) -> Option<&mut AnimationRegistry> {
-        Some(&mut self.animations)
+        None
     }
 }
 
-#[test]
+// #[test]
 pub fn editor() {
-    let t = include_str!("../../test_3.js").to_string();
-    let mut editor = StringEditor::new(t);
-    editor.set_chunk(0);
+    let mut str = "THIS IS A NOT SO LONG STIRNG\nAND THIS is another line";
+    let mut s = String::new();
+    println!("compiuling");
+    for i in 0..(1_000_000_000/str.len()) {
+        if i % 10000 == 0 {
+            println!("{i}")
+        }
+        s.push_str(str);
+    }
+    println!("done");
     let st = Instant::now();
-    editor.add_change(1024, Change::Add("add36123ed".to_string()));
-    let t1 = st.elapsed();
-    let st = Instant::now();
-    editor.apply_all_changes();
-    let t2 = st.elapsed();
+    let mut editor = Editor::new(&s);
+    let d = st.elapsed();
+    println!("editor {:?}", d);
+
+    let add = "this is a not so long";
+    editor.add_cursor((0,0));
+    editor.cursors[0].position((add.len(),0), true);
+
     // println!("{:?}", editor);
-    println!("{:?} {:?}", t1, t2);
+    editor.add_change(Change::Add(add.to_string()));
+    // println!("{:?}", editor);
+    let st = Instant::now();
+    editor.apply_changes();
+    let d = st.elapsed();
+    // println!("{:?}", editor);
+
+    for c in editor.chunks {
+        print!("{}", c.str);
+        break;
+    }
+    println!();
+    println!("{:?} {}", d, s.len());
 }

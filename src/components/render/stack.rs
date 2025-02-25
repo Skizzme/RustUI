@@ -128,7 +128,7 @@ pub struct Stack {
     stack: LinkedList<GlState>,
     markers: Vec<usize>,
     current: HashMap<u8, GlState>,
-    current_translate: Vec2,
+    current_translate: Vec2<f32>,
 }
 
 impl Stack {
@@ -141,7 +141,7 @@ impl Stack {
         }
     }
 
-    pub fn current_translate(&self) -> &Vec2 {
+    pub fn current_translate(&self) -> &Vec2<f32> {
         &self.current_translate
     }
 

@@ -5,10 +5,10 @@ use glfw::{Action, MouseButton, WindowEvent};
 use crate::components::spatial::vec2::Vec2;
 
 pub struct Mouse {
-    pub(crate) pos: Vec2,
-    last_pos: Vec2,
-    click_pos: Vec2,
-    pub(super) delta: Vec2,
+    pub(crate) pos: Vec2<f32>,
+    last_pos: Vec2<f32>,
+    click_pos: Vec2<f32>,
+    pub(super) delta: Vec2<f32>,
     pub(super) pressed: HashSet<MouseButton>,
 }
 
@@ -48,14 +48,14 @@ impl Mouse {
         }
     }
 
-    pub fn pos(&self) -> &Vec2 {
+    pub fn pos(&self) -> &Vec2<f32> {
         &self.pos
     }
     pub fn is_pressed(&self, button: MouseButton) -> bool {
         self.pressed.contains(&button)
     }
-    pub fn delta(&self) -> Vec2 { self.delta }
-    pub fn click_pos(&self) -> Vec2 {
+    pub fn delta(&self) -> Vec2<f32> { self.delta }
+    pub fn click_pos(&self) -> Vec2<f32> {
         self.click_pos
     }
 }

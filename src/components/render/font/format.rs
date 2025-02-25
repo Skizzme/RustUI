@@ -210,7 +210,7 @@ pub enum FormatItem {
     Color(Color),
     Size(f32),
     String(String),
-    Offset(Vec2),
+    Offset(Vec2<f32>),
     AlignH(Alignment),
     AlignV(Alignment),
     TabLength(u32),
@@ -242,7 +242,7 @@ impl Into<FormatItem> for f32 {
     }
 }
 
-impl Into<FormatItem> for Vec2 {
+impl Into<FormatItem> for Vec2<f32> {
     fn into(self) -> FormatItem {
         Offset(self)
     }
@@ -253,7 +253,10 @@ impl Hash for FormatItem {
         match self {
             FormatItem::Color(v) => v.hash(state),
             FormatItem::String(v) => v.hash(state),
-            Offset(v) => v.hash(state),
+            Offset(v) => {
+                state.write(&v.x().to_be_bytes());
+                state.write(&v.y().to_be_bytes());
+            },
             Size(v) => state.write(&v.to_be_bytes()),
             FormatItem::None => state.write(&[0u8]),
             FormatItem::AlignH(v) => v.hash(state),
@@ -372,7 +375,7 @@ impl Formatter for DefaultFormatter {
 
 #[test]
 pub fn format() {
-    let mut formatter = DefaultFormatter::new("thius is a test &ff9020ff sting".to_string());
+    let mut formatter = DefaultFormatter::new();
     formatter.parse_all();
 
     println!("{:?}", formatter.parsed);

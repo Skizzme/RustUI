@@ -31,17 +31,20 @@ pub mod manager;
 const FONT_RES: u32 = 48u32;
 const MAX_ATLAS_WIDTH: i32 = 2000;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 struct CacheGlyph {
     id: usize,
     bytes: Vec<u8>,
-    atlas_pos: Vec2,
+    atlas_pos: Vec2<f32>,
     width: i32,
     height: i32,
     advance: i32,
     bearing_x: i32,
     top: i32,
 }
+
+impl Eq for CacheGlyph {}
+
 impl PartialOrd<Self> for CacheGlyph {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.id > other.id {
@@ -95,7 +98,7 @@ struct RenderData {
 
     current_color: Color,
     current_size: f32,
-    current_offset: Vec2,
+    current_offset: Vec2<f32>,
     current_align_h: f32,
     current_align_v: f32,
     current_tab_length: u32,
@@ -126,7 +129,7 @@ impl Default for RenderData {
 
 #[derive(Clone)]
 pub struct FontRenderData {
-    end_char_pos: Vec2,
+    end_char_pos: Vec2<f32>,
     bounds: Vec4,
 
     char_positions: Rc<Vec<[f32; 4]>>,
@@ -134,7 +137,7 @@ pub struct FontRenderData {
 }
 
 impl FontRenderData {
-    pub fn end_char_pos(&self) -> Vec2 {
+    pub fn end_char_pos(&self) -> Vec2<f32> {
         self.end_char_pos
     }
     pub fn bounds(&self) -> Vec4 {
@@ -466,14 +469,18 @@ impl Font {
 
 
     /// Get (or create if it doesn't exist) the data for the text render batch
-    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, FontRenderData) {
+    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> (u32, FontRenderData) {
         let offset = offset.into();
         let pos = pos.into();
         let formatted_text = formatted_text.into();
         let len = formatted_text.visible_length();
         let mut hasher = hash::DefaultHasher::new();
-        offset.hash(&mut hasher);
-        pos.hash(&mut hasher);
+
+        hasher.write(&offset.x().to_be_bytes());
+        hasher.write(&offset.y().to_be_bytes());
+
+        hasher.write(&pos.x().to_be_bytes());
+        hasher.write(&pos.y().to_be_bytes());
 
         formatted_text.hash(&mut hasher);
 
@@ -656,7 +663,7 @@ impl Font {
             vao.add_buffer(t_buf);
             vao.add_buffer(dims_buf);
 
-            // VertexArray, Vec2, Vec4, u32
+            // VertexArray, Vec2<f32>, Vec4, u32
             // (vao, Vec2::new(self.draw_data.line_width, height), bounds, 0)
             map.insert(hashed, (vao, 0, FontRenderData {
                 end_char_pos: Vec2::new(self.draw_data.line_width, height),
@@ -674,8 +681,8 @@ impl Font {
     /// Calls [`draw_string_offset()`] with an offset of `(0, 0)`
     ///
     /// [`draw_string_offset()`]: Font::draw_string_offset
-    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>) -> FontRenderData {
-        self.draw_string_offset(formatted_text, pos, (0, 0))
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>) -> FontRenderData {
+        self.draw_string_offset(formatted_text, pos, (0., 0.))
     }
 
     /// The method to be called to a render a string using modern GL
@@ -684,7 +691,7 @@ impl Font {
     /// but is deleted if not used within 10 frames
     ///
     /// Returns width, height
-    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> FontRenderData {
+    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> FontRenderData {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 
@@ -791,7 +798,7 @@ impl Font {
         width*scale
     }
 
-    pub unsafe fn get_end_pos(&self, size: f32, string: impl ToString) -> Vec2 {
+    pub unsafe fn get_end_pos(&self, size: f32, string: impl ToString) -> Vec2<f32> {
         let string = string.to_string();
         let scale = size/FONT_RES as f32;
         let mut width = 0f32;
@@ -810,7 +817,7 @@ impl Font {
         (width*scale, height*scale).into()
     }
 
-    pub unsafe fn add_end_pos(&self, current: Vec2, size: f32, string: impl ToString) -> Vec2 {
+    pub unsafe fn add_end_pos(&self, current: Vec2<f32>, size: f32, string: impl ToString) -> Vec2<f32> {
         let string = string.to_string();
         let scale = size/FONT_RES as f32;
         let mut width = current.x;
@@ -854,7 +861,7 @@ fn i32_from_bytes(index: usize, bytes: &Vec<u8>) -> i32 {
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Glyph {
-    pub atlas_pos: Vec2,
+    pub atlas_pos: Vec2<f32>,
     pub width: f32,
     pub height: f32,
     pub advance: f32,

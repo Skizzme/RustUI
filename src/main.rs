@@ -30,7 +30,9 @@ use parking_lot::Mutex;
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::context::{context, ContextBuilder};
-use RustUI::components::editor::Textbox;
+use RustUI::components::editor::editor;
+// use RustUI::components::editor::editor;
+// use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationType};
 use RustUI::components::framework::element::ElementBuilder;
 use RustUI::components::framework::element::comp_element::CompElement;
@@ -52,28 +54,29 @@ use RustUI::gl_binds::gl11::{ALPHA, BLEND};
 use RustUI::text;
 
 fn main() {
-    let args : Vec<String> = std::env::args().collect();
-    if !(args.len() > 1 && args[1] == "console") {
-        unsafe {
-            FreeConsole();
-        }
-    }
-
-    unsafe {
-        let mut builder = ContextBuilder::new();
-        builder.title("Test");
-        builder.dims(1920/2, 1080/2);
-        builder.hint(WindowHint::Resizable(false));
-        builder.build();
-
-        context().framework().set_screen(TestScreen::new());
-        context().do_loop()
-    }
+    editor();
+    // let args : Vec<String> = std::env::args().collect();
+    // if !(args.len() > 1 && args[1] == "console") {
+    //     unsafe {
+    //         FreeConsole();
+    //     }
+    // }
+    //
+    // unsafe {
+    //     let mut builder = ContextBuilder::new();
+    //     builder.title("Test");
+    //     builder.dims(1920/2, 1080/2);
+    //     builder.hint(WindowHint::Resizable(false));
+    //     builder.build();
+    //
+    //     context().framework().set_screen(TestScreen::new());
+    //     context().do_loop()
+    // }
 }
 
 pub struct TestScreen {
     pub text: String,
-    previous_pos: Vec2,
+    previous_pos: Vec2<f32>,
     previous_tex: Arc<Mutex<String>>,
     t_size: AnimationRef,
     last_fps: u32,
@@ -345,7 +348,7 @@ impl ScreenTrait for TestScreen {
 
         layer_0.add(el_test);
         layer_0.add(el_1.build());
-        layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
+        // layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 
         vec![layer_0]

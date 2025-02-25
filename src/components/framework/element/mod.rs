@@ -30,7 +30,7 @@ pub struct Element {
     pub scrollable: bool,
 
     scroll: Changing<(f32, f32)>,
-    dragging: (bool, Vec2),
+    dragging: (bool, Vec2<f32>),
     has_rendered: bool,
     animations: AnimationRegistry,
 
@@ -65,7 +65,7 @@ impl Element {
             active_fn: None,
         }
     }
-    // pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Vec2>, color: impl ToColor) -> Element {
+    // pub fn text(mut fr: FontRenderer, size: f32, text: impl ToString, pos: impl Into<Vec2<f32>>, color: impl ToColor) -> Element {
     //     let pos = pos.into();
     //     let text = text.to_string();
     //     let color = color.to_color();
