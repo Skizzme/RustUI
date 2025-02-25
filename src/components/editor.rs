@@ -291,7 +291,7 @@ impl Textbox {
 
             let mut text = Text::new();
             // text.push(FormatItem::Offset(last_offset));
-            text.push(FormatItem::Size(self.font_size.borrow().value()));
+            text.push(FormatItem::Size(self.font_size.borrow().value().round()));
             text.push(FormatItem::Color(Color::from_hsv(thread_rng().random::<f32>(), 1.0, 1.0)));
             text.push(FormatItem::String(self.editor.chunks().get(index).unwrap().string.clone()));
 
