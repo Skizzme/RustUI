@@ -30,7 +30,7 @@ use parking_lot::Mutex;
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::context::{context, ContextBuilder};
-use RustUI::components::editor::editor;
+use RustUI::components::editor::{editor, Textbox};
 // use RustUI::components::editor::editor;
 // use RustUI::components::editor::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationType};
@@ -348,7 +348,7 @@ impl ScreenTrait for TestScreen {
 
         layer_0.add(el_test);
         layer_0.add(el_1.build());
-        // layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
+        layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 
         vec![layer_0]

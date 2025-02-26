@@ -127,7 +127,10 @@ impl Default for RenderData {
     }
 }
 
-#[derive(Clone)]
+/// Contains the data for the rendering of a piece of text
+///
+/// `char_positions` contains the position and dimensions for each character
+#[derive(Clone, Default, Debug)]
 pub struct FontRenderData {
     end_char_pos: Vec2<f32>,
     bounds: Vec4,
@@ -689,6 +692,8 @@ impl Font {
     ///
     /// Also caches the VAOs in order for faster rendering times,
     /// but is deleted if not used within 10 frames
+    ///
+    /// Offset will offset the first line by that amount
     ///
     /// Returns width, height
     pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> FontRenderData {
