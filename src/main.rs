@@ -54,24 +54,24 @@ use RustUI::gl_binds::gl11::{ALPHA, BLEND};
 use RustUI::text;
 
 fn main() {
-    editor();
-    // let args : Vec<String> = std::env::args().collect();
-    // if !(args.len() > 1 && args[1] == "console") {
-    //     unsafe {
-    //         FreeConsole();
-    //     }
-    // }
-    //
-    // unsafe {
-    //     let mut builder = ContextBuilder::new();
-    //     builder.title("Test");
-    //     builder.dims(1920/2, 1080/2);
-    //     builder.hint(WindowHint::Resizable(false));
-    //     builder.build();
-    //
-    //     context().framework().set_screen(TestScreen::new());
-    //     context().do_loop()
-    // }
+    // editor();
+    let args : Vec<String> = std::env::args().collect();
+    if !(args.len() > 1 && args[1] == "console") {
+        unsafe {
+            FreeConsole();
+        }
+    }
+
+    unsafe {
+        let mut builder = ContextBuilder::new();
+        builder.title("Test");
+        builder.dims(1920/2, 1080/2);
+        builder.hint(WindowHint::Resizable(false));
+        builder.build();
+
+        context().framework().set_screen(TestScreen::new());
+        context().do_loop()
+    }
 }
 
 pub struct TestScreen {
