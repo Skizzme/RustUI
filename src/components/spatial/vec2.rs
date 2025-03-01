@@ -7,10 +7,30 @@ use num_traits::{Num, NumCast, ToPrimitive};
 use crate::components::spatial::vec4::Vec4;
 
 /// Stores x and y values as f32 values
-#[derive(Clone, Debug, Copy, PartialEq, Default, Ord, PartialOrd)]
+#[derive(Clone, Debug, Copy, PartialEq, Default)]
 pub struct Vec2<T> {
     pub(crate) x: T,
     pub(crate) y: T,
+}
+
+impl<T> PartialOrd<Self> for Vec2<T> where T: Eq + Ord {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T> Ord for Vec2<T>
+where T: Eq + Ord,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.y < other.y {
+            Ordering::Less
+        } else if self.y > other.y {
+            Ordering::Greater
+        } else {
+            self.x.cmp(&other.y)
+        }
+    }
 }
 
 impl<T> Eq for Vec2<T> where T: Eq {}

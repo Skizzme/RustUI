@@ -11,15 +11,17 @@ use crate::components::context::context;
 use crate::components::framework::animation::{AnimationRef, AnimationRegistry, AnimationType};
 use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
-use crate::components::render::color::Color;
+use crate::components::framework::state::State;
+use crate::components::render::color::{Color, ToColor};
 use crate::components::render::font::FontRenderData;
-use crate::components::render::font::format::{FormatItem, Text};
+use crate::components::render::font::format::{Alignment, FormatItem, Text};
+use crate::components::render::font::format::FormatItem::{AlignH, Size};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::gl_binds::gl11::Translatef;
 use crate::text;
 
-const CHUNK_SIZE: usize = 2; // 1024*2
+const CHUNK_SIZE: usize = 128; // 1024*2
 // static SHIFT_MAP: HashMap<char, char> = ;
 
 pub fn get_shifted(c: char) -> char {
@@ -91,7 +93,7 @@ pub struct ChunkInfo {
     start: Vec2<usize>,
     end: Vec2<usize>,
 
-    lines: Vec<(usize, usize)>,
+    lines: Vec<(usize, usize, usize)>,
 }
 
 impl ChunkInfo {
@@ -124,17 +126,19 @@ impl ChunkInfo {
             self.end.x += 1;
             i += 1;
             if c == '\n' {
-                if prev_char == '\r' {
-                    i += 1;
-                }
-                self.lines.push((line_start_ind, i));
+                let w = if prev_char == '\r' {
+                    2
+                } else {
+                    1
+                };
+                self.lines.push((line_start_ind, i, w));
                 line_start_ind = i;
                 self.end.y += 1;
                 self.end.x = 0;
             }
             prev_char = c;
         }
-        self.lines.push((line_start_ind, i));
+        self.lines.push((line_start_ind, i, 0));
         self.lines.shrink_to_fit();
         // self.end.y += 1;
     }
@@ -212,6 +216,7 @@ pub struct Editor {
 impl Editor {
 
     pub fn new<T: AsRef<str>>(str: T) -> Self {
+        let str = str.as_ref().replace("\r\n", "\n");
         let mut editor = Editor {
             cursors: vec![],
             chunks: vec![],
@@ -224,23 +229,40 @@ impl Editor {
         editor
     }
 
-    pub fn correct_cursors(&mut self) {
+    pub fn correct_cursors(&mut self, move_down: bool) {
         let mut cursor_line_widths = vec![];
         let mut i = 0;
         for c in &self.cursors {
-            let w = self.line_width(c.pos.y);
-            println!("cursor line widht: {} {}", w, c.pos.y);
-            cursor_line_widths.push((i, w));
+            let (w1, w2) = if c.pos.y == c.select_pos.y {
+                let w = self.line(c.pos.y).0;
+                (w, w)
+            } else {
+                (self.line(c.pos.y).0, self.line(c.select_pos.y).0)
+            };
+            println!("cursor line widht: {} {:?} {:?}", w1, w2, c.pos);
+            cursor_line_widths.push((i, w1, w2));
             i += 1;
         }
 
-        for (cursor_index, line_width) in cursor_line_widths {
+        for (cursor_index, line_width_1, line_width_2) in cursor_line_widths {
             let c = &mut self.cursors[cursor_index];
-            if c.pos.x >= line_width {
-                println!("prev: {:?}", c.pos);
-                c.pos.y += 1;
-                c.pos.x = 0;
-                println!("new {:?}", c.pos);
+            if c.pos.x > line_width_1 {
+                if move_down {
+                    c.pos.y += 1;
+                    c.pos.x = 0;
+                } else {
+                    c.pos.x = line_width_1;
+                }
+                println!("correct pos to {:?}", c.pos);
+            }
+            if c.select_pos.x > line_width_2 {
+                if move_down {
+                    c.select_pos.y += 1;
+                    c.select_pos.x = 0;
+                } else {
+                    c.pos.x = line_width_2;
+                }
+                println!("correct select_pos to {:?}", c.select_pos);
             }
         }
     }
@@ -269,36 +291,36 @@ impl Editor {
         self.cursors.push(Cursor::new(pos.into()));
     }
 
-    pub fn line_width(&self, line_index: usize) -> usize {
+    pub fn line(&self, line_index: usize) -> (usize, usize, usize) { // width, start, end
         // TODO fix issue where the line is not counted properly if there is a \r on a previous chunk with the \n on the next chunk
         let mut current_line_start = 0;
         let mut chunk_index = 0;
+        println!("lw at {}", line_index);
         for ci in &self.chunk_info {
             let mut i = 0;
-            // println!("{:?} {:?}", ci, self.chunks[chunk_index].str);
+            println!("{:?} {:?}", ci, self.chunks[chunk_index].str);
             let mut current_line = ci.start.y;
             for line in &ci.lines {
-                let (ind_start, ind_end) = *line;
+                let (ind_start, ind_end, new_line) = *line;
                 let w = ind_end - ind_start;
 
-                // println!("{:?} {:?} {:?} {:?} {:?}", ind_start, ind_end, w, current_line_start, current_line);
-
+                println!("{:?} {:?} {:?} {:?} {:?} {:?}", ind_start, ind_end, w, current_line_start, current_line, &self.chunks[chunk_index].str[ind_start-ci.ind_start..ind_end-ci.ind_start]);
+                //
                 if chunk_index == self.chunk_info.len()-1 {
-                    return ind_end - current_line_start;
+                    return (ind_end - current_line_start, current_line_start, ind_end);
                 }
-                if i > 0 {
+                if new_line > 0 {
                     if current_line == line_index {
-                        return ind_start - current_line_start - (2 - w);
+                        return ((ind_end - current_line_start).max(new_line) - new_line, current_line_start, ind_end);
                     }
                     current_line += 1;
                     current_line_start = ind_end;
                 }
-
                 i += 1;
             }
             chunk_index += 1;
         }
-        0
+        (0, 0, 0)
     }
 
     /// Returns the global
@@ -307,11 +329,12 @@ impl Editor {
 
         let mut char_index = 0;
         let mut i = 0;
+        // println!("check_pos {:?}", pos);
         'chunk: for ci in &self.chunk_info {
             let mut line_ind = ci.start.y;
             // TODO a loop could probably be skipped by finding the specific line using the pos.y and ci.start.y?
-            // println!("{:?}", ci);
-            for (line_start, line_end) in &ci.lines {
+            println!("{:?}", ci);
+            for (line_start, line_end, new_line) in &ci.lines {
                 let column_min = if line_ind == ci.start.y {
                     ci.start.x
                 } else {
@@ -320,22 +343,23 @@ impl Editor {
                 let column_max = if line_ind == ci.end.y {
                     ci.end.x
                 } else {
-                    (line_end - line_start) // line width
+                    (line_end - line_start) + column_min // line width
                 };
-                // println!("ln {} {} {} {} {} {:?}", line_ind, column_min,
-                //          column_max, line_start, line_end, pos);
+                println!("ln {} {} {} {} {} {:?} {:?} {:?}", line_ind, column_min, column_max, line_start, line_end, new_line, pos, self.chunks[i].str);
                 if pos.y == line_ind && (pos.x >= column_min && pos.x < column_max) || (pos.x == column_min && pos.x == column_max) {
 
                     // char_index = line_index_offset + pos.x + line_ind;
                     char_index = *line_start + (pos.x - column_min);
-                    // println!("found chunk: char_index {} {:?} i {} line_index_offset {} pos.x {} ci.ind_start {} line_start {} line_end {} line_ind {}", char_index, self.chunks[i].str, i, line_index_offset, pos.x, ci.ind_start, line_start, line_end, line_ind);
-                    break 'chunk;
+                    println!("found chunk: char_index {} {:?} i {} pos.x {} ci.ind_start {} line_start {} line_end {} line_ind {}", char_index, self.chunks[i].str, i, pos.x, ci.ind_start, line_start, line_end, line_ind);
+                    // break 'chunk;
+                    return (char_index, i);
                 }
                 line_ind += 1;
             }
             i += 1;
         }
 
+        println!("no chunk found {:?}", pos);
         (char_index, i)
     }
 
@@ -344,7 +368,7 @@ impl Editor {
             let (start_index, start_chunk) = self.pos_index(c.start_pos());
             let (mut end_index, end_chunk) = self.pos_index(c.end_pos());
             // end_index += 1;
-            println!("checked {} {} {} {} {:?}", start_index, end_index, start_chunk, end_chunk, change);
+            // println!("checked {} {} {} {} {:?}", start_index, end_index, start_chunk, end_chunk, change);
 
             let mut max_reached = 0;
             for chunk_index in start_chunk..=end_chunk.min(self.chunks.len()-1) {
@@ -432,6 +456,8 @@ impl Editor {
             // recursively ensure no chunk is above the max size
             self.correct_chunk_size(chunk + 1);
             self.correct_chunk_size(chunk);
+
+            // println!("corrected {:?} {:?} | {:?} {:?}", self.chunks[chunk], self.chunk_info[chunk], self.chunks[chunk+1], self.chunk_info[chunk+1]);
             return true;
         }
         false
@@ -453,7 +479,7 @@ impl Editor {
         }
 
         changed_chunks.sort();
-        // println!("{:?}", changed_chunks);
+        // println!("CHANGED {:?}", changed_chunks);
         if changed_chunks.len() == 0 {
             return;
         }
@@ -467,7 +493,9 @@ impl Editor {
             }
         }
 
-        let (mut ind, mut pos) = {
+        let (mut ind, mut pos) = if changed_chunks[0] == 0 {
+            (0,Vec2::new(0,0))
+        } else {
             let ci = &self.chunk_info[(changed_chunks[0].max(1)-1)];
             (ci.ind_end, ci.end.clone())
         };
@@ -494,7 +522,7 @@ impl RenderChunk {
             chunk,
             chunk_changed: true,
             text: FontRenderData::default(),
-            c: Color::from_hsv(thread_rng().random::<f32>(), 1.0, 1.0),
+            c: Color::from_hsv(thread_rng().random::<f32>(), 0.6, 1.0),
         }
     }
 }
@@ -502,6 +530,7 @@ impl RenderChunk {
 pub struct Textbox {
     editor: Editor,
     render_chunks: Vec<RenderChunk>,
+    changed: bool,
 }
 
 impl Textbox {
@@ -509,6 +538,7 @@ impl Textbox {
         let mut textbox = Textbox {
             editor: Editor::new(text),
             render_chunks: vec![],
+            changed: true,
         };
         for i in 0..textbox.editor.chunks.len() {
             textbox.render_chunks.push(RenderChunk::new(i));
@@ -521,39 +551,114 @@ impl Textbox {
 
         textbox
     }
+
+    fn move_left(&mut self) {
+        for i in 0..self.editor.cursors.len() {
+            if self.editor.cursors[i].pos.x == 0 {
+                let mut pos = self.editor.cursors[i].pos.clone();
+
+                pos.y -= 1;
+                pos.x = self.editor.line(pos.y).0;
+
+                self.editor.cursors[i].position(pos, false);
+            } else {
+                self.editor.cursors[i].left(false)
+            }
+
+        }
+        self.correct_cursor(true);
+    }
+
+    fn apply_changes(&mut self) {
+        self.changed = true;
+        self.editor.apply_changes();
+    }
+
+    fn correct_cursor(&mut self, move_down: bool) {
+        self.changed = true;
+        self.editor.correct_cursors(move_down);
+    }
 }
 
 impl UIHandler for Textbox {
     unsafe fn handle(&mut self, event: &Event) -> bool {
         if event.is_render(RenderPass::Main) {
             let fr = context().fonts().font("main").unwrap();
+            let size = 12.;
+            let fr_height = fr.get_sized_height(size);
+            let mut offset = Vec2::new(40., 10.);
 
             // println!("{} {}", self.render_chunks.len(), self.editor.chunks.len());
             for i in self.render_chunks.len()..self.editor.chunks.len() {
                 self.render_chunks.push(RenderChunk::new(i));
             }
 
+            let (mut start_line, mut end_line) = (usize::MAX,0);
             let mut end_pos = Vec2::new(0.,0.);
             for r_chunk in &mut self.render_chunks {
                 let e_chunk = &self.editor.chunks[r_chunk.chunk];
                 let i_chunk = &self.editor.chunk_info[r_chunk.chunk];
 
+                if i_chunk.start.y < start_line {
+                    start_line = i_chunk.start.y;
+                }
+
+                if i_chunk.end.y > end_line {
+                    end_line = i_chunk.end.y;
+                }
+
+                // println!("{} {:?}", r_chunk.chunk, e_chunk.str);
+
                 // TODO make it so that text can be rendered using just the VAO
-                r_chunk.text = fr.draw_string_offset((8., e_chunk.str.clone(), r_chunk.c), (10., 10.), end_pos);
+                r_chunk.text = fr.draw_string_offset((size, &e_chunk.str, r_chunk.c), offset, end_pos);
+                // r_chunk.text.bounds().debug_draw(r_chunk.c * 0x20ffffff.to_color());
 
                 // add y-position while setting the x to the x of the last
                 end_pos.y += r_chunk.text.end_char_pos().y;
                 end_pos.x = r_chunk.text.end_char_pos().x;
             }
 
+            // println!("first {:?} {:?}", self.editor.chunk_info[0], self.editor.chunks[0].str);
             for cursor in &self.editor.cursors {
                 let (index, chunk) = self.editor.pos_index(cursor.pos);
-                println!("{} {} {:?}", index, chunk, cursor.pos);
+                // print!("index {} chunk {} pos {:?}", index, chunk, cursor.pos,);
+                if chunk == self.editor.chunks.len() {
+                    // println!(" !! end chunk");
+                    continue;
+                }
+
                 let r_chunk = &self.render_chunks[chunk];
                 let i_chunk = &self.editor.chunk_info[chunk];
                 let chunk_index = index - i_chunk.ind_start;
 
-                // let char_pos = r_chunk.text.char_positions()
+                if r_chunk.text.char_positions().len() == 0 {
+                    // println!(" !! no char pos");
+                    continue;
+                }
+                let ind = chunk_index.max(1)-1;
+                let mut char_pos = r_chunk.text.char_positions()[ind];
+                if cursor.pos.x == 0 {
+                    char_pos[0] = offset.x;
+                    char_pos[2] = 0.;
+                }
+                // println!();
+                // println!(" chunk_index {} {:?} {:?}",  chunk_index, &(&self.editor.chunks[chunk].str)[ind..ind+1], char_pos);
+
+                let mut cursor_draw = Vec4::xywh(char_pos[0]+char_pos[2], cursor.pos.y as f32 * fr_height, 1., fr_height);
+                cursor_draw.set_y(cursor_draw.y() + offset.y);
+                context().renderer().draw_rect(cursor_draw, 0xffffffff);
+            }
+
+            offset.offset((-10., 0.));
+
+            for line in start_line..end_line {
+                let text = text!(
+                    AlignH(Alignment::Right),
+                    Size(size),
+                    FormatItem::Color(0xff909090.to_color()),
+                    format!("{}", line),
+                );
+                fr.draw_string(text, offset + (0, line as f32 * fr_height));
             }
         }
         match event {
@@ -569,57 +674,71 @@ impl UIHandler for Textbox {
                                 for c in &mut self.editor.cursors {
                                     c.up(false)
                                 }
-                                self.editor.correct_cursors();
+                                self.correct_cursor(false);
                             }
                             Key::Down => {
                                 for c in &mut self.editor.cursors {
                                     c.down(false)
                                 }
-                                self.editor.correct_cursors();
+                                self.correct_cursor(false);
                             }
                             Key::Right => {
                                 for c in &mut self.editor.cursors {
                                     c.right(false)
                                 }
-                                self.editor.correct_cursors();
+                                self.correct_cursor(true);
                             }
                             Key::Left => {
-                                for c in &mut self.editor.cursors {
-                                    c.left(false)
-                                }
-                                self.editor.correct_cursors();
+                                self.move_left();
                             }
 
                             Key::Space => {
                                 self.editor.add_change(Change::Add(" ".to_string()));
+                                self.apply_changes();
                                 for c in &mut self.editor.cursors {
                                     c.right(false)
                                 }
-                                self.editor.correct_cursors();
+                                self.correct_cursor(true);
                             }
                             Key::Enter => {
                                 self.editor.add_change(Change::Add("\n".to_string()));
+                                self.apply_changes();
 
                                 for c in &mut self.editor.cursors {
                                     c.right(false)
                                 }
-                                self.editor.correct_cursors();
+                                self.correct_cursor(true);
+                            }
+                            Key::Backspace => {
+                                self.move_left();
+
+                                self.editor.add_change(Change::Delete);
+                                self.apply_changes();
+                            }
+                            Key::Delete => {
+                                self.editor.add_change(Change::Delete);
+                                self.apply_changes();
                             }
                             _ => {}
                         },
                     Some(pressed) => {
                         let st = Instant::now();
                         self.editor.add_change(Change::Add(pressed));
-                        self.editor.apply_changes();
+                        self.apply_changes();
                         let d = st.elapsed();
                         for c in &mut self.editor.cursors {
                             c.right(false);
                         }
-                        self.editor.correct_cursors();
+                        self.correct_cursor(true);
                         println!("{:?}", d);
                     }
                 }
-                println!("{:?}", self.editor.cursors[0].pos);
+                // println!("{:?}", self.editor.cursors[0].pos);
+            }
+            Event::PostRender => {
+                if self.changed {
+                    self.changed = false;
+                }
             }
             _ => {},
         }
@@ -627,7 +746,7 @@ impl UIHandler for Textbox {
     }
 
     unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
-        true
+        self.changed
     }
 
     fn animations(&mut self) -> Option<&mut AnimationRegistry> {
@@ -637,21 +756,26 @@ impl UIHandler for Textbox {
 
 // #[test]
 pub fn editor() {
-    // let mut str = include_str!("../../test.js").to_string();
-    let mut str = "THIS IS A NOT SO LONG STIRNG\nAND THIS is another line";;
+    let mut str = include_str!("../../test.js").to_string();
+    let (str, _) = str.split_at(400);
+    // let mut str = "THIS IS A NOT SO LONG STIRNG\nAND THIS is another line";;
 
     // let mut str = "12345678";
     // "abcdefgh678"
     // "abcdefgh"
     let st = Instant::now();
-    let mut editor = Editor::new(str);
+    let mut editor = Editor::new(&str);
     let d = st.elapsed();
     // println!("editor {:?}", d);
-
-    println!("{}", editor.line_width(1));
-    // for i in 0..20 {
-    //     println!("LENGTH of {} is {}", i, editor.line_width(i));
-    // }
+    //
+    // let w=  editor.line_width(1);
+    // let st = &str[0..w];
+    // println!("{}", w);
+    for i in 0..20 {
+        let (w, s, e) = editor.line(i);
+        let st = &str[s..e];
+        println!("{} {:?}", w, st);
+    }
     // let add = "abcdefgh";
     // // editor.add_cursor((0,0));
     // editor.add_cursor((0,1));

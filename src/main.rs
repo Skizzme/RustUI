@@ -346,8 +346,8 @@ impl ScreenTrait for TestScreen {
             }
         );
 
-        layer_0.add(el_test);
-        layer_0.add(el_1.build());
+        // layer_0.add(el_test);
+        // layer_0.add(el_1.build());
         layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
         self.text = "".to_string();
 

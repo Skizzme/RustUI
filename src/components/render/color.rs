@@ -1,4 +1,5 @@
 use std::hash::{Hash, Hasher};
+use std::ops::Mul;
 
 use crate::gl_binds::gl30::Color4f;
 
@@ -124,6 +125,19 @@ impl Default for Color {
             g: 1.,
             b: 1.,
             a: 1.,
+        }
+    }
+}
+
+impl Mul for Color {
+    type Output = Color;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Color {
+            r: self.r * rhs.r,
+            g: self.g * rhs.g,
+            b: self.b * rhs.b,
+            a: self.a * rhs.a,
         }
     }
 }

@@ -578,6 +578,19 @@ impl Font {
                                 self.draw_data.line_width = 0.0;
                                 self.draw_data.x = self.draw_data.start_x;
 
+                                let pos_y = self.draw_data.y + (self.get_height()) * self.draw_data.scale;
+                                let (p_left, p_top, p_height) = (self.draw_data.x * self.draw_data.scale, pos_y, self.get_line_height() * self.draw_data.scale);
+                                dims.push([p_left,p_top,0.,p_height]);
+                                uvs.push([0.,0.,0.,0.]);
+
+                                bounds.expand_to_x(p_left);
+                                bounds.expand_to_y(p_top);
+                                bounds.expand_to_y(p_top+p_height);
+
+                                colors.push([current_color.rgba_u32(), 0x20ffffff, 0xfffffff0, 0xfffffff0]);
+
+                                render_index += 1;
+                                max_line_height = max_line_height.max(p_height);
                                 continue;
                             }
 
@@ -596,8 +609,12 @@ impl Font {
 
                             let pos_y = self.draw_data.y + (self.get_height() - glyph.top) * self.draw_data.scale;
 
-                            let (p_left, p_top, p_width, p_height) = (self.draw_data.x+glyph.bearing_x * self.draw_data.scale, pos_y, glyph.width * self.draw_data.scale, glyph.height * self.draw_data.scale);
+                            let (p_left, p_top, mut p_width, p_height) = (self.draw_data.x+glyph.bearing_x * self.draw_data.scale, pos_y, glyph.width * self.draw_data.scale, glyph.height * self.draw_data.scale);
                             let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
+
+                            if char == ' ' {
+                                p_width = c_a;
+                            }
 
                             bounds.expand_to_x(p_left);
                             bounds.expand_to_y(p_top);
@@ -846,7 +863,7 @@ impl Font {
 
     pub unsafe fn get_sized_height(&self, size: f32) -> f32 {
         let scale = size / FONT_RES as f32;
-        self.get_height() * scale
+        self.get_line_height() * scale
     }
 
     /// Returns the height, in pixels, of the font. Unscaled

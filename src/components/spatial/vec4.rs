@@ -225,3 +225,20 @@ impl Div for Vec4 {
         Vec4 { x: self.x / other.x, y: self.y / other.y, width: self.width / other.width, height: self.height / other.height, }
     }
 }
+
+impl Into<Vec4> for [f32; 4] {
+    fn into(self) -> Vec4 {
+        Vec4 {
+            x: self[0],
+            y: self[1],
+            width: self[2],
+            height: self[3],
+        }
+    }
+}
+
+impl Into<[f32;4]> for Vec4 {
+    fn into(self) -> [f32; 4] {
+        [self.x, self.y, self.width, self.height]
+    }
+}
