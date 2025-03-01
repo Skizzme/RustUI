@@ -33,7 +33,7 @@ use RustUI::components::context::{context, ContextBuilder};
 use RustUI::components::editor::{editor, Textbox};
 // use RustUI::components::editor::editor;
 // use RustUI::components::editor::Textbox;
-use RustUI::components::framework::animation::{Animation, AnimationRef, AnimationType};
+use RustUI::components::framework::animation::{Animation, AnimationRef, Easing};
 use RustUI::components::framework::element::ElementBuilder;
 use RustUI::components::framework::element::comp_element::CompElement;
 use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
@@ -88,7 +88,7 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let mut t = include_str!("../test.js").to_string();
+        let mut t = include_str!("../test_3.js").to_string();
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
@@ -124,7 +124,7 @@ impl TestScreen {
 impl ScreenTrait for TestScreen {
     unsafe fn handle(&mut self, event: &Event) { match event {
         Event::PreRender => {
-            self.t_size.borrow_mut().animate(4f32, AnimationType::Sin);
+            self.t_size.borrow_mut().animate(4f32, Easing::Sin);
         }
         Event::Keyboard(key, action, _) => {
             if action == &Action::Release {
@@ -348,7 +348,9 @@ impl ScreenTrait for TestScreen {
 
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
+        println!("mk new txt");
         layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
+        println!("done");
         self.text = "".to_string();
 
         vec![layer_0]

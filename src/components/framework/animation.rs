@@ -8,7 +8,8 @@ use rand::random;
 use crate::components::context::context;
 
 /// Different animation types will give different animation curves, and provide a cleaner visual than `linear`
-pub enum AnimationType {
+#[derive(Clone, Copy)]
+pub enum Easing {
     Linear,
     Log,
     CubicIn,
@@ -19,31 +20,31 @@ pub enum AnimationType {
     Sin,
 }
 
-impl AnimationType {
+impl Easing {
     fn get_value(&self, state: f32) -> f32 {
         match self {
-            AnimationType::Linear => {
+            Easing::Linear => {
                 state
             }
-            AnimationType::Log => {
+            Easing::Log => {
                 ((state + 0.01).log10()+2.0)/2.0
             }
-            AnimationType::CubicIn => {
+            Easing::CubicIn => {
                 (state - 1.0).powf(3.0) + 1.0
             }
-            AnimationType::CubicOut => {
+            Easing::CubicOut => {
                 state.powf(3.0)
             }
-            AnimationType::QuarticOut => {
+            Easing::QuarticOut => {
                 state.powf(4.0)
             }
-            AnimationType::QuarticIn => {
+            Easing::QuarticIn => {
                 (state - 1.0).powf(4.0)
             }
-            AnimationType::Sin => {
+            Easing::Sin => {
                 (state * (PI/2.0) as f32).sin()
             }
-            AnimationType::Progressive(speed) => {
+            Easing::Progressive(speed) => {
                 2.0/(1.0+20f32.powf(-(20.0/speed)*state))-1.0
             }
         }.clamp(0.0, 1.0)
@@ -77,13 +78,13 @@ impl Animation {
         Animation::new(0.0, 0.0)
     }
 
-    pub unsafe fn animate_to(&mut self, target: f32, speed: f32, animation_type: AnimationType) -> f32 {
+    pub unsafe fn animate_to(&mut self, target: f32, speed: f32, animation_type: Easing) -> f32 {
         self.set_target(target);
 
         self.animate(speed, animation_type)
     }
 
-    pub unsafe fn animate(&mut self, speed: f32, animation: AnimationType) -> f32 {
+    pub unsafe fn animate(&mut self, speed: f32, animation: Easing) -> f32 {
         self.state += speed * context().framework().pre_delta();
         self.state = self.state.clamp(0.0, 1.0);
 
