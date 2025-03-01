@@ -1,3 +1,15 @@
+use std::collections::HashMap;
+use std::time::Instant;
+
+use crate::components::context::context;
+use crate::components::framework::animation::AnimationRegistry;
+use crate::components::framework::event::{Event, RenderPass};
+use crate::components::framework::layer::Layer;
+use crate::components::framework::screen::{DefaultScreen, ScreenTrait};
+use crate::components::framework::state::{ChangingRegistry, UnchangingRegistry};
+use crate::components::wrapper::framebuffer::Framebuffer;
+use crate::gl_binds::gl11::RGBA;
+
 pub mod screen;
 pub mod event;
 pub mod element;
@@ -5,19 +17,6 @@ pub mod layer;
 pub mod animation;
 pub mod state;
 pub mod changing;
-
-use std::collections::HashMap;
-use std::time::Instant;
-
-use crate::components::context::context;
-use crate::components::framework::animation::AnimationRegistry;
-use crate::components::framework::changing::Changing;
-use crate::components::framework::event::{Event, RenderPass};
-use crate::components::framework::layer::Layer;
-use crate::components::framework::screen::{DefaultScreen, ScreenTrait};
-use crate::components::framework::state::{ChangingRegistry, UnchangingRegistry};
-use crate::components::wrapper::framebuffer::Framebuffer;
-use crate::gl_binds::gl11::RGBA;
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,

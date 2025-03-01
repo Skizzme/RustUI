@@ -9,15 +9,15 @@ use std::io::Write;
 use std::rc::Rc;
 use std::sync::mpsc::channel;
 use std::time::Instant;
+
 use freetype::{Library, RenderMode};
 use freetype::face::LoadFlag;
-
 use gl::*;
+
 use crate::components::context::context;
 use crate::components::render::color::Color;
-use crate::components::render::font::format::{Alignment, FormatItem, Text};
+use crate::components::render::font::format::{FormatItem, Text};
 use crate::components::render::stack::State::{Blend, Texture2D};
-
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::{Buffer, VertexArray};

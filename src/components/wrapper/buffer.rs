@@ -4,9 +4,8 @@ use gl::{BindBuffer, BindVertexArray, BufferData, DeleteBuffers, DYNAMIC_DRAW, G
 use gl::types::GLsizeiptr;
 
 use crate::gl_binds::gl11::types::{GLboolean, GLenum, GLint, GLuint};
-use crate::gl_binds::gl11::UNSIGNED_INT;
 use crate::gl_binds::gl20::{EnableVertexAttribArray, VertexAttribPointer};
-use crate::gl_binds::gl30::{DeleteVertexArrays, INT, VertexAttribIPointer};
+use crate::gl_binds::gl30::{DeleteVertexArrays, VertexAttribIPointer};
 use crate::gl_binds::gl41::VertexAttribDivisor;
 
 #[derive(Clone)]

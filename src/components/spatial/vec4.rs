@@ -1,8 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
-use num_traits::NumCast;
 
 use crate::components::context::context;
-use crate::components::framework::element::ui_traits::UIIdentifier;
 use crate::components::render::color::ToColor;
 use crate::components::render::font::format::Alignment;
 use crate::components::spatial::vec2::Vec2;

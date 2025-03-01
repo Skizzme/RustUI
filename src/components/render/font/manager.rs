@@ -3,8 +3,6 @@ use std::path::Path;
 use std::time::Instant;
 
 use crate::components::render::font::{Font, FONT_RES, FontRenderData};
-use crate::components::spatial::vec2::Vec2;
-use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::buffer::VertexArray;
 use crate::components::wrapper::shader::Shader;
 use crate::test_ui::asset_manager;

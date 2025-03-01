@@ -30,9 +30,7 @@ use parking_lot::Mutex;
 use winapi::um::wincon::FreeConsole;
 
 use RustUI::components::context::{context, ContextBuilder};
-use RustUI::components::editor::{editor, Textbox};
-// use RustUI::components::editor::editor;
-// use RustUI::components::editor::Textbox;
+use RustUI::components::editor::textbox::Textbox;
 use RustUI::components::framework::animation::{Animation, AnimationRef, Easing};
 use RustUI::components::framework::element::ElementBuilder;
 use RustUI::components::framework::element::comp_element::CompElement;

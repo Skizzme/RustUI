@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use crate::components::framework::changing::Changing;
 
+use crate::components::framework::changing::Changing;
 use crate::components::render::color::{Color, ToColor};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
