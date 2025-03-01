@@ -204,7 +204,7 @@ impl UIHandler for Textbox {
                 let a= self.line_texts.get(&line).unwrap();
                 fr.draw_string(a.clone(), offset + (0, line as f32 * fr_height) + (0,scroll.y()));
             }
-            println!("render: {:?}", st.elapsed());
+            // println!("render: {:?}", st.elapsed());
         }
         let tmp_changed = self.changed;
         self.changed = false;
@@ -290,7 +290,7 @@ impl UIHandler for Textbox {
                             c.right(false);
                         }
                         self.correct_cursor(true);
-                        println!("{:?}", d);
+                        println!("{:?} {:?}", d, self.editor.chunks.len());
                     }
                 }
             }
@@ -364,9 +364,9 @@ impl UIHandler for Textbox {
             _ => {},
         }
         let d = st.elapsed();
-        if self.changed {
-            println!("{:?}", d);
-        }
+        // if self.changed {
+        //     println!("{:?}", d);
+        // }
         self.changed = tmp_changed || self.changed;
         false
     }

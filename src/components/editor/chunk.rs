@@ -24,38 +24,52 @@ impl ChunkInfo {
             lines: vec![],
         };
         // TODO optimize this so that creating the editor doesn't take so long
-        inf.update_info(chunk, index, start);
+        inf.update_info(chunk, index, start, true);
         inf
     }
 
-    pub fn update_info(&mut self, chunk: &Chunk, start_index: usize, start: Vec2<usize>) {
-        self.ind_start = start_index;
-        self.ind_end = start_index+chunk.str.len();
+    pub fn update_info(&mut self, chunk: &Chunk, start_index: usize, start: Vec2<usize>, changed: bool) {
 
         self.start = start;
         self.end = start;
 
-        self.lines.clear();
+        let prev_lines = std::mem::take(&mut self.lines);
 
         let mut line_start_ind = start_index;
         let mut i = start_index;
-        let mut prev_char = '_';
-        for c in chunk.str.chars() {
-            self.end.x += 1;
-            i += 1;
-            if c == '\n' {
-                let w = if prev_char == '\r' {
-                    2
-                } else {
-                    1
-                };
-                self.lines.push((line_start_ind, i, w));
-                line_start_ind = i;
-                self.end.y += 1;
-                self.end.x = 0;
+        if changed {
+            let mut prev_char = '_';
+            for c in chunk.str.chars() {
+                self.end.x += 1;
+                i += 1;
+                if c == '\n' {
+                    let w = if prev_char == '\r' {
+                        2
+                    } else {
+                        1
+                    };
+                    self.lines.push((line_start_ind, i, w));
+                    line_start_ind = i;
+                    self.end.y += 1;
+                    self.end.x = 0;
+                }
+                prev_char = c;
             }
-            prev_char = c;
+        } else {
+            for (start, end, new_line) in prev_lines {
+                let (new_start, new_end) = (start - self.ind_start + start_index, end - self.ind_start + start_index);
+                self.end.x += (start - end);
+                if new_line > 0 {
+                    self.lines.push((new_start, new_end, new_line));
+                    self.end.y += 1;
+                    self.end.x = 0;
+                }
+            }
         }
+
+        self.ind_start = start_index;
+        self.ind_end = start_index+chunk.str.len();
+
         self.lines.push((line_start_ind, i, 0));
         self.lines.shrink_to_fit();
     }

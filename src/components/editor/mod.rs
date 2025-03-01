@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
 use std::mem;
 use std::ops::Add;
+use std::time::Instant;
 
 use rand::Rng;
 
@@ -15,7 +16,7 @@ pub mod textbox;
 mod cursor;
 mod chunk;
 
-const CHUNK_SIZE: usize = 128; // 1024*2
+const CHUNK_SIZE: usize = 1024; // 1024*2
 // static SHIFT_MAP: HashMap<char, char> = ;
 
 pub fn get_shifted(c: char) -> char {
@@ -277,24 +278,36 @@ impl Editor {
     }
 
     pub fn apply_changes(&mut self) {
+        let mut st = (Instant::now(), 0);
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
+
         let mut changed_chunks = vec![];
         for (_, (_, chunk, _)) in &mut self.changes {
             changed_chunks.push(*chunk);
         }
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
 
         for chunk in &changed_chunks {
             let ci = &self.chunk_info[*chunk];
             self.chunks[*chunk].calculate_changes(&mut self.changes, ci);
         }
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
 
         for c in &changed_chunks {
             self.chunks[*c].update();
         }
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
 
         changed_chunks.sort();
         if changed_chunks.len() == 0 {
             return;
         }
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
 
         for i in (0..changed_chunks.len()).rev() {
             let chunk = changed_chunks[i];
@@ -308,6 +321,8 @@ impl Editor {
                 }
             }
         }
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
 
         let (mut ind, mut pos) = if changed_chunks[0] == 0 {
             (0,Vec2::new(0,0))
@@ -315,21 +330,37 @@ impl Editor {
             let ci = &self.chunk_info[(changed_chunks[0].max(1)-1)];
             (ci.ind_end, ci.end.clone())
         };
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
 
+        let mut changed_chunks_set = HashSet::with_capacity(changed_chunks.len());
+        for c in &changed_chunks {
+            changed_chunks_set.insert(*c);
+        }
         for chunk in changed_chunks[0]..self.chunks.len() {
             let c = &mut self.chunks[chunk];
             let ci = &mut self.chunk_info[chunk];
-            ci.update_info(c, ind, pos.clone());
+            let changed = if changed_chunks_set.len() > 0 && changed_chunks_set.contains(&chunk) {
+                changed_chunks_set.remove(&chunk);
+                true
+            } else {
+                false
+            };
+            ci.update_info(c, ind, pos.clone(), changed);
             ind = ci.ind_end;
             pos = ci.end;
         }
 
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
         for i in (0..changed_chunks.len()).rev() {
             let chunk = changed_chunks[i];
             if self.chunks[chunk].str.len() == 0 {
                 self.chunks.remove(chunk);
             }
         }
+        println!("{:?} {}", st.0.elapsed(), st.1);
+        st = (Instant::now(), st.1+1);
     }
 }
 
