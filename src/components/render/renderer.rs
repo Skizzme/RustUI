@@ -26,7 +26,7 @@ pub struct Renderer {
     /// up, down
     pub bloom_shaders: (Shader, Shader),
     pub blur_fb: u32,
-    stack: Stack
+    stack: Stack,
 }
 
 pub fn shader_file(path: impl ToString) -> String {
@@ -35,7 +35,6 @@ pub fn shader_file(path: impl ToString) -> String {
 }
 
 impl Renderer {
-
     pub unsafe fn new() -> Self {
         let default_vert = shader_file("shaders/vertex.glsl");
         Renderer {
@@ -93,7 +92,7 @@ impl Renderer {
 
     /// Draws a circle, using a rounded rect, with the center point at x, y
     pub unsafe fn draw_circle(&mut self, x: f32, y: f32, radius: f32, color: impl ToColor) {
-        self.draw_rounded_rect(Vec4::ltrb(x-radius, y-radius, x+radius, y+radius), radius, color);
+        self.draw_rounded_rect(Vec4::ltrb(x - radius, y - radius, x + radius, y + radius), radius, color);
     }
 
     /// The most boring rectangle

@@ -9,7 +9,7 @@ use crate::components::spatial::vec4::Vec4;
 pub enum State {
     Color(Color),
     Vec4(Vec4),
-    Vec2(Vec2),
+    Vec2(Vec2<f32>),
     Number(f32),
     String(String),
     Bool(bool),
@@ -26,7 +26,7 @@ pub trait StateRegistry {
         self.set(key, State::Vec4(value));
     }
 
-    fn set_pos(&mut self, key: impl ToString, value: Vec2) {
+    fn set_pos(&mut self, key: impl ToString, value: Vec2<f32>) {
         self.set(key, State::Vec2(value));
     }
 
@@ -67,7 +67,7 @@ pub trait StateRegistry {
         }
     }
 
-    fn get_pos(&self, key: impl ToString) -> Vec2 {
+    fn get_pos(&self, key: impl ToString) -> Vec2<f32> {
         match self.get(key) {
             State::Vec2(p) => p.clone(),
             _ => Vec2::new(0.0, 0.0),

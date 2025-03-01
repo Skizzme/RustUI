@@ -31,17 +31,20 @@ pub mod manager;
 const FONT_RES: u32 = 48u32;
 const MAX_ATLAS_WIDTH: i32 = 2000;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 struct CacheGlyph {
     id: usize,
     bytes: Vec<u8>,
-    atlas_pos: Vec2,
+    atlas_pos: Vec2<f32>,
     width: i32,
     height: i32,
     advance: i32,
     bearing_x: i32,
     top: i32,
 }
+
+impl Eq for CacheGlyph {}
+
 impl PartialOrd<Self> for CacheGlyph {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.id > other.id {
@@ -95,7 +98,7 @@ struct RenderData {
 
     current_color: Color,
     current_size: f32,
-    current_offset: Vec2,
+    current_offset: Vec2<f32>,
     current_align_h: f32,
     current_align_v: f32,
     current_tab_length: u32,
@@ -124,9 +127,12 @@ impl Default for RenderData {
     }
 }
 
-#[derive(Clone)]
+/// Contains the data for the rendering of a piece of text
+///
+/// `char_positions` contains the position and dimensions for each character
+#[derive(Clone, Default, Debug)]
 pub struct FontRenderData {
-    end_char_pos: Vec2,
+    end_char_pos: Vec2<f32>,
     bounds: Vec4,
 
     char_positions: Rc<Vec<[f32; 4]>>,
@@ -134,7 +140,7 @@ pub struct FontRenderData {
 }
 
 impl FontRenderData {
-    pub fn end_char_pos(&self) -> Vec2 {
+    pub fn end_char_pos(&self) -> Vec2<f32> {
         self.end_char_pos
     }
     pub fn bounds(&self) -> Vec4 {
@@ -466,14 +472,18 @@ impl Font {
 
 
     /// Get (or create if it doesn't exist) the data for the text render batch
-    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> (u32, FontRenderData) {
+    pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> (u32, FontRenderData) {
         let offset = offset.into();
         let pos = pos.into();
         let formatted_text = formatted_text.into();
         let len = formatted_text.visible_length();
         let mut hasher = hash::DefaultHasher::new();
-        offset.hash(&mut hasher);
-        pos.hash(&mut hasher);
+
+        hasher.write(&offset.x().to_be_bytes());
+        hasher.write(&offset.y().to_be_bytes());
+
+        hasher.write(&pos.x().to_be_bytes());
+        hasher.write(&pos.y().to_be_bytes());
 
         formatted_text.hash(&mut hasher);
 
@@ -568,6 +578,19 @@ impl Font {
                                 self.draw_data.line_width = 0.0;
                                 self.draw_data.x = self.draw_data.start_x;
 
+                                let pos_y = self.draw_data.y + (self.get_height()) * self.draw_data.scale;
+                                let (p_left, p_top, p_height) = (self.draw_data.x * self.draw_data.scale, pos_y, self.get_line_height() * self.draw_data.scale);
+                                dims.push([p_left,p_top,0.,p_height]);
+                                uvs.push([0.,0.,0.,0.]);
+
+                                bounds.expand_to_x(p_left);
+                                bounds.expand_to_y(p_top);
+                                bounds.expand_to_y(p_top+p_height);
+
+                                colors.push([current_color.rgba_u32(), 0x20ffffff, 0xfffffff0, 0xfffffff0]);
+
+                                render_index += 1;
+                                max_line_height = max_line_height.max(p_height);
                                 continue;
                             }
 
@@ -586,8 +609,12 @@ impl Font {
 
                             let pos_y = self.draw_data.y + (self.get_height() - glyph.top) * self.draw_data.scale;
 
-                            let (p_left, p_top, p_width, p_height) = (self.draw_data.x+glyph.bearing_x * self.draw_data.scale, pos_y, glyph.width * self.draw_data.scale, glyph.height * self.draw_data.scale);
+                            let (p_left, p_top, mut p_width, p_height) = (self.draw_data.x+glyph.bearing_x * self.draw_data.scale, pos_y, glyph.width * self.draw_data.scale, glyph.height * self.draw_data.scale);
                             let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
+
+                            if char == ' ' {
+                                p_width = c_a;
+                            }
 
                             bounds.expand_to_x(p_left);
                             bounds.expand_to_y(p_top);
@@ -656,7 +683,7 @@ impl Font {
             vao.add_buffer(t_buf);
             vao.add_buffer(dims_buf);
 
-            // VertexArray, Vec2, Vec4, u32
+            // VertexArray, Vec2<f32>, Vec4, u32
             // (vao, Vec2::new(self.draw_data.line_width, height), bounds, 0)
             map.insert(hashed, (vao, 0, FontRenderData {
                 end_char_pos: Vec2::new(self.draw_data.line_width, height),
@@ -674,8 +701,8 @@ impl Font {
     /// Calls [`draw_string_offset()`] with an offset of `(0, 0)`
     ///
     /// [`draw_string_offset()`]: Font::draw_string_offset
-    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>) -> FontRenderData {
-        self.draw_string_offset(formatted_text, pos, (0, 0))
+    pub unsafe fn draw_string(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>) -> FontRenderData {
+        self.draw_string_offset(formatted_text, pos, (0., 0.))
     }
 
     /// The method to be called to a render a string using modern GL
@@ -683,8 +710,10 @@ impl Font {
     /// Also caches the VAOs in order for faster rendering times,
     /// but is deleted if not used within 10 frames
     ///
+    /// Offset will offset the first line by that amount
+    ///
     /// Returns width, height
-    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2>, offset: impl Into<Vec2>) -> FontRenderData {
+    pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> FontRenderData {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
 
@@ -791,7 +820,7 @@ impl Font {
         width*scale
     }
 
-    pub unsafe fn get_end_pos(&self, size: f32, string: impl ToString) -> Vec2 {
+    pub unsafe fn get_end_pos(&self, size: f32, string: impl ToString) -> Vec2<f32> {
         let string = string.to_string();
         let scale = size/FONT_RES as f32;
         let mut width = 0f32;
@@ -810,7 +839,7 @@ impl Font {
         (width*scale, height*scale).into()
     }
 
-    pub unsafe fn add_end_pos(&self, current: Vec2, size: f32, string: impl ToString) -> Vec2 {
+    pub unsafe fn add_end_pos(&self, current: Vec2<f32>, size: f32, string: impl ToString) -> Vec2<f32> {
         let string = string.to_string();
         let scale = size/FONT_RES as f32;
         let mut width = current.x;
@@ -834,7 +863,7 @@ impl Font {
 
     pub unsafe fn get_sized_height(&self, size: f32) -> f32 {
         let scale = size / FONT_RES as f32;
-        self.get_height() * scale
+        self.get_line_height() * scale
     }
 
     /// Returns the height, in pixels, of the font. Unscaled
@@ -854,7 +883,7 @@ fn i32_from_bytes(index: usize, bytes: &Vec<u8>) -> i32 {
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Glyph {
-    pub atlas_pos: Vec2,
+    pub atlas_pos: Vec2<f32>,
     pub width: f32,
     pub height: f32,
     pub advance: f32,

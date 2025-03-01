@@ -41,7 +41,7 @@ impl Vec4 {
     /// The order does not matter, the object will be created
     /// by taking the minimum and maximum of the X and Y of both positions. Negative widths and heights
     /// will never occur
-    pub fn from_pos<A: Into<Vec2>, B: Into<Vec2>>(pos1: A, pos2: B) -> Vec4 {
+    pub fn from_pos<A: Into<Vec2<f32>>, B: Into<Vec2<f32>>>(pos1: A, pos2: B) -> Vec4 {
         let pos1 = pos1.into();
         let pos2 = pos2.into();
 
@@ -66,18 +66,18 @@ impl Vec4 {
         obj
     }
 
-    pub fn top_left(&self) -> Vec2 { Vec2::new(self.left().min(self.right()), self.top().min(self.bottom()) ) }
-    pub fn top_right(&self) -> Vec2 { Vec2::new(self.left().max(self.right()), self.top().min(self.bottom()) ) }
-    pub fn bottom_left(&self) -> Vec2 { Vec2::new(self.left().min(self.right()), self.top().max(self.bottom()) ) }
-    pub fn bottom_right(&self) -> Vec2 { Vec2::new(self.left().max(self.right()), self.top().max(self.bottom()) ) }
+    pub fn top_left(&self) -> Vec2<f32> { Vec2::new(self.left().min(self.right()), self.top().min(self.bottom()) ) }
+    pub fn top_right(&self) -> Vec2<f32> { Vec2::new(self.left().max(self.right()), self.top().min(self.bottom()) ) }
+    pub fn bottom_left(&self) -> Vec2<f32> { Vec2::new(self.left().min(self.right()), self.top().max(self.bottom()) ) }
+    pub fn bottom_right(&self) -> Vec2<f32> { Vec2::new(self.left().max(self.right()), self.top().max(self.bottom()) ) }
 
-    pub fn pos(&self) -> Vec2 {
+    pub fn pos(&self) -> Vec2<f32> {
         Vec2::new(self.x, self.y)
     }
     pub fn x(&self) -> f32 { self.x }
     pub fn y(&self) -> f32 { self.y }
-    pub fn xy(&self) -> Vec2 { Vec2::new(self.x, self.y) }
-    pub fn wh(&self) -> Vec2 { Vec2::new(self.width, self.height) }
+    pub fn xy(&self) -> Vec2<f32> { Vec2::new(self.x, self.y) }
+    pub fn wh(&self) -> Vec2<f32> { Vec2::new(self.width, self.height) }
     pub fn width(&self) -> f32 { self.width }
     pub fn height(&self) -> f32 { self.height }
     pub fn left(&self) -> f32 { self.x }
@@ -87,7 +87,7 @@ impl Vec4 {
     pub fn center_x(&self) -> f32 { self.x + self.width / 2.0 }
     pub fn center_y(&self) -> f32 { self.y + self.height / 2.0 }
 
-    pub fn set_pos(&mut self, pos: impl Into<Vec2>) {
+    pub fn set_pos(&mut self, pos: impl Into<Vec2<f32>>) {
         let pos = pos.into();
         self.x = pos.x;
         self.y = pos.y;
@@ -148,7 +148,7 @@ impl Vec4 {
     ///
     /// [`expand_to_x()`]: Vec4::expand_to_x
     /// [`expand_to_y()`]: Vec4::expand_to_y
-    pub fn expand_to<A: Into<Vec2>>(&mut self, pos: A) {
+    pub fn expand_to<A: Into<Vec2<f32>>>(&mut self, pos: A) {
         let pos = pos.into();
         self.expand_to_y(pos.y);
         self.expand_to_x(pos.x);
@@ -175,7 +175,7 @@ impl Vec4 {
         self.y + self.height * alignment.get_value()
     }
 
-    pub fn offset<A: Into<Vec2>>(&mut self, amount: A) {
+    pub fn offset<A: Into<Vec2<f32>>>(&mut self, amount: A) {
         let amount = amount.into();
         self.x += amount.x;
         self.y += amount.y;
@@ -223,5 +223,22 @@ impl Div for Vec4 {
 
     fn div(self, other: Self) -> Self::Output {
         Vec4 { x: self.x / other.x, y: self.y / other.y, width: self.width / other.width, height: self.height / other.height, }
+    }
+}
+
+impl Into<Vec4> for [f32; 4] {
+    fn into(self) -> Vec4 {
+        Vec4 {
+            x: self[0],
+            y: self[1],
+            width: self[2],
+            height: self[3],
+        }
+    }
+}
+
+impl Into<[f32;4]> for Vec4 {
+    fn into(self) -> [f32; 4] {
+        [self.x, self.y, self.width, self.height]
     }
 }
