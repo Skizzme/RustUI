@@ -2,7 +2,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use gl::types::*;
-use glfw::{Context, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
+use glfw::{Action, Context, Glfw, GlfwReceiver, PWindow, SwapInterval, WindowEvent, WindowHint, WindowMode};
+use glfw::Action::Press;
 
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::Framework;
@@ -11,6 +12,7 @@ use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State;
 use crate::components::window::Window;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
+use crate::components::wrapper::keyboard::Keyboard;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::{gl11, gl20, gl30, gl41};
@@ -53,6 +55,7 @@ pub struct UIContext {
     font_manager: FontManager,
     framework: Framework,
     fb_manager: FramebufferManager,
+    keyboard: Keyboard,
 
     close_requested: bool,
 }
@@ -85,6 +88,7 @@ impl UIContext {
             font_manager: FontManager::new(""),
             framework: Framework::new(),
             fb_manager,
+            keyboard: Keyboard::new(),
             close_requested: false,
         });
         context().framebuffer = context().fb_manager.create_fb(RGBA).unwrap();
@@ -304,6 +308,11 @@ impl UIContext {
                     self.window.handle(&event);
                     match &event {
                         WindowEvent::Key(key, code, action, mods) => {
+                            match action {
+                                Action::Release => self.keyboard.pressed().remove(key),
+                                Press | Action::Repeat => self.keyboard.pressed().insert(key.clone()),
+                            };
+
                             self.framework.event(Event::Keyboard(*key, *action, *mods));
                         }
                         WindowEvent::Size(width, height) => {
@@ -348,6 +357,9 @@ impl UIContext {
     pub fn fps(&self) -> u32 { self.frames.1 }
     pub fn p_window(&mut self) -> &mut PWindow { &mut self.p_window }
     pub fn fb_manager(&mut self) -> &mut FramebufferManager { &mut self.fb_manager }
+    pub fn keyboard(&self) -> &Keyboard {
+        &self.keyboard
+    }
     pub unsafe fn framebuffer(&mut self) -> &mut Framebuffer { self.fb_manager.fb(self.framebuffer) }
 }
 

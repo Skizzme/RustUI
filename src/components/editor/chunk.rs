@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Instant;
 
 use crate::components::editor::Change;
 use crate::components::spatial::vec2::Vec2;
@@ -7,9 +8,12 @@ use crate::components::spatial::vec2::Vec2;
 pub struct ChunkInfo {
     pub(super) ind_start: usize,
     pub(super) ind_end: usize,
+    pub(super) ind_offset: usize,
 
     pub(super) start: Vec2<usize>,
     pub(super) end: Vec2<usize>,
+    pub(super) start_offset: Vec2<usize>,
+    pub(super) end_offset: Vec2<usize>,
 
     pub(super) lines: Vec<(usize, usize, usize)>,
 }
@@ -19,8 +23,11 @@ impl ChunkInfo {
         let mut inf = ChunkInfo {
             ind_start: 0,
             ind_end: 0,
+            ind_offset: 0,
             start: Default::default(),
             end: Default::default(),
+            start_offset: Default::default(),
+            end_offset: Default::default(),
             lines: vec![],
         };
         // TODO optimize this so that creating the editor doesn't take so long
@@ -30,15 +37,19 @@ impl ChunkInfo {
 
     pub fn update_info(&mut self, chunk: &Chunk, start_index: usize, start: Vec2<usize>, changed: bool) {
 
-        self.start = start;
-        self.end = start;
 
-        let prev_lines = std::mem::take(&mut self.lines);
-
-        let mut line_start_ind = start_index;
-        let mut i = start_index;
         if changed {
+            self.start = start;
+            self.end = start;
+
+            self.ind_start = start_index;
+            self.ind_end = start_index+chunk.str.len();
+
+            self.lines.clear();
+
             let mut prev_char = '_';
+            let mut line_start_ind = start_index;
+            let mut i = start_index;
             for c in chunk.str.chars() {
                 self.end.x += 1;
                 i += 1;
@@ -55,23 +66,37 @@ impl ChunkInfo {
                 }
                 prev_char = c;
             }
+
+            self.lines.push((line_start_ind, i, 0));
+            self.lines.shrink_to_fit();
+
+            self.ind_offset = 0;
+            self.start_offset = Vec2::new(0,0);
+            self.end_offset = Vec2::new(0,0);
         } else {
-            for (start, end, new_line) in prev_lines {
-                let (new_start, new_end) = (start - self.ind_start + start_index, end - self.ind_start + start_index);
-                self.end.x += (start - end);
-                if new_line > 0 {
-                    self.lines.push((new_start, new_end, new_line));
-                    self.end.y += 1;
-                    self.end.x = 0;
-                }
+            let ind_offset = start_index as isize - self.ind_start as isize;
+
+            self.ind_start += ind_offset as usize;
+            self.ind_end += ind_offset as usize;
+            self.ind_offset += ind_offset as usize;
+
+            let x_offset = (start.x - self.start.x);
+            if self.start.y == start.y {
+                self.start.x += x_offset;
+                self.start_offset.x += x_offset;
+            } else {
+                let y_offset = (start.y - self.start.y);
+                self.start.y += y_offset;
+                self.end.y += y_offset;
+                self.start_offset.y += y_offset;
+                self.end_offset.y += y_offset;
+            }
+            if self.end.y == start.y {
+                self.end.x += x_offset;
+                self.end_offset.x += x_offset;
             }
         }
 
-        self.ind_start = start_index;
-        self.ind_end = start_index+chunk.str.len();
-
-        self.lines.push((line_start_ind, i, 0));
-        self.lines.shrink_to_fit();
     }
 }
 

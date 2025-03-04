@@ -86,7 +86,7 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let mut t = include_str!("../test_3.js").to_string();
+        let mut t = include_str!("../test.js").to_string();
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
@@ -167,6 +167,8 @@ impl ScreenTrait for TestScreen {
             }
 
             let mut fr = context().fonts().font("main").unwrap();
+
+            // fr.draw_string((20., "there should be a tab right\there", 0xffffffff), (10., 10.,));
 
             let text: Text = text!(
                 AlignH(Center),
@@ -348,6 +350,7 @@ impl ScreenTrait for TestScreen {
         // layer_0.add(el_1.build());
         println!("mk new txt");
         layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
+        // layer
         println!("done");
         self.text = "".to_string();
 

@@ -16,7 +16,7 @@ use gl::*;
 
 use crate::components::context::context;
 use crate::components::render::color::Color;
-use crate::components::render::font::format::{FormatItem, Text};
+use crate::components::render::font::format::{FormatItem, Text, Wrapping};
 use crate::components::render::stack::State::{Blend, Texture2D};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
@@ -103,6 +103,7 @@ struct RenderData {
     current_align_v: f32,
     current_tab_length: u32,
     current_line_spacing: f32,
+    wrapping: Wrapping,
 }
 
 impl Default for RenderData {
@@ -121,8 +122,9 @@ impl Default for RenderData {
             current_offset: Default::default(),
             current_align_h: 0.0,
             current_align_v: 0.0,
-            current_tab_length: 0,
+            current_tab_length: 4,
             current_line_spacing: 1.5,
+            wrapping: Wrapping::None,
         }
     }
 }
@@ -526,7 +528,8 @@ impl Font {
 
             for item in formatted_text.items() {
                 match item {
-                    FormatItem::None => {}
+                    FormatItem::None => {},
+                    FormatItem::Wrapping(wrapping) => self.draw_data.wrapping = wrapping.clone(),
                     FormatItem::Color(v) => current_color = v.clone(),
                     FormatItem::AlignH(alignment) => {
                         if self.draw_data.current_align_h != 0. {
@@ -562,6 +565,7 @@ impl Font {
                         self.draw_data.y += amount.y;
                     }
                     FormatItem::String(string) => {
+                        // let mut wrap_point = 0;
                         for char in string.chars() {
                             if char == '\n' {
                                 if self.draw_data.current_align_h != 0. {
@@ -570,16 +574,8 @@ impl Font {
                                     // TODO track line heights
                                 }
 
-                                self.draw_data.y += max_line_height;
-                                height += max_line_height;
-                                max_line_height = 0f32;
-
-                                line_start_index = render_index;
-                                self.draw_data.line_width = 0.0;
-                                self.draw_data.x = self.draw_data.start_x;
-
                                 let pos_y = self.draw_data.y + (self.get_height()) * self.draw_data.scale;
-                                let (p_left, p_top, p_height) = (self.draw_data.x * self.draw_data.scale, pos_y, self.get_line_height() * self.draw_data.scale);
+                                let (p_left, p_top, p_height) = (self.draw_data.x, pos_y, self.get_line_height() * self.draw_data.scale);
                                 dims.push([p_left,p_top,0.,p_height]);
                                 uvs.push([0.,0.,0.,0.]);
 
@@ -589,6 +585,14 @@ impl Font {
 
                                 colors.push([current_color.rgba_u32(), 0x20ffffff, 0xfffffff0, 0xfffffff0]);
 
+                                self.draw_data.y += max_line_height;
+                                height += max_line_height;
+                                max_line_height = 0f32;
+
+                                line_start_index = render_index;
+                                self.draw_data.line_width = 0.0;
+                                self.draw_data.x = self.draw_data.start_x;
+
                                 render_index += 1;
                                 max_line_height = max_line_height.max(p_height);
                                 continue;
@@ -596,15 +600,29 @@ impl Font {
 
                             max_line_height = max_line_height.max(self.get_line_height() * self.draw_data.scale);
 
-                            let (c_w, _c_h, c_a, should_render) = self.get_dimensions_scaled(char);
+                            let (c_w, _c_h, c_a, should_render) = if char == '\t' {
+                                let mut dims = self.get_dimensions_scaled(' ');
+                                dims.0 *= self.draw_data.current_tab_length as f32;
+                                dims.2 *= self.draw_data.current_tab_length as f32;
+                                dims
+                            } else {
+                                self.get_dimensions_scaled(char)
+                            };
                             if should_render == 2 {
                                 // println!("broken at {}", i);
                                 // break
                             }
 
-                            let glyph: &Glyph = match self.glyphs.get(&(char as usize)) {
-                                None => continue,
-                                Some(glyph) => glyph
+                            let glyph: &Glyph = if char == '\t' {
+                                match self.glyphs.get(&(' ' as usize)) {
+                                    None => continue,
+                                    Some(glyph) => glyph
+                                }
+                            } else {
+                                match self.glyphs.get(&(char as usize)) {
+                                    None => continue,
+                                    Some(glyph) => glyph
+                                }
                             };
 
                             let pos_y = self.draw_data.y + (self.get_height() - glyph.top) * self.draw_data.scale;
@@ -612,7 +630,13 @@ impl Font {
                             let (p_left, p_top, mut p_width, p_height) = (self.draw_data.x+glyph.bearing_x * self.draw_data.scale, pos_y, glyph.width * self.draw_data.scale, glyph.height * self.draw_data.scale);
                             let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
 
-                            if char == ' ' {
+                            // let wrap_width = self.draw_data.wrapping.length() * self.draw_data.scale;
+                            // if wrap_width > 0. && p_left + p_width > wrap_width {
+                            //
+                            // }
+
+
+                            if char == ' ' || char == '\t' {
                                 p_width = c_a;
                             }
 

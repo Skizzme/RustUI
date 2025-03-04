@@ -16,9 +16,6 @@ pub mod textbox;
 mod cursor;
 mod chunk;
 
-const CHUNK_SIZE: usize = 1024; // 1024*2
-// static SHIFT_MAP: HashMap<char, char> = ;
-
 pub fn get_shifted(c: char) -> char {
     let shifted: HashMap<char, char> = [
         ('1', '!'), ('2', '@'), ('3', '#'), ('4', '$'), ('5', '%'), ('6', '^'), ('7', '&'), ('8', '*'), ('9', '('), ('0', ')'), ('=', '+'),
@@ -39,11 +36,12 @@ pub struct Editor {
     chunks: Vec<Chunk>,
     chunk_info: Vec<ChunkInfo>,
     changes: HashMap<usize, (usize, usize, Change)>,
+    chunk_size: usize,
 }
 
 impl Editor {
 
-    pub fn new<T: AsRef<str>>(str: T) -> Self {
+    pub fn new<T: AsRef<str>>(chunk_size: usize, str: T) -> Self {
         println!("repl");
         let str = str.as_ref().replace("\r\n", "\n");
         println!("rest");
@@ -52,9 +50,10 @@ impl Editor {
             chunks: vec![],
             chunk_info: vec![],
             changes: Default::default(),
+            chunk_size,
         };
 
-        Editor::create_chunks_from(str, 0, &mut editor.chunks, &mut editor.chunk_info);
+        Editor::create_chunks_from(str, 0, editor.chunk_size, &mut editor.chunks, &mut editor.chunk_info);
 
         editor
     }
@@ -75,6 +74,7 @@ impl Editor {
 
         for (cursor_index, line_width_1, line_width_2) in cursor_line_widths {
             let c = &mut self.cursors[cursor_index];
+            println!("correct? {:?}", c);
             if c.pos.x > line_width_1 {
                 if move_down {
                     c.pos.y += 1;
@@ -82,25 +82,27 @@ impl Editor {
                 } else {
                     c.pos.x = line_width_1;
                 }
+                println!("correct pos to {:?}", c.pos)
             }
             if c.select_pos.x > line_width_2 {
                 if move_down {
                     c.select_pos.y += 1;
                     c.select_pos.x = 0;
                 } else {
-                    c.pos.x = line_width_2;
+                    c.select_pos.x = line_width_2;
                 }
+                println!("correct select_pos to {:?}", c.select_pos)
             }
         }
     }
 
-    pub fn create_chunks_from<T: AsRef<str>>(str: T, insert_at: usize, chunks: &mut Vec<Chunk>, infos: &mut Vec<ChunkInfo>) {
+    pub fn create_chunks_from<T: AsRef<str>>(str: T, insert_at: usize, chunk_size: usize, chunks: &mut Vec<Chunk>, infos: &mut Vec<ChunkInfo>) {
         let str = str.as_ref();
         let mut index = 0;
         let mut pos = Vec2::new(0,0);
         let mut i = 0;
         while index < str.len() {
-            let chunk_str = &str[index..(index +CHUNK_SIZE).min(str.len())];
+            let chunk_str = &str[index..(index + chunk_size).min(str.len())];
             let chunk = Chunk::new(chunk_str.to_string());
 
             let chunk_info = ChunkInfo::new(&chunk, index, pos.clone());
@@ -109,7 +111,7 @@ impl Editor {
             chunks.insert(i + insert_at, chunk);
             infos.insert(i + insert_at, chunk_info);
 
-            index += CHUNK_SIZE;
+            index += chunk_size;
             i += 1;
         }
     }
@@ -129,7 +131,9 @@ impl Editor {
 
             let mut current_line = ci.start.y;
             for line in &ci.lines {
-                let (ind_start, ind_end, new_line) = *line;
+                let (mut ind_start, mut ind_end, new_line) = *line;
+                ind_start += ci.ind_offset;
+                ind_end += ci.ind_offset;
                 let w = ind_end - ind_start;
 
                 if chunk_index == self.chunk_info.len()-1 {
@@ -158,39 +162,43 @@ impl Editor {
         let mut char_index = 0;
         let mut i = 0;
 
-        'chunk: for ci in &self.chunk_info {
+        for ci in &self.chunk_info {
             let mut line_ind = ci.start.y;
-            // TODO a loop could probably be skipped by finding the specific line using the pos.y and ci.start.y?
-            for (line_start, line_end, new_line) in &ci.lines {
 
-                let column_min = if line_ind == ci.start.y {
-                    ci.start.x
-                } else {
-                    0
-                };
+            if ci.start.y <= pos.y || ci.end.y >= pos.y {
+                for (line_start, line_end, new_line) in &ci.lines {
+                    let (line_start, line_end) = (line_start + ci.ind_offset, line_end + ci.ind_offset);
+                    let column_min = if line_ind == ci.start.y {
+                        ci.start.x
+                    } else {
+                        0
+                    };
 
-                let column_max = if line_ind == ci.end.y {
-                    ci.end.x
-                } else {
-                    (line_end - line_start) + column_min // line width
-                };
+                    let column_max = if line_ind == ci.end.y {
+                        ci.end.x
+                    } else {
+                        (line_end - line_start) + column_min // line width
+                    };
 
-                if pos.y == line_ind && (pos.x >= column_min && pos.x < column_max) || (pos.x == column_min && pos.x == column_max) {
-                    char_index = *line_start + pos.x - column_min;
-                    return (char_index, i);
+                    if pos.y == line_ind && (pos.x >= column_min && pos.x < column_max) || (pos.x == column_min && pos.x == column_max) {
+                        char_index = line_start + pos.x - column_min;
+                        return (char_index, i);
+                    }
+                    line_ind += 1;
                 }
-                line_ind += 1;
             }
             i += 1;
         }
 
-        (char_index, i)
+        (0, 0)
     }
 
     pub fn add_change(&mut self, change: Change) {
         for c in &self.cursors {
             let (start_index, start_chunk) = self.pos_index(c.start_pos());
             let (mut end_index, end_chunk) = self.pos_index(c.end_pos());
+
+            println!("add_change {} {} {} {} {:?}", start_index, end_index, start_chunk, end_chunk, c);
 
             let mut max_reached = 0;
             for chunk_index in start_chunk..=end_chunk.min(self.chunks.len()-1) {
@@ -222,6 +230,8 @@ impl Editor {
                 let start_index = start_index.max(chunk_info.ind_start);
                 let end_index = end_index.min(chunk_info.ind_end);
 
+                println!("chunk change {:?} {} {} {} {:?}", chunk_change, start_index, end_index, end_index.max(start_index) - start_index, self.chunks[chunk_index].str);
+
                 self.changes.insert(start_index, (end_index.max(start_index) - start_index, chunk_index, chunk_change));
             }
         }
@@ -240,7 +250,7 @@ impl Editor {
             (0, Vec2::new(0, 0))
         } else {
             let ci = &self.chunk_info[chunk_index-1];
-            (ci.ind_end, ci.end.clone())
+            (ci.ind_end, ci.end)
         };
         let info = ChunkInfo::new(&chunk, text_index, pos);
 
@@ -255,7 +265,7 @@ impl Editor {
 
     fn correct_chunk_size(&mut self, chunk: usize) -> bool {
         let chunk_len = self.chunks[chunk].str.len();
-        if chunk_len > CHUNK_SIZE {
+        if chunk_len > self.chunk_size {
             let mut tmp = mem::take(&mut self.chunks[chunk].str);
             let (c1_str, c2_str) = tmp.split_at(chunk_len/2);
             let (chunk_1, chunk_info_1) = self.create_chunk(chunk, c1_str);
@@ -278,36 +288,24 @@ impl Editor {
     }
 
     pub fn apply_changes(&mut self) {
-        let mut st = (Instant::now(), 0);
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
-
         let mut changed_chunks = vec![];
         for (_, (_, chunk, _)) in &mut self.changes {
             changed_chunks.push(*chunk);
         }
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
 
         for chunk in &changed_chunks {
             let ci = &self.chunk_info[*chunk];
             self.chunks[*chunk].calculate_changes(&mut self.changes, ci);
         }
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
 
         for c in &changed_chunks {
             self.chunks[*c].update();
         }
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
 
         changed_chunks.sort();
         if changed_chunks.len() == 0 {
             return;
         }
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
 
         for i in (0..changed_chunks.len()).rev() {
             let chunk = changed_chunks[i];
@@ -321,8 +319,6 @@ impl Editor {
                 }
             }
         }
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
 
         let (mut ind, mut pos) = if changed_chunks[0] == 0 {
             (0,Vec2::new(0,0))
@@ -330,8 +326,6 @@ impl Editor {
             let ci = &self.chunk_info[(changed_chunks[0].max(1)-1)];
             (ci.ind_end, ci.end.clone())
         };
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
 
         let mut changed_chunks_set = HashSet::with_capacity(changed_chunks.len());
         for c in &changed_chunks {
@@ -351,16 +345,12 @@ impl Editor {
             pos = ci.end;
         }
 
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
         for i in (0..changed_chunks.len()).rev() {
             let chunk = changed_chunks[i];
             if self.chunks[chunk].str.len() == 0 {
                 self.chunks.remove(chunk);
             }
         }
-        println!("{:?} {}", st.0.elapsed(), st.1);
-        st = (Instant::now(), st.1+1);
     }
 }
 

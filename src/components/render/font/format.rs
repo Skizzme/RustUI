@@ -194,6 +194,7 @@ impl Hash for Alignment {
 /// Wrapping to be used for rendering
 ///
 /// When not [Wrapping::None], the enum should contain the maximum line length (in pixels)
+#[derive(Clone, Debug)]
 pub enum Wrapping {
     /// No wrapping
     None,
@@ -203,6 +204,28 @@ pub enum Wrapping {
     Soft(f32),
     /// Will try to wrap only at spaces, but if one word is longer than the maximum line length, it would resort to hard wrapping
     SoftHard(f32),
+}
+
+impl Wrapping {
+    pub fn length(&self) -> f32 {
+        match self {
+            Wrapping::None => 0.,
+            Wrapping::Hard(l) | Wrapping::Soft(l) | Wrapping::SoftHard(l) => *l,
+        }
+    }
+}
+
+impl Hash for Wrapping {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let id: i8 = match self {
+            Wrapping::None => 0,
+            Wrapping::Hard(_) => 1,
+            Wrapping::Soft(_) => 2,
+            Wrapping::SoftHard(_) => 3,
+        };
+        state.write(&id.to_be_bytes());
+        state.write(&self.length().to_be_bytes());
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -215,6 +238,7 @@ pub enum FormatItem {
     AlignV(Alignment),
     TabLength(u32),
     LineSpacing(f32),
+    Wrapping(Wrapping),
     None,
 }
 
@@ -263,6 +287,7 @@ impl Hash for FormatItem {
             FormatItem::AlignV(v) => v.hash(state),
             FormatItem::TabLength(v) => v.hash(state),
             FormatItem::LineSpacing(v) => state.write(&v.to_be_bytes()),
+            FormatItem::Wrapping(v) => v.hash(state),
         }
     }
 }

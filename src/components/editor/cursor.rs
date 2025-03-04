@@ -14,6 +14,10 @@ impl Cursor {
         }
     }
 
+    pub fn is_expanded(&self) -> bool {
+        !self.pos.eq(&self.select_pos)
+    }
+
     pub fn start_pos(&self) -> Vec2<usize> {
         self.pos.min(self.select_pos)
     }
