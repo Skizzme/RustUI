@@ -35,6 +35,16 @@ impl ChunkInfo {
         inf
     }
 
+    pub fn line_with_offset(&self, index: usize) -> (usize, usize, usize) {
+        let (st, ed, nl) = self.lines[index];
+        (st + self.ind_offset, ed + self.ind_offset, nl)
+    }
+
+    pub fn line_as_local(&self, index: usize) -> (usize, usize, usize) {
+        let (st, ed, nl) = self.lines[index];
+        (st - self.ind_start, ed - self.ind_start, nl)
+    }
+
     pub fn update_info(&mut self, chunk: &Chunk, start_index: usize, start: Vec2<usize>, changed: bool) {
 
 

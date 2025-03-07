@@ -129,6 +129,13 @@ impl Editor {
         for ci in &self.chunk_info {
             let mut i = 0;
 
+            // if ci.end.y < line_index-1 {
+            //     continue;
+            // }
+            // if ci.start.y > line_index {
+            //     break;
+            // }
+
             let mut current_line = ci.start.y;
             for line in &ci.lines {
                 let (mut ind_start, mut ind_end, new_line) = *line;

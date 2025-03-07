@@ -177,6 +177,36 @@ impl Textbox {
         self.editor.cursors[0].position(pos, expand);
         self.correct_cursor(false);
     }
+
+    unsafe fn draw_cursor_pos(&self, pos: &Vec2<usize>, scroll: &Vec2<f32>, fr_height: f32) -> (usize, usize, bool){
+        let (mut end_index, end_chunk) = self.editor.pos_index(*pos);
+        if end_chunk == self.editor.chunks.len() {
+            return (0, 0, false);
+        }
+
+        let r_chunk = &self.render_chunks[end_chunk];
+        let i_chunk = &self.editor.chunk_info[end_chunk];
+        let chunk_index = end_index - i_chunk.ind_start;
+
+        let ind = chunk_index;
+        let mut char_pos = if pos.x == 0 {
+            [self.offset.x, 0., 0., 0.]
+        } else {
+            if ind >= r_chunk.text.char_positions().len() {
+                (0, 0, false);
+            }
+            r_chunk.text.char_positions()[ind]
+        };
+
+
+        let cursor_width = 1.;
+        let mut cursor_draw = Vec4::xywh(char_pos[0] - cursor_width/2. + 1., pos.y as f32 * fr_height, cursor_width, fr_height);
+        cursor_draw.set_y(cursor_draw.y() + self.offset.y - 2.);
+        cursor_draw.offset(*scroll);
+        context().renderer().draw_rect(cursor_draw, 0xffff0000);
+
+        (end_index, end_chunk, true)
+    }
 }
 
 impl UIHandler for Textbox {
@@ -253,107 +283,64 @@ impl UIHandler for Textbox {
             }
 
             for cursor in &self.editor.cursors {
-                let (mut index, chunk) = self.editor.pos_index(cursor.pos);
-                if chunk == self.editor.chunks.len() {
+                let (mut start_index, mut start_chunk, drawn) = self.draw_cursor_pos(&cursor.pos, &scroll, fr_height);
+                if !drawn {
                     continue;
                 }
 
-                let r_chunk = &self.render_chunks[chunk];
-                let i_chunk = &self.editor.chunk_info[chunk];
-                let chunk_index = index - i_chunk.ind_start;
-
-                let ind = chunk_index;
-                let mut char_pos = if cursor.pos.x == 0 {
-                    [offset.x, 0., 0., 0.]
-                } else {
-                    if ind >= r_chunk.text.char_positions().len() {
-                        continue;
-                    }
-                    r_chunk.text.char_positions()[ind]
-                };
-
-
-                let cursor_width = 1.;
-                let mut cursor_draw = Vec4::xywh(char_pos[0] - cursor_width/2. + 1., cursor.pos.y as f32 * fr_height, cursor_width, fr_height);
-                cursor_draw.set_y(cursor_draw.y() + offset.y - 2.);
-                cursor_draw.offset(scroll);
-                context().renderer().draw_rect(cursor_draw, 0xffffffff);
-
-                let (mut end_index, end_chunk) = self.editor.pos_index(cursor.select_pos);
-                if end_chunk == self.editor.chunks.len() {
+                let (mut end_index, mut end_chunk, drawn) = self.draw_cursor_pos(&cursor.select_pos, &scroll, fr_height);
+                if !drawn {
                     continue;
                 }
 
-                let r_chunk = &self.render_chunks[end_chunk];
-                let i_chunk = &self.editor.chunk_info[end_chunk];
-                let chunk_index = end_index - i_chunk.ind_start;
-
-                let ind = chunk_index;
-                let mut char_pos = if cursor.pos.x == 0 {
-                    [offset.x, 0., 0., 0.]
-                } else {
-                    if ind >= r_chunk.text.char_positions().len() {
-                        continue;
-                    }
-                    r_chunk.text.char_positions()[ind]
-                };
-
-
-                let cursor_width = 1.;
-                let mut cursor_draw = Vec4::xywh(char_pos[0] - cursor_width/2. + 1., cursor.select_pos.y as f32 * fr_height, cursor_width, fr_height);
-                cursor_draw.set_y(cursor_draw.y() + offset.y - 2.);
-                cursor_draw.offset(scroll);
-                context().renderer().draw_rect(cursor_draw, 0xffff0000);
-
-                if end_index < index {
-                    std::mem::swap(&mut end_index, &mut index);
+                if end_index < start_index {
+                    std::mem::swap(&mut end_index, &mut start_index);
+                    std::mem::swap(&mut end_chunk, &mut start_chunk);
                 }
 
-                'chunks : for c_index in chunk.min(end_chunk)..=end_chunk.max(chunk) {
-                    let i_chunk = &self.editor.chunk_info[c_index];
-                    let e_chunk = &self.editor.chunks[c_index];
-                    let mut line = i_chunk.start.y;
-                    let mut line_start = 0;
+                let mut start_pos = {
+                    let i_chunk = &self.editor.chunk_info[start_chunk];
+                    let index = start_index - i_chunk.ind_start;
+                    let char_pos = self.render_chunks[start_chunk].text.char_positions();
+                    char_pos[index.min(char_pos.len() - 1)][0]
+                };
+                let mut end_pos = self.render_chunks[start_chunk].text.char_positions()[0][0];
+                let mut line = self.editor.chunk_info[start_chunk].start.y;
+                for c in start_chunk..=end_chunk {
+                    let i_chunk = &self.editor.chunk_info[c];
+                    let r_chunk = &self.render_chunks[c];
                     for l in &i_chunk.lines {
-                        let (ln_start, ln_end, new_line) = *l;
-                        if line < cursor.start_pos().y {
-                            continue
-                        } else if line > cursor.end_pos().y {
-                            break 'chunks;
+                        let (start, mut end, new_line) = *l;
+                        end = end - new_line;
+                        let (local_start, local_end) = (start - i_chunk.ind_start, end - i_chunk.ind_start);
+
+                        let mut index = end.min(end_index).max(start) - i_chunk.ind_start;
+                        if index >= r_chunk.text.char_positions().len() {
+                            index = r_chunk.text.char_positions().len() - 1 - new_line;
                         }
-
-                        println!("{:?}", i_chunk.lines);
-
-                        let start = index.clamp(ln_start, (ln_end-1).max(ln_start+1));
-
-                        let end = if ln_start >= ln_end {
-                            ln_end
-                        } else {
-                            end_index.clamp(ln_start, ln_end-1)
-                        };
-
-                        let start_x = self.render_chunks[c_index].text.char_positions()[start-i_chunk.ind_start][0];
-                        let mut end_x = self.render_chunks[c_index].text.char_positions()[end-i_chunk.ind_start][0];
-
-                        println!("{} {} LEN {} {:?}", start, end, self.render_chunks[c_index].text.char_positions().len(), e_chunk.str.chars().last());
-                        if end == ln_end - 1 && end_index > end {
-                            end_x = context().window().width() as f32;
+                        end_pos = r_chunk.text.char_positions()[index][0];
+                        // println!("{} {} {} {:?} {:?} {:?}", end, end_index, index + i_chunk.ind_start, index, line, l);
+                        if line >= cursor.end_pos().y{
+                            break;
                         }
-                        // for j in start..=end {
-                        //     width +=
-                        // }
-
-                        context().renderer().draw_rect(Vec4::ltrb(start_x, fr_height*(line as f32) + offset.y, end_x, fr_height*(line as f32 + 1.0) + offset.y), 0x80ffffff);
-
                         if new_line > 0 {
+                            if cursor.start_pos().y != cursor.end_pos().y {
+                                if line >= cursor.start_pos().y {
+                                    context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y, end_pos - start_pos, fr_height), 0x80909090);
+                                    start_pos = 0.0;
+                                } else {
+                                    start_pos = end_pos;
+                                }
+                            }
                             line += 1;
                         }
                     }
                 }
+                context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y, end_pos - start_pos, fr_height), 0x80909090);
             }
 
             offset.offset((-10., 0.));
-
+            // Draw line numbers to the left side of the text block
             for line in start_line..end_line {
                 if !self.line_texts.contains_key(&line) {
                     let text = text!(
