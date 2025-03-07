@@ -28,7 +28,7 @@ where T: Eq + Ord,
         } else if self.y > other.y {
             Ordering::Greater
         } else {
-            self.x.cmp(&other.y)
+            self.x.cmp(&other.x)
         }
     }
 }

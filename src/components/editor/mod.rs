@@ -198,6 +198,8 @@ impl Editor {
             let (start_index, start_chunk) = self.pos_index(c.start_pos());
             let (mut end_index, end_chunk) = self.pos_index(c.end_pos());
 
+            println!("{:?} {:?} {:?} {:?}", c.start_pos(), c.end_pos(), c.pos, c.select_pos);
+
             println!("add_change {} {} {} {} {:?}", start_index, end_index, start_chunk, end_chunk, c);
 
             let mut max_reached = 0;
