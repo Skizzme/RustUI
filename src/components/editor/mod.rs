@@ -207,7 +207,7 @@ impl Editor {
 
             println!("{:?} {:?} {:?} {:?}", c.start_pos(), c.end_pos(), c.pos, c.select_pos);
 
-            println!("add_change {} {} {} {} {:?}", start_index, end_index, start_chunk, end_chunk, c);
+            println!("add_change {} {} {} {} {:?} {} {}", start_index, end_index, start_chunk, end_chunk, c, self.chunk_info.len(), self.chunks.len());
 
             let mut max_reached = 0;
             for chunk_index in start_chunk..=end_chunk.min(self.chunks.len()-1) {
@@ -239,7 +239,7 @@ impl Editor {
                 let start_index = start_index.max(chunk_info.ind_start);
                 let end_index = end_index.min(chunk_info.ind_end);
 
-                println!("chunk change {:?} {} {} {} {:?}", chunk_change, start_index, end_index, end_index.max(start_index) - start_index, self.chunks[chunk_index].str);
+                println!("chunkchange {:?} {:?} {:?} {:?}", self.chunks[chunk_index].str, start_index, end_index, chunk_change);
 
                 self.changes.insert(start_index, (end_index.max(start_index) - start_index, chunk_index, chunk_change));
             }
@@ -358,6 +358,7 @@ impl Editor {
             let chunk = changed_chunks[i];
             if self.chunks[chunk].str.len() == 0 {
                 self.chunks.remove(chunk);
+                self.chunk_info.remove(chunk);
             }
         }
     }

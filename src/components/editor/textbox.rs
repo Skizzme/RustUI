@@ -186,9 +186,9 @@ impl Textbox {
 
         let r_chunk = &self.render_chunks[end_chunk];
         let i_chunk = &self.editor.chunk_info[end_chunk];
-        let chunk_index = end_index - i_chunk.ind_start;
+        let local_index = end_index - i_chunk.ind_start;
 
-        let ind = chunk_index;
+        let ind = local_index;
         let mut char_pos = if pos.x == 0 {
             [self.offset.x, 0., 0., 0.]
         } else {
@@ -203,7 +203,7 @@ impl Textbox {
         let mut cursor_draw = Vec4::xywh(char_pos[0] - cursor_width/2. + 1., pos.y as f32 * fr_height, cursor_width, fr_height);
         cursor_draw.set_y(cursor_draw.y() + self.offset.y - 2.);
         cursor_draw.offset(*scroll);
-        context().renderer().draw_rect(cursor_draw, 0xffff0000);
+        context().renderer().draw_rect(cursor_draw, 0xffffffff);
 
         (end_index, end_chunk, true)
     }
@@ -277,7 +277,7 @@ impl UIHandler for Textbox {
                 end_pos.y += r_chunk.text.end_char_pos().y;
                 end_pos.x = r_chunk.text.end_char_pos().x;
 
-                if end_pos.y() + scroll.y() > context().window().height as f32 {
+                if end_pos.y + scroll.y > context().window().height as f32 + 100. {
                     break;
                 }
             }
@@ -288,10 +288,11 @@ impl UIHandler for Textbox {
                     continue;
                 }
 
-                let (mut end_index, mut end_chunk, drawn) = self.draw_cursor_pos(&cursor.select_pos, &scroll, fr_height);
-                if !drawn {
-                    continue;
-                }
+//                self.draw_cursor_pos(&cursor.select_pos, &scroll, fr_height)
+                let (mut end_index, mut end_chunk) = self.editor.pos_index(cursor.select_pos);
+                // if !drawn {
+                //     continue;
+                // }
 
                 if end_index < start_index {
                     std::mem::swap(&mut end_index, &mut start_index);
@@ -309,8 +310,9 @@ impl UIHandler for Textbox {
                 for c in start_chunk..=end_chunk {
                     let i_chunk = &self.editor.chunk_info[c];
                     let r_chunk = &self.render_chunks[c];
-                    for l in &i_chunk.lines {
-                        let (start, mut end, new_line) = *l;
+                    // for l in &i_chunk.lines {
+                    for i in 0..i_chunk.lines.len() {
+                        let (start, mut end, new_line) = i_chunk.line_with_offset(i);
                         end = end - new_line;
                         let (local_start, local_end) = (start - i_chunk.ind_start, end - i_chunk.ind_start);
 
@@ -326,7 +328,7 @@ impl UIHandler for Textbox {
                         if new_line > 0 {
                             if cursor.start_pos().y != cursor.end_pos().y {
                                 if line >= cursor.start_pos().y {
-                                    context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y, end_pos - start_pos, fr_height), 0x80909090);
+                                    context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y - 2., end_pos - start_pos, fr_height), 0x80909090);
                                     start_pos = 0.0;
                                 } else {
                                     start_pos = end_pos;
@@ -336,7 +338,7 @@ impl UIHandler for Textbox {
                         }
                     }
                 }
-                context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y, end_pos - start_pos, fr_height), 0x80909090);
+                context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y - 2., end_pos - start_pos, fr_height), 0x80909090);
             }
 
             offset.offset((-10., 0.));
@@ -489,8 +491,8 @@ impl UIHandler for Textbox {
     }
 
     unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
-        // self.changed
-        true
+        self.changed
+        // true
     }
 
     fn animations(&mut self) -> Option<&mut AnimationRegistry> {

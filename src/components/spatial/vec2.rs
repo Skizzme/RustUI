@@ -55,6 +55,14 @@ where T: Num + Clone + AddAssign
         self.y += vec2.y;
     }
 
+    pub fn offset_new(&mut self, vec2: impl Into<Vec2<T>>) -> Vec2<T> {
+        let vec2 = vec2.into();
+        let mut s = self.clone();
+        s.x += vec2.x;
+        s.y += vec2.y;
+        s
+    }
+
     /// Returns if this [`Vec2`] is inside the bounds of the [`Vec4`]
     pub fn intersects(&self, vec4: &Vec4) -> bool
     where T: PartialOrd<f32>

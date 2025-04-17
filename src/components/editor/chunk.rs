@@ -46,8 +46,6 @@ impl ChunkInfo {
     }
 
     pub fn update_info(&mut self, chunk: &Chunk, start_index: usize, start: Vec2<usize>, changed: bool) {
-
-
         if changed {
             self.start = start;
             self.end = start;
@@ -106,7 +104,6 @@ impl ChunkInfo {
                 self.end_offset.x += x_offset;
             }
         }
-
     }
 }
 

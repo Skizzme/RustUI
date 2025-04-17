@@ -41,7 +41,7 @@ use RustUI::components::framework::screen::ScreenTrait;
 use RustUI::components::render::color::ToColor;
 use RustUI::components::render::font::format::{Alignment, DefaultFormatter, FormatItem, Text};
 use RustUI::components::render::font::format::Alignment::{Left, Center, Right, Custom};
-use RustUI::components::render::font::format::FormatItem::{AlignH, Color, LineSpacing, Size};
+use RustUI::components::render::font::format::FormatItem::{AlignH, AlignV, Color, LineSpacing, Size};
 use RustUI::components::render::mask::FramebufferMask;
 use RustUI::components::render::renderer::shader_file;
 use RustUI::components::spatial::vec2::Vec2;
@@ -209,7 +209,7 @@ impl ScreenTrait for TestScreen {
             // context().renderer().draw_rect(bounds, (1., 0.25, 0., 1.));
             //
             // context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
-            // fr.draw_string((30.0, format!("{:?}", context().fps()), 0xffffffff), (300, 100.0));
+            fr.draw_string(text!(AlignH(Right), (20.0, format!("{:?}", context().fps()), 0xffffffff)), context().window().bounds().wh().offset_new((-4., -20.)));
             // let formated: Text = (self.t_size.borrow().value(), "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
             // let pos = 0; //
             // fr.draw_string(formated, (pos, 300.0));
