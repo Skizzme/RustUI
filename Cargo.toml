@@ -3,6 +3,9 @@ name = "RustUI"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+opt-level = 2 # seems to be the optimal performance, only slightly better than 3
+
 [dependencies]
 glfw = "0.59.0"
 winapi = { version = "0.3.9", features = ["wincon", "winuser", "winnt"] }

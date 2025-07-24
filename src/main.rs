@@ -16,6 +16,8 @@
 //         .unwrap();
 // }
 
+extern crate alloc;
+
 use std::cell::RefCell;
 use std::fs;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -95,7 +97,7 @@ impl TestScreen {
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
         // t.push_str(&t.clone());
-        println!("LEN : {}", t.len());
+        // println!("LEN : {}", t.len());
         // before
         // let bytes = fs::read("C:\\Windows\\Fonts\\consola.ttf").unwrap();
         // before
@@ -197,13 +199,13 @@ impl ScreenTrait for TestScreen {
                 AlignH(Center),
                 "and it should work"
             );
-            gl::Finish();
-            let st = Instant::now();
-            // let (end_pos, bounds) = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
-            gl::Finish();
-            let et = st.elapsed();
+            // gl::Finish();
+            // let st = Instant::now();
+            let fr_d = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
+            // gl::Finish();
+            // let et = st.elapsed();
             // println!("drawed {:?}", et);
-            // context().renderer().draw_rect(Vec4::xywh(500., 100., 2., bounds.height()), 0xffffffff);
+            // context().renderer().draw_rect(Vec4::xywh(500., 100., 2., fr_d.height()), 0xffffffff);
             //
             // let (_, bounds) = context().fonts().font("main").unwrap().draw_string((32., "32 size", 0xffffffff), (200., 200.));
             // context().renderer().draw_rect(bounds, (1., 0.25, 0., 1.));
@@ -348,10 +350,8 @@ impl ScreenTrait for TestScreen {
 
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
-        println!("mk new txt");
         layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
         // layer
-        println!("done");
         self.text = "".to_string();
 
         vec![layer_0]

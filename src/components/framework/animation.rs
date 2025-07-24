@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::rc::Rc;
-
+use num_traits::Pow;
 use rand::random;
 
 use crate::components::context::context;
@@ -17,35 +17,79 @@ pub enum Easing {
     QuarticIn,
     QuarticOut,
     Progressive(f32),
+    EaseInElastic,
+    EaseOutElastic,
+    EaseOutBounce,
     Sin,
 }
 
 impl Easing {
-    fn get_value(&self, state: f32) -> f32 {
+    fn get_value(&self, x: f32) -> f32 {
         match self {
             Easing::Linear => {
-                state
+                x
             }
             Easing::Log => {
-                ((state + 0.01).log10()+2.0)/2.0
+                ((x + 0.01).log10()+2.0)/2.0
             }
             Easing::CubicIn => {
-                (state - 1.0).powf(3.0) + 1.0
+                (x - 1.0).powf(3.0) + 1.0
             }
             Easing::CubicOut => {
-                state.powf(3.0)
+                x.powf(3.0)
             }
             Easing::QuarticOut => {
-                state.powf(4.0)
+                x.powf(4.0)
             }
             Easing::QuarticIn => {
-                (state - 1.0).powf(4.0)
+                (x - 1.0).powf(4.0)
             }
             Easing::Sin => {
-                (state * (PI/2.0) as f32).sin()
+                (x * (PI/2.0) as f32).sin()
             }
             Easing::Progressive(speed) => {
-                2.0/(1.0+20f32.powf(-(20.0/speed)*state))-1.0
+                2.0/(1.0+20f32.powf(-(20.0/speed)* x))-1.0
+            }
+            Easing::EaseInElastic => {
+                let c4: f32 = (2. * PI as f32) / 3.;
+                if x == 0. {
+                    0.
+                } else {
+                    if (x == 1.) {
+                        1.
+                    } else {
+                        (-2.).pow(10. * x - 10.) as f32 * ((x * 10. - 10.75) * c4).sin()
+                    }
+                }
+            }
+            Easing::EaseOutElastic => {
+                let c4: f32 = (2. * PI as f32) / 3.;
+                if x == 0. {
+                    0.
+                } else {
+                    if (x == 1.) {
+                        1.
+                    } else {
+                        (-2.).pow(-10. * x) as f32 * ((x * 10. - 0.75) * c4).sin() + 1.
+                    }
+                }
+            }
+            Easing::EaseOutBounce => {
+                let n1 = 7.5625;
+                let d1 = 2.75;
+
+                if x < 1.0 / d1 {
+                    n1 * x * x
+                } else if x < 2.0 / d1 {
+                    let x = x - 1.5 / d1;
+                    n1 * x * x + 0.75
+                } else if x < 2.5 / d1 {
+                    let x = x - 2.25 / d1;
+                    n1 * x * x + 0.9375
+                } else {
+                    let x = x - 2.625 / d1;
+                    n1 * x * x + 0.984375
+                }
             }
         }.clamp(0.0, 1.0)
     }

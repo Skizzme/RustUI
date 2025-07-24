@@ -74,7 +74,7 @@ impl Editor {
 
         for (cursor_index, line_width_1, line_width_2) in cursor_line_widths {
             let c = &mut self.cursors[cursor_index];
-            println!("correct? {:?}", c);
+            // println!("correct? {:?}", c);
             if c.pos.x > line_width_1 {
                 if move_down {
                     c.pos.y += 1;
@@ -82,7 +82,7 @@ impl Editor {
                 } else {
                     c.pos.x = line_width_1;
                 }
-                println!("correct pos to {:?}", c.pos)
+                // println!("correct pos to {:?}", c.pos)
             }
             if c.select_pos.x > line_width_2 {
                 if move_down {
@@ -91,7 +91,7 @@ impl Editor {
                 } else {
                     c.select_pos.x = line_width_2;
                 }
-                println!("correct select_pos to {:?}", c.select_pos)
+                // println!("correct select_pos to {:?}", c.select_pos)
             }
         }
     }
@@ -205,9 +205,9 @@ impl Editor {
             let (start_index, start_chunk) = self.pos_index(c.start_pos());
             let (mut end_index, end_chunk) = self.pos_index(c.end_pos());
 
-            println!("{:?} {:?} {:?} {:?}", c.start_pos(), c.end_pos(), c.pos, c.select_pos);
+            // println!("{:?} {:?} {:?} {:?}", c.start_pos(), c.end_pos(), c.pos, c.select_pos);
 
-            println!("add_change {} {} {} {} {:?} {} {}", start_index, end_index, start_chunk, end_chunk, c, self.chunk_info.len(), self.chunks.len());
+            // println!("add_change {} {} {} {} {:?} {} {}", start_index, end_index, start_chunk, end_chunk, c, self.chunk_info.len(), self.chunks.len());
 
             let mut max_reached = 0;
             for chunk_index in start_chunk..=end_chunk.min(self.chunks.len()-1) {
@@ -239,7 +239,7 @@ impl Editor {
                 let start_index = start_index.max(chunk_info.ind_start);
                 let end_index = end_index.min(chunk_info.ind_end);
 
-                println!("chunkchange {:?} {:?} {:?} {:?}", self.chunks[chunk_index].str, start_index, end_index, chunk_change);
+                // println!("chunkchange {:?} {:?} {:?} {:?}", self.chunks[chunk_index].str, start_index, end_index, chunk_change);
 
                 self.changes.insert(start_index, (end_index.max(start_index) - start_index, chunk_index, chunk_change));
             }

@@ -103,14 +103,14 @@ impl UIContext {
             // let et = st.elapsed();
             // println!("Frame Time: {:?}", et);
             if !rendered {
-                thread::sleep(Duration::from_secs_f32(1.0/200.0));
+                // thread::sleep(Duration::from_secs_f32(1.0/200.0));
             }
 
             if self.last_render.elapsed().as_secs_f32() > 1.0 {
-                thread::sleep(Duration::from_millis(50));
+                // thread::sleep(Duration::from_millis(50));
             }
             // Finish();
-            self.glfw.set_swap_interval(SwapInterval::Adaptive);
+            self.glfw.set_swap_interval(SwapInterval::None);
             // self.glfw.set_swap_interval(SwapInterval::Sync(2));
         }
     }
@@ -128,10 +128,10 @@ impl UIContext {
         let should_render = self.should_render();
         // println!("CHECK RENDER: {:?}", st.elapsed());
 
-        if should_render {
+        // if should_render {
             self.render();
             self.last_render = Instant::now();
-        }
+        // }
         // let st = Instant::now();
         self.framework.event(Event::PostRender);
         // println!("EVENT POST: {:?}", st.elapsed());
