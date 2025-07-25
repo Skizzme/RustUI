@@ -294,7 +294,6 @@ impl Font {
         let st = Instant::now();
 
         let mut meta_data: Vec<u8> = Vec::new();
-        println!("CAH {}", cache_glyphs.len());
         cache_glyphs.sort_by(|v1, v2| v1.height.cmp(&v2.height));
 
         // Creates the single texture atlas with all glyphs,
@@ -627,8 +626,11 @@ impl Font {
 
                             let pos_y = self.draw_data.y + (self.get_height() - glyph.top) * self.draw_data.scale;
 
+                            let a_width_inv = 1. / a_width;
+                            let a_height_inv = 1. / a_height;
+
                             let (p_left, p_top, mut p_width, p_height) = (self.draw_data.x+glyph.bearing_x * self.draw_data.scale, pos_y, glyph.width * self.draw_data.scale, glyph.height * self.draw_data.scale);
-                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x / a_width, glyph.atlas_pos.y / a_height, (glyph.atlas_pos.x + glyph.width) / a_width, (glyph.atlas_pos.y + glyph.height) / a_height);
+                            let (uv_left, uv_top, uv_right, uv_bottom) = (glyph.atlas_pos.x * a_width_inv, glyph.atlas_pos.y * a_height_inv, (glyph.atlas_pos.x + glyph.width) * a_width_inv, (glyph.atlas_pos.y + glyph.height) * a_height_inv);
 
                             // let wrap_width = self.draw_data.wrapping.length() * self.draw_data.scale;
                             // if wrap_width > 0. && p_left + p_width > wrap_width {
@@ -673,7 +675,7 @@ impl Font {
                 line_index += 1;
             }
 
-            let shader = &context().fonts().sdf_shader;
+            let shader = &mut context().fonts().sdf_shader;
             let mut vao = VertexArray::new();
             vao.bind();
 

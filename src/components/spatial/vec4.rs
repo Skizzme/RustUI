@@ -1,5 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
-
+use num_traits::{Num, NumCast};
 use crate::components::context::context;
 use crate::components::render::color::ToColor;
 use crate::components::render::font::format::Alignment;
@@ -54,12 +54,12 @@ impl Vec4 {
     }
 
     /// Creates a `Vec4` object from `X, Y, Width, Height` parameters
-    pub fn xywh(x: f32, y: f32, width: f32, height: f32) -> Vec4 {
+    pub fn xywh<A: NumCast, B: NumCast, C: NumCast, D: NumCast>(x: A, y: B, width: C, height: D) -> Vec4 {
         let mut obj = Vec4::default();
-        obj.set_x(x);
-        obj.set_y(y);
-        obj.set_width(width);
-        obj.set_height(height);
+        obj.set_x(x.to_f32().unwrap());
+        obj.set_y(y.to_f32().unwrap());
+        obj.set_width(width.to_f32().unwrap());
+        obj.set_height(height.to_f32().unwrap());
 
         obj
     }
@@ -184,6 +184,10 @@ impl Into<Vec4> for &Vec4 {
     fn into(self) -> Vec4 { self.clone() }
 }
 
+impl Into<Vec4> for &mut Vec4 {
+    fn into(self) -> Vec4 { self.clone() }
+}
+
 impl Sub for Vec4 {
     type Output = Self;
 
@@ -221,22 +225,5 @@ impl Div for Vec4 {
 
     fn div(self, other: Self) -> Self::Output {
         Vec4 { x: self.x / other.x, y: self.y / other.y, width: self.width / other.width, height: self.height / other.height, }
-    }
-}
-
-impl Into<Vec4> for [f32; 4] {
-    fn into(self) -> Vec4 {
-        Vec4 {
-            x: self[0],
-            y: self[1],
-            width: self[2],
-            height: self[3],
-        }
-    }
-}
-
-impl Into<[f32;4]> for Vec4 {
-    fn into(self) -> [f32; 4] {
-        [self.x, self.y, self.width, self.height]
     }
 }

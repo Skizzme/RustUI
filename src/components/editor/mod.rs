@@ -42,9 +42,7 @@ pub struct Editor {
 impl Editor {
 
     pub fn new<T: AsRef<str>>(chunk_size: usize, str: T) -> Self {
-        println!("repl");
         let str = str.as_ref().replace("\r\n", "\n");
-        println!("rest");
         let mut editor = Editor {
             cursors: vec![],
             chunks: vec![],
@@ -172,7 +170,7 @@ impl Editor {
         for ci in &self.chunk_info {
             let mut line_ind = ci.start.y;
 
-            if ci.start.y <= pos.y || ci.end.y >= pos.y {
+            if ci.start.y <= pos.y && ci.end.y >= pos.y {
                 for (line_start, line_end, new_line) in &ci.lines {
                     let (line_start, line_end) = (line_start + ci.ind_offset, line_end + ci.ind_offset);
                     let column_min = if line_ind == ci.start.y {
@@ -203,18 +201,17 @@ impl Editor {
     pub fn add_change(&mut self, change: Change) {
         for c in &self.cursors {
             let (start_index, start_chunk) = self.pos_index(c.start_pos());
-            let (mut end_index, end_chunk) = self.pos_index(c.end_pos());
+            let (end_index, end_chunk) = self.pos_index(c.end_pos());
 
-            // println!("{:?} {:?} {:?} {:?}", c.start_pos(), c.end_pos(), c.pos, c.select_pos);
-
-            // println!("add_change {} {} {} {} {:?} {} {}", start_index, end_index, start_chunk, end_chunk, c, self.chunk_info.len(), self.chunks.len());
-
-            let mut max_reached = 0;
             for chunk_index in start_chunk..=end_chunk.min(self.chunks.len()-1) {
                 let chunk_info = &self.chunk_info[chunk_index];
 
+                let mut is_delete = false;
                 let chunk_change = match &change {
-                    Change::Delete => Change::Delete,
+                    Change::Delete => {
+                        is_delete = true;
+                        Change::Delete
+                    },
                     Change::Add(str) => {
                         let mut sub = String::new();
                         let mut i = 0;
@@ -228,7 +225,6 @@ impl Editor {
                             if i >= min &&
                                 (i < max || chunk_index == end_chunk.min(self.chunks.len()-1)) {
                                 sub.push(c);
-                                max_reached = i;
                             }
                             i += 1;
                         }
@@ -239,7 +235,10 @@ impl Editor {
                 let start_index = start_index.max(chunk_info.ind_start);
                 let end_index = end_index.min(chunk_info.ind_end);
 
-                // println!("chunkchange {:?} {:?} {:?} {:?}", self.chunks[chunk_index].str, start_index, end_index, chunk_change);
+                if start_index == end_index && is_delete {
+                    // This can occur due to the end selection of the cursor being at the first index of a chunk, so we ignore that chunk for this change
+                    continue;
+                }
 
                 self.changes.insert(start_index, (end_index.max(start_index) - start_index, chunk_index, chunk_change));
             }
@@ -361,6 +360,14 @@ impl Editor {
                 self.chunk_info.remove(chunk);
             }
         }
+    }
+
+    pub fn compile(&self) -> String {
+        let mut b = String::new();
+        for c in &self.chunks {
+            b.push_str(c.str.as_str())
+        }
+        b
     }
 }
 

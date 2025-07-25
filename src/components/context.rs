@@ -1,4 +1,4 @@
-use std::thread;
+use std::{mem, thread};
 use std::time::{Duration, Instant};
 
 use gl::types::*;
@@ -49,6 +49,7 @@ pub struct UIContext {
     frames: (u32, u32, Instant),
     last_render: Instant,
     content_scale: (f32, f32),
+    swap_interval: SwapInterval,
 
     window: Window,
     renderer: Renderer,
@@ -56,6 +57,8 @@ pub struct UIContext {
     framework: Framework,
     fb_manager: FramebufferManager,
     keyboard: Keyboard,
+
+    passes: Vec<RenderPass>,
 
     close_requested: bool,
 }
@@ -83,12 +86,14 @@ impl UIContext {
             frames: (0, 0, Instant::now()),
             last_render: Instant::now(),
             content_scale: (1.0, 1.0),
+            swap_interval: builder.swap_interval,
             window: Window::new(builder.width, builder.height),
             renderer: Renderer::new(),
             font_manager: FontManager::new(""),
             framework: Framework::new(),
             fb_manager,
             keyboard: Keyboard::new(),
+            passes: builder.passes,
             close_requested: false,
         });
         context().framebuffer = context().fb_manager.create_fb(RGBA).unwrap();
@@ -110,8 +115,8 @@ impl UIContext {
                 // thread::sleep(Duration::from_millis(50));
             }
             // Finish();
-            self.glfw.set_swap_interval(SwapInterval::None);
-            // self.glfw.set_swap_interval(SwapInterval::Sync(2));
+            // self.glfw.set_swap_interval(SwapInterval::None);
+            self.glfw.set_swap_interval(self.swap_interval);
         }
     }
 
@@ -124,14 +129,13 @@ impl UIContext {
         self.framework.event(Event::PreRender);
         // println!("EVENT PRE: {:?}", st.elapsed());
 
-        // let st = Instant::now();
+        let st = Instant::now();
         let should_render = self.should_render();
-        // println!("CHECK RENDER: {:?}", st.elapsed());
 
-        // if should_render {
+        if should_render {
             self.render();
             self.last_render = Instant::now();
-        // }
+        }
         // let st = Instant::now();
         self.framework.event(Event::PostRender);
         // println!("EVENT POST: {:?}", st.elapsed());
@@ -145,18 +149,14 @@ impl UIContext {
 
     pub unsafe fn render(&mut self) {
         self.pre_render();
-        Finish();
+        // Finish();
 
         PushMatrix();
         self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
         context().window().mouse.pos /= (self.content_scale.0, self.content_scale.1);
 
-        let mut passes = RenderPass::all();
-        // passes.reverse(
-        for pass in passes {
-            // if pass != RenderPass::Main {
-            //     continue
-            // }
+        let mut passes = mem::take(&mut self.passes);
+        for pass in &passes {
             let (parent_fb, parent_tex) = self.framework.element_pass_fb(&pass).bind();
             if self.framework.should_render_pass(&pass) {
                 Framebuffer::clear_current();
@@ -166,69 +166,7 @@ impl UIContext {
                 match pass {
                     RenderPass::Main => {}
                     RenderPass::Bloom => {
-                        if self.renderer.blur_fb ==  0{
-                            self.renderer.blur_fb = self.fb_manager.create_fb(RGBA).unwrap();
-                        }
-
-                        let (mut parent_fb_2, mut parent_tex_2) = (0, 0);
-                        {
-                            let blur_fb = self.fb_manager.fb(self.renderer.blur_fb);
-                            // blur_fb.tex_filter();
-                            (parent_fb_2, parent_tex_2) = blur_fb.bind();
-                            Framebuffer::clear_current();
-                            // blur_fb.copy_from_parent();
-                        }
-                        // let shader = &mut ;
-                        self.renderer.bloom_shaders.0.bind();
-
-                        let mut last_tex = parent_tex_2;
-                        for i in 0..3 {
-                            {
-                                let shader = &self.renderer.bloom_shaders.0;
-                                shader.u_put_float("offset", vec![4.0 / (i as f32 + 1.0), 4.0 / (i as f32 + 1.0)]);
-                                shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
-                                shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
-                                shader.u_put_int("texture", vec![0]);
-                                shader.u_put_float("noise", vec![0.2]);
-                                shader.u_put_int("check", vec![1]);
-                                shader.u_put_int("check_texture", vec![1]);
-                            }
-                            // ActiveTexture(TEXTURE1);
-                            // BindTexture(TEXTURE_2D, last_tex as GLuint);
-                            ActiveTexture(TEXTURE0);
-                            BindTexture(TEXTURE_2D, last_tex as GLuint);
-                            self.renderer.draw_screen_rect_flipped();
-                            last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
-                        }
-                        self.renderer.bloom_shaders.1.bind();
-
-                        let mut last_tex = parent_tex_2;
-                        for i in 0..3 {
-                            {
-                                let shader = &self.renderer.bloom_shaders.1;
-                                shader.u_put_float("offset", vec![4.0 / (i as f32 + 1.0), 4.0 / (i as f32 + 1.0)]);
-                                shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
-                                shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
-                                shader.u_put_int("texture", vec![0]);
-                                shader.u_put_float("noise", vec![0.2]);
-                                shader.u_put_int("check", vec![1]);
-                                shader.u_put_int("check_texture", vec![1]);
-                            }
-                            // ActiveTexture(TEXTURE1);
-                            // BindTexture(TEXTURE_2D, last_tex as GLuint);
-                            ActiveTexture(TEXTURE0);
-                            BindTexture(TEXTURE_2D, last_tex as GLuint);
-                            self.renderer.draw_screen_rect_flipped();
-                            last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
-                        }
-
-                        self.fb_manager.fb(self.renderer.blur_fb).unbind();
-                        Framebuffer::clear_current(); // clear pass buffer
-                        // self.fb_manager.fb(self.renderer.blur_fb).bind_texture();
-                        Shader::unbind();
-
-                        // self.renderer.draw_screen_rect_flipped();
-                        Texture::unbind();
+                        self.bloom_pass()
                     }
                     RenderPass::Post => {}
                     RenderPass::Custom(_) => {}
@@ -248,6 +186,7 @@ impl UIContext {
 
             self.framework.element_pass_fb(&pass).copy_bind(parent_fb as u32, parent_tex as u32);
         }
+        mem::swap(&mut passes, &mut self.passes);
         // for pass in RenderPass::all().iter().rev() {
         //     Enable(BLEND);
         //     self.framework.pass_fb(pass).bind_texture();
@@ -260,7 +199,7 @@ impl UIContext {
         context().window().mouse.pos *= (self.content_scale.0, self.content_scale.1);
         self.renderer.stack().pop();
         PopMatrix();
-        Finish();
+        // Finish();
         check_error("render");
         self.post_render();
 
@@ -298,7 +237,8 @@ impl UIContext {
         self.framebuffer().unbind();
 
         self.renderer.end_frame();
-        self.p_window.swap_buffers(); }
+        self.p_window.swap_buffers();
+    }
 
     pub unsafe fn handle_events(&mut self) {
         self.glfw.poll_events();
@@ -361,6 +301,72 @@ impl UIContext {
         &self.keyboard
     }
     pub unsafe fn framebuffer(&mut self) -> &mut Framebuffer { self.fb_manager.fb(self.framebuffer) }
+
+    unsafe fn bloom_pass(&mut self) {
+        if self.renderer.blur_fb ==  0{
+            self.renderer.blur_fb = self.fb_manager.create_fb(RGBA).unwrap();
+        }
+
+        let (mut parent_fb_2, mut parent_tex_2) = (0, 0);
+        {
+            let blur_fb = self.fb_manager.fb(self.renderer.blur_fb);
+            // blur_fb.tex_filter();
+            (parent_fb_2, parent_tex_2) = blur_fb.bind();
+            Framebuffer::clear_current();
+            // blur_fb.copy_from_parent();
+        }
+        // let shader = &mut ;
+        self.renderer.bloom_shaders.0.bind();
+
+        let mut last_tex = parent_tex_2;
+        for i in 0..3 {
+            {
+                let shader = &self.renderer.bloom_shaders.0;
+                shader.u_put_float("offset", vec![4.0 / (i as f32 + 1.0), 4.0 / (i as f32 + 1.0)]);
+                shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
+                shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
+                shader.u_put_int("texture", vec![0]);
+                shader.u_put_float("noise", vec![0.2]);
+                shader.u_put_int("check", vec![1]);
+                shader.u_put_int("check_texture", vec![1]);
+            }
+            // ActiveTexture(TEXTURE1);
+            // BindTexture(TEXTURE_2D, last_tex as GLuint);
+            ActiveTexture(TEXTURE0);
+            BindTexture(TEXTURE_2D, last_tex as GLuint);
+            self.renderer.draw_screen_rect_flipped();
+            last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
+        }
+        self.renderer.bloom_shaders.1.bind();
+
+        let mut last_tex = parent_tex_2;
+        for i in 0..3 {
+            {
+                let shader = &self.renderer.bloom_shaders.1;
+                shader.u_put_float("offset", vec![4.0 / (i as f32 + 1.0), 4.0 / (i as f32 + 1.0)]);
+                shader.u_put_float("half_pixel", vec![1.0 / self.window.width as f32, 1.0 / self.window.height as f32]);
+                shader.u_put_float("resolution", vec![self.window.width as f32, self.window.height as f32]);
+                shader.u_put_int("texture", vec![0]);
+                shader.u_put_float("noise", vec![0.2]);
+                shader.u_put_int("check", vec![1]);
+                shader.u_put_int("check_texture", vec![1]);
+            }
+            // ActiveTexture(TEXTURE1);
+            // BindTexture(TEXTURE_2D, last_tex as GLuint);
+            ActiveTexture(TEXTURE0);
+            BindTexture(TEXTURE_2D, last_tex as GLuint);
+            self.renderer.draw_screen_rect_flipped();
+            last_tex = self.fb_manager.fb(self.renderer.blur_fb).texture_id() as i32;
+        }
+
+        self.fb_manager.fb(self.renderer.blur_fb).unbind();
+        Framebuffer::clear_current(); // clear pass buffer
+        // self.fb_manager.fb(self.renderer.blur_fb).bind_texture();
+        Shader::unbind();
+
+        // self.renderer.draw_screen_rect_flipped();
+        Texture::unbind();
+    }
 }
 
 pub struct ContextBuilder<'a> {
@@ -369,6 +375,8 @@ pub struct ContextBuilder<'a> {
     title: String,
     glfw: Glfw,
     mode: WindowMode<'a>,
+    passes: Vec<RenderPass>,
+    swap_interval: SwapInterval,
 }
 
 impl<'a> ContextBuilder<'a> {
@@ -380,6 +388,8 @@ impl<'a> ContextBuilder<'a> {
             title: "".to_string(),
             glfw: glfw::init(|e, s| eprintln!("{:?} {:?}", e, s)).unwrap(),
             mode: WindowMode::Windowed,
+            passes: vec![RenderPass::Main],
+            swap_interval: SwapInterval::Adaptive,
         }
     }
 
@@ -393,6 +403,12 @@ impl<'a> ContextBuilder<'a> {
     pub fn hint(&mut self, hint: WindowHint) { self.hints.push(hint); }
 
     pub fn mode(&mut self, mode: WindowMode<'a>) { self.mode = mode; }
+
+    pub fn passes(&mut self, passes: Vec<RenderPass>) { self.passes = passes }
+
+    pub fn swap_interval(&mut self, swap_interval: SwapInterval) {
+        self.swap_interval = swap_interval;
+    }
 
     pub unsafe fn build(self) {
         UIContext::create_instance(self);

@@ -15,6 +15,8 @@ pub struct FontManager {
     pub(crate) sdf_shader: Shader,
     font_byte_library: HashMap<String, Vec<u8>>,
     pub(crate) cached_inst: HashMap<u64, (VertexArray, u32, FontRenderData)>,
+
+    to_remove: Vec<u64>,
 }
 
 impl FontManager {
@@ -28,6 +30,7 @@ impl FontManager {
             sdf_shader: s,
             font_byte_library: HashMap::new(),
             cached_inst: HashMap::new(),
+            to_remove: vec![],
         }
     }
 
@@ -36,19 +39,20 @@ impl FontManager {
     }
 
     pub unsafe fn cleanup(&mut self) {
-        let mut remove = vec![];
         for (hash, (_, elapsed_frames, _)) in &mut self.cached_inst {
             if *elapsed_frames > 10 {
-                remove.push(*hash);
+                self.to_remove.push(*hash);
             } else {
                 *elapsed_frames += 1;
             }
         }
 
-        remove.iter().for_each(|key| unsafe {
+        self.to_remove.iter().for_each(|key| unsafe {
             let (vao, _, _) = self.cached_inst.remove(&key).unwrap();
             vao.delete();
         });
+
+        self.to_remove.clear()
     }
 
     pub fn font(&mut self, name: impl ToString) -> Option<&mut Font> {

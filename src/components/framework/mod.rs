@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::time::Instant;
-
+use gl::Finish;
 use crate::components::context::context;
 use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::event::{Event, RenderPass};
@@ -95,11 +95,6 @@ impl Framework {
             if self.should_render_pass(&rp) {
                 return true;
             }
-            // for i in 0..self.layers.len() {
-            //     if self.should_render(i as u32, &rp) {
-            //         return true
-            //     }
-            // }
         }
         false
     }
@@ -149,6 +144,9 @@ impl Framework {
                     self.screen_pass_fb(pass).unbind();
                 }
 
+                // At 4K this copy takes ~0.2ms on GPU and ~2.0ms on iGPU. Likely to have a very big performance impact on lower power integrated graphics
+                // At 4K, all copies per frame is around 5.4ms on iGPU and 0.6ms on GPU
+                // TODO dirty rects https://trello.com/c/LEwMbrmE
                 self.screen_pass_fb(pass).copy_bind(parent_fb as u32, parent_tex as u32);
             },
             _ => self.current_screen.handle(&event),
@@ -160,7 +158,7 @@ impl Framework {
                     let (mut parent_fb, mut parent_tex) = (0, 0);
                     {
                         let layer_fb = layer.fb(pass);
-                        (parent_fb, parent_tex) = layer_fb.bind();
+                        (parent_fb, parent_tex) = layer_fb.bind(); 
                     }
 
                     // println!("{}", layer.should_render(pass));

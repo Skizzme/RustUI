@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::ffi::CString;
 use gl::*;
 use gl::types::*;
 
@@ -10,6 +12,7 @@ pub struct Shader {
     pub created: bool,
     vertex_source: String,
     fragment_source: String,
+    cached_attribs: HashMap<CString, GLint>
 }
 
 // TODO: GEOMETRY SHADERS!!! (could be cool for stuff like bezier curves)
@@ -23,6 +26,7 @@ impl Shader {
             created: false,
             vertex_source: vertex_source.to_string(),
             fragment_source: fragment_source.to_string(),
+            cached_attribs: Default::default(),
         };
 
         let v_res = compile(shader.vertex_shader, shader.vertex_source.as_str());
@@ -85,9 +89,15 @@ impl Shader {
     }
 
     /// Gets the location of an attribute variable of the program
-    pub unsafe fn get_attrib_location(&self, name: &str) -> GLint {
+    pub unsafe fn get_attrib_location(&mut self, name: &str) -> GLint {
         let cname = std::ffi::CString::new(name).expect("Failed to convert to cstring");
-        GetAttribLocation(self.program, cname.as_ptr())
+        match self.cached_attribs.get(&cname) {
+            None => {
+                self.cached_attribs.insert(cname.clone(), GetAttribLocation(self.program, cname.as_ptr()));
+                self.cached_attribs.get(&cname).unwrap().clone()
+            }
+            Some(v) => v.clone()
+        }
     }
 
     /// Gets the location of a uniform variable of the program

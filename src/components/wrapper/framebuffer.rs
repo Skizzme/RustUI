@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::ptr::null;
-
+use std::time::Instant;
 use crate::components::context::context;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
@@ -135,9 +135,6 @@ impl Framebuffer {
 
     /// Copy this framebuffer to target, leaving the target framebuffer bound
     pub unsafe fn copy_bind(&self, target_fb: u32, target_tex: u32) {
-        // Finish();
-        // let st = Instant::now();
-
         Disable(BLEND);
         BindFramebuffer(FRAMEBUFFER, target_fb);
 
@@ -157,9 +154,6 @@ impl Framebuffer {
         context().renderer().draw_screen_rect_flipped();
         Shader::unbind();
         Enable(BLEND);
-
-        // Finish();
-        // println!("cop {:?}", st.elapsed());
     }
 
     pub unsafe fn copy_raw(&self, target_fb: u32) {

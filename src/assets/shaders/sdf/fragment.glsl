@@ -19,11 +19,11 @@ void main() {
     vec2 texCoord = gl_TexCoord[0].xy;
 
     vec2 screenDerivatives = vec2(length(dFdx(texCoord)), length(dFdy(texCoord)));
-    vec2 normalizedDerivates = screenDerivatives * u_atlas_dims;
+    vec2 normalizedDerivatives = screenDerivatives * u_atlas_dims;
 
     float distance = texture2D(u_texture, texCoord).a;
 
-    float contrast = length(normalizedDerivates);
+    float contrast = length(normalizedDerivatives);
 
     float zero_level = 0.5;
     float adjustedDistance = (distance - zero_level) / contrast + zero_level;

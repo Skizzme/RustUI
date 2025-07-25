@@ -6,7 +6,7 @@ use glfw::{Action, MouseButton};
 use parking_lot::Mutex;
 
 use crate::components::context::context;
-use crate::components::framework::animation::AnimationRegistry;
+use crate::components::framework::animation::{AnimationRef, AnimationRegistry};
 use crate::components::framework::changing::Changing;
 use crate::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
@@ -297,31 +297,46 @@ impl ElementBuilder {
     }
 
     pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self {
-        self.element.handler = Arc::new(Mutex::new(Box::new(handler))); self
+        self.element.handler = Arc::new(Mutex::new(Box::new(handler)));
+        self
     }
     pub fn render_handler<R: FnMut(&mut Element, &RenderPass) + 'static>(mut self, render_handler: R) -> Self {
-        self.element.render_handler = Some(Arc::new(Mutex::new(Box::new(render_handler)))); self
+        self.element.render_handler = Some(Arc::new(Mutex::new(Box::new(render_handler))));
+        self
     }
     pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self {
-        self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render))); self
+        self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render)));
+        self
     }
     pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self {
-        self.element.children.push(Box::new(child)); self
+        self.element.children.push(Box::new(child));
+        self
     }
-    pub fn bounds(mut self, vec4: Vec4) -> Self {
-        self.element.bounds.set(vec4); self
+    pub fn bounds(mut self, vec4: impl Into<Vec4>) -> Self {
+        self.element.bounds.set(vec4.into());
+        self
     }
     pub fn draggable(mut self, draggable: bool) -> Self {
-        self.element.draggable = draggable; self
+        self.element.draggable = draggable;
+        self
     }
     pub fn scrollable(mut self, scrollable: bool) -> Self {
-        self.element.scrollable = scrollable; self
+        self.element.scrollable = scrollable;
+        self
     }
     pub fn active(mut self, active: bool) -> Self {
-        self.element.active = active; self
+        self.element.active = active;
+        self
     }
     pub fn active_fn<Fn: FnMut() -> bool + 'static>(mut self, active_fn: Option<Fn>) -> Self {
-        self.element.set_active_fn(active_fn); self
+        self.element.set_active_fn(active_fn);
+        self
+    }
+    pub fn register_animations(mut self, anims: Vec<AnimationRef>) -> Self {
+        for a in anims {
+            self.element.animations.register(a);
+        }
+        self
     }
     pub fn animations(&mut self) -> &mut AnimationRegistry {
         &mut self.element.animations

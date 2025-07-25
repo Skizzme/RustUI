@@ -5,6 +5,7 @@ edition = "2021"
 
 [profile.release]
 opt-level = 2 # seems to be the optimal performance, only slightly better than 3
+debug = "line-tables-only"
 
 [dependencies]
 glfw = "0.59.0"

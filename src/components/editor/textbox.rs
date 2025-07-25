@@ -47,6 +47,8 @@ pub struct Textbox {
     scroll: (AnimationRef, AnimationRef),
     target_scroll: Vec2<f32>,
 
+    text_size: f32,
+
     line_texts: HashMap<usize, Text>,
     debug: bool,
 }
@@ -56,9 +58,10 @@ impl Textbox {
         let mut animations = AnimationRegistry::new();
         let scroll = (animations.new_anim(), animations.new_anim());
         let mut textbox = Textbox {
-            editor: Editor::new(32, text),
+            editor: Editor::new(1024 * 16, text),
             render_chunks: vec![],
             changed: true,
+            text_size: 16.0,
 
             offset: Default::default(),
             anim_registry: animations,
@@ -66,7 +69,7 @@ impl Textbox {
             target_scroll: Default::default(),
             line_texts: Default::default(),
 
-            debug: true,
+            debug: false,
         };
         for i in 0..textbox.editor.chunks.len() {
             textbox.render_chunks.push(RenderChunk::new(i));
@@ -98,7 +101,10 @@ impl Textbox {
 
     fn apply_changes(&mut self) {
         self.changed = true;
+        let st = Instant::now();
         self.editor.apply_changes();
+        let d = st.elapsed();
+        println!("edited in {:?}", d);
     }
 
     fn correct_cursor(&mut self, move_down: bool) {
@@ -119,8 +125,7 @@ impl Textbox {
 
     unsafe fn screen_to_text_pos(&self, screen_pos: &Vec2<f32>) -> Vec2<usize> {
         let fr = context().fonts().font("main").unwrap();
-        let size = 16.;
-        let fr_height = fr.get_sized_height(size);
+        let fr_height = fr.get_sized_height(self.text_size);
         let mut offset = self.offset();
 
         let screen_line = ((screen_pos.y() - self.scroll.1.borrow().value() + offset.y()) / fr_height) as usize - 1;;
@@ -212,8 +217,7 @@ impl Textbox {
 impl UIHandler for Textbox {
     unsafe fn handle(&mut self, event: &Event) -> bool {
         let fr = context().fonts().font("main").unwrap();
-        let size = 16.;
-        let fr_height = fr.get_sized_height(size);
+        let fr_height = fr.get_sized_height(self.text_size);
         let shift_pressed = context().keyboard().shift();
 
         let scroll = Vec2::new(self.scroll.0.borrow().value(), self.scroll.1.borrow().value());
@@ -267,7 +271,7 @@ impl UIHandler for Textbox {
                 } else {
                     0xffbbbbbb.to_color()
                 };
-                r_chunk.text = fr.draw_string_offset((size, &e_chunk.str, color), offset + scroll, end_pos);
+                r_chunk.text = fr.draw_string_offset((self.text_size, &e_chunk.str, color), offset + scroll, end_pos);
                 r_chunk.last_scroll = scroll;
                 if self.debug {
                     r_chunk.text.bounds().debug_draw(r_chunk.c * 0x20ffffff.to_color());
@@ -347,7 +351,7 @@ impl UIHandler for Textbox {
                 if !self.line_texts.contains_key(&line) {
                     let text = text!(
                         AlignH(Alignment::Right),
-                        Size(size),
+                        Size(self.text_size),
                         FormatItem::Color(0xff909090.to_color()),
                         format!("{}", line),
                     );

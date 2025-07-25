@@ -19,6 +19,7 @@
 extern crate alloc;
 
 use std::cell::RefCell;
+use std::f64::consts::PI;
 use std::fs;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::Add;
@@ -27,7 +28,8 @@ use std::sync::Arc;
 use std::time::{Instant, UNIX_EPOCH};
 use gl::Enable;
 
-use glfw::{Action, Key, WindowHint};
+use glfw::{Action, Key, SwapInterval, WindowHint};
+use num_traits::Pow;
 use parking_lot::Mutex;
 use winapi::um::wincon::FreeConsole;
 
@@ -67,6 +69,7 @@ fn main() {
         builder.title("Test");
         builder.dims(1920/2, 1080/2);
         builder.hint(WindowHint::Resizable(false));
+        builder.swap_interval(SwapInterval::Adaptive);
         builder.build();
 
         context().framework().set_screen(TestScreen::new());
@@ -88,20 +91,15 @@ pub struct TestScreen {
 
 impl TestScreen {
     pub unsafe fn new() -> Self {
-        let mut t = include_str!("../test.js").to_string();
-        // t.push_str(&t.clone());
-        // t.push_str(&t.clone());
-        // t.push_str(&t.clone());
-        // t.push_str(&t.clone());
-        // t.push_str(&t.clone());
-        // t.push_str(&t.clone());
-        // t.push_str(&t.clone());
-        // t.push_str(&t.clone());
+        // let mut t = include_str!("../test_4.js").to_string();
+        let mut t = String::from_utf8(fs::read("test.js").unwrap()).unwrap();
+        // 5,320,704
         // println!("LEN : {}", t.len());
         // before
         // let bytes = fs::read("C:\\Windows\\Fonts\\consola.ttf").unwrap();
         // before
         // context().fonts().set_font_bytes("main", bytes);
+        println!("{}", t.len());
         context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         // context().fonts().load_font("main", true);
 
@@ -201,7 +199,7 @@ impl ScreenTrait for TestScreen {
             );
             // gl::Finish();
             // let st = Instant::now();
-            let fr_d = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
+            // let fr_d = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
             // gl::Finish();
             // let et = st.elapsed();
             // println!("drawed {:?}", et);
@@ -215,7 +213,7 @@ impl ScreenTrait for TestScreen {
             // let formated: Text = (self.t_size.borrow().value(), "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
             // let pos = 0; //
             // fr.draw_string(formated, (pos, 300.0));
-            // self.last_fps = context().fps();
+            self.last_fps = context().fps();
         }
         Event::PostRender => {
             self.previous_pos = *context().window().mouse().pos();
@@ -348,24 +346,60 @@ impl ScreenTrait for TestScreen {
             }
         );
 
+        let mut hover_anim: AnimationRef = Animation::zero().into();
+        let mut drop_anim: AnimationRef = Animation::zero().into();
+        layer_0.add(
+            ElementBuilder::new()
+                .register_animations(vec![hover_anim.clone(), drop_anim.clone()])
+                .handler(move |el, e|{
+                    let hover_anim = hover_anim.clone();
+                    let drop_anim = drop_anim.clone();
+                    if e.is_render(RenderPass::Main) {
+                        let c_mult = hover_anim.borrow().value();
+                        context().renderer().draw_rounded_rect(el.bounds(), 5., (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.));
+                    }
+                    match e {
+                        Event::PreRender => {
+                            // println!("{} {}", drop_anim.borrow().value(), hover_anim.borrow().value());
+                            hover_anim.borrow_mut().animate_to( if el.hovering() { 1.5 } else { 1.0 }, 5., Easing::Sin);
+                            drop_anim.borrow_mut().animate(4.0, Easing::Progressive(1.0));
+                            el.bounds().set_height(90.+90.*drop_anim.borrow().value());
+                        },
+                        Event::MouseClick(button, action) => if *action == Action::Press {
+                            if el.hovering() {
+                                if drop_anim.borrow().target() == 1.0 {
+                                    drop_anim.borrow_mut().set_target(0.0);
+                                } else {
+                                    drop_anim.borrow_mut().set_target(1.0);
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                })
+                .bounds(Vec4::xywh(10, 10, 140, 90))
+                .draggable(true)
+                .build()
+        );
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
-        layer_0.add(Textbox::new("main", self.text.clone())); // "".to_string() self.text.clone()
+        layer_0.add(Textbox::new("main", self.text.clone())); // "".to_stringpplplplp() self.text.clone()
         // layer
         self.text = "".to_string();
+
+        // layer_0.elements().first().unwrap().
 
         vec![layer_0]
         // vec![]
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        true
-        // if rp == &RenderPass::Main {
-        //     let res = self.last_fps != context().fps();
-        //     res
-        // } else {
-        //     false
-        // }
+        if rp == &RenderPass::Main {
+            let res = self.last_fps != context().fps();
+            res
+        } else {
+            false
+        }
     }
 }
 

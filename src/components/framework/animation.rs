@@ -16,6 +16,7 @@ pub enum Easing {
     CubicOut,
     QuarticIn,
     QuarticOut,
+    // For best results, value must be from 0 to 1
     Progressive(f32),
     EaseInElastic,
     EaseOutElastic,
@@ -48,7 +49,7 @@ impl Easing {
                 (x * (PI/2.0) as f32).sin()
             }
             Easing::Progressive(speed) => {
-                2.0/(1.0+20f32.powf(-(20.0/speed)* x))-1.0
+                2.0/(1.0+20f32.powf(-(20.0/(speed*5.+5.))* x))-1.0
             }
             Easing::EaseInElastic => {
                 let c4: f32 = (2. * PI as f32) / 3.;
@@ -58,7 +59,7 @@ impl Easing {
                     if (x == 1.) {
                         1.
                     } else {
-                        (-2.).pow(10. * x - 10.) as f32 * ((x * 10. - 10.75) * c4).sin()
+                        -((2.).pow(10. * x - 10.) as f32) * ((x * 10. - 10.75) * c4).sin()
                     }
                 }
             }
@@ -70,7 +71,7 @@ impl Easing {
                     if (x == 1.) {
                         1.
                     } else {
-                        (-2.).pow(-10. * x) as f32 * ((x * 10. - 0.75) * c4).sin() + 1.
+                        (2.).pow(-10. * x) as f32 * ((x * 10. - 0.75) * c4).sin() + 1.
                     }
                 }
             }
@@ -91,7 +92,7 @@ impl Easing {
                     n1 * x * x + 0.984375
                 }
             }
-        }.clamp(0.0, 1.0)
+        }
     }
 }
 
@@ -168,6 +169,12 @@ impl Animation {
     }
     pub fn state(&self) -> f32 {
         self.state
+    }
+}
+
+impl Into<AnimationRef> for Animation {
+    fn into(self) -> AnimationRef {
+        Rc::new(RefCell::new(self))
     }
 }
 
