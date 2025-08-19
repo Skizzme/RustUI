@@ -48,10 +48,10 @@ use crate::components::framework::state::ChangingRegistry;
 /// ```
 /// use std::hash::{DefaultHasher, Hasher};
 /// use std::sync::{Arc, Mutex};
-/// use RustUI::components::framework::element::comp_element::CompElement;
-/// use RustUI::components::framework::element::ElementBuilder;
-/// use RustUI::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
-/// use RustUI::components::spatial::vec2::Vec2;
+/// use ferrum::components::framework::element::comp_element::CompElement;
+/// use ferrum::components::framework::element::ElementBuilder;
+/// use ferrum::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
+/// use ferrum::components::spatial::vec2::Vec2;
 ///
 /// struct User {
 ///     name: String

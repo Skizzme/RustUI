@@ -377,7 +377,7 @@ impl Font {
     /// A shortcut to calling
     ///
     /// ```
-    /// use RustUI::components::render::font::manager::FontManager;
+    /// use ferrum::components::render::font::manager::FontManager;
     /// FontManager::load(std::fs::read("cached_path").unwrap(), /*args_here*/);
     /// ```
     pub unsafe fn load_from_file(cached_path: &str) -> Self {
@@ -786,7 +786,7 @@ impl Font {
     ///
     /// `should_render` is an integer that is 0, 1, or 2. Is calculated based off of this Font's current draw data
     /// ```
-    /// use RustUI::components::render::font::Font;
+    /// use ferrum::components::render::font::Font;
     /// let should_render = unsafe { Font::get_dimensions_scaled('A') }.3;
     /// if should_render == 2 {
     ///     // End the rendering.
