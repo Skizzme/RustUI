@@ -65,12 +65,12 @@ fn main() {
     }
 
     unsafe {
-        let mut builder = ContextBuilder::new();
-        builder.title("Test");
-        builder.dims(1920/2, 1080/2);
-        builder.hint(WindowHint::Resizable(false));
-        builder.swap_interval(SwapInterval::Adaptive);
-        builder.build();
+        ContextBuilder::new()
+            .title("Test")
+            .dims(1920/2, 1080/2)
+            .hint(WindowHint::Resizable(false))
+            .swap_interval(SwapInterval::Adaptive)
+            .build();
 
         context().framework().set_screen(TestScreen::new());
         context().do_loop()
@@ -92,7 +92,7 @@ pub struct TestScreen {
 impl TestScreen {
     pub unsafe fn new() -> Self {
         // let mut t = include_str!("../test_4.js").to_string();
-        let mut t = String::from_utf8(fs::read("test.js").unwrap()).unwrap();
+        let mut t = String::from_utf8(fs::read("dev/test.js").unwrap()).unwrap();
         // 5,320,704
         // println!("LEN : {}", t.len());
         // before
@@ -100,7 +100,7 @@ impl TestScreen {
         // before
         // context().fonts().set_font_bytes("main", bytes);
         println!("{}", t.len());
-        context().fonts().set_font_bytes("main", include_bytes!("assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+        context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         // context().fonts().load_font("main", true);
 
         let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000)];
@@ -166,6 +166,8 @@ impl ScreenTrait for TestScreen {
                 }
             }
 
+            context().renderer().draw_rect(Vec4::xywh(20, 20, 10, 10), 0xffffffff);
+
             let mut fr = context().fonts().font("main").unwrap();
 
             // fr.draw_string((20., "there should be a tab right\there", 0xffffffff), (10., 10.,));
@@ -175,31 +177,19 @@ impl ScreenTrait for TestScreen {
                 (20., "aligned middle? with some\nextra lines\nto spare", 0xffffffff),
                 (36., "along with some\nLARGER ", 0xffffffff),
                 (18., "text...\n", 0xffffffff),
-                AlignH(Left),
                 Size(16.),
-                "left\n",
-                AlignH(Center),
-                "center\n",
-                AlignH(Right),
-                "right\n",
-                AlignH(Custom(0.75)),
-                "0.75\n",
-                AlignH(Custom(2.)),
-                "this is a 2.",
-                AlignH(Custom(-1.)),
-                "this is a -1.\n",
-                AlignH(Custom(2.)),
-                "this is another 2.",
-                AlignH(Custom(-1.)),
-                "this is another -1.\n\n",
-                AlignH(Right),
-                "and now inline",
-                AlignH(Center),
-                "and it should work"
+                AlignH(Left), "left\n",
+                AlignH(Center), "center\n",
+                AlignH(Right), "right\n",
+                AlignH(Custom(0.75)), "0.75\n",
+                AlignH(Custom(2.)), "this is a 2.",
+                AlignH(Custom(-1.)), "this is a -1.\n",
+                AlignH(Custom(2.)), "this is another 2.",
+                AlignH(Custom(-1.)), "this is another -1.\n\n",
+                AlignH(Right), "and now inline",
+                AlignH(Center), "and it should work"
             );
-            // gl::Finish();
-            // let st = Instant::now();
-            // let fr_d = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
+            let fr_d = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
             // gl::Finish();
             // let et = st.elapsed();
             // println!("drawed {:?}", et);
@@ -383,7 +373,7 @@ impl ScreenTrait for TestScreen {
         );
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
-        layer_0.add(Textbox::new("main", self.text.clone())); // "".to_stringpplplplp() self.text.clone()
+        layer_0.add(Textbox::new("main", &self.text)); // "".to_stringpplplplp() self.text.clone()
         // layer
         self.text = "".to_string();
 
@@ -394,12 +384,13 @@ impl ScreenTrait for TestScreen {
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        if rp == &RenderPass::Main {
-            let res = self.last_fps != context().fps();
-            res
-        } else {
-            false
-        }
+        false
+        // if rp == &RenderPass::Main {
+        //     let res = self.last_fps != context().fps();
+        //     res
+        // } else {
+        //     false
+        // }
     }
 }
 

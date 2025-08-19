@@ -101,18 +101,18 @@ impl UIContext {
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            // Finish();
-            // let st = Instant::now();
+            Finish();
+            let st = Instant::now();
             let rendered = self.frame();
-            // Finish();
-            // let et = st.elapsed();
-            // println!("Frame Time: {:?}", et);
+            Finish();
+            let et = st.elapsed();
+            println!("Frame Time: {:?}", et);
             if !rendered {
                 // thread::sleep(Duration::from_secs_f32(1.0/200.0));
             }
 
             if self.last_render.elapsed().as_secs_f32() > 1.0 {
-                // thread::sleep(Duration::from_millis(50));
+                thread::sleep(Duration::from_millis(50));
             }
             // Finish();
             // self.glfw.set_swap_interval(SwapInterval::None);
@@ -125,20 +125,16 @@ impl UIContext {
         self.handle_events();
         self.window.mouse.frame();
 
-        // let st = Instant::now();
         self.framework.event(Event::PreRender);
-        // println!("EVENT PRE: {:?}", st.elapsed());
 
-        let st = Instant::now();
         let should_render = self.should_render();
 
         if should_render {
             self.render();
             self.last_render = Instant::now();
         }
-        // let st = Instant::now();
+
         self.framework.event(Event::PostRender);
-        // println!("EVENT POST: {:?}", st.elapsed());
 ;
         should_render
     }
@@ -393,21 +389,38 @@ impl<'a> ContextBuilder<'a> {
         }
     }
 
-    pub fn title(&mut self, title: impl ToString) { self.title = title.to_string(); }
-    pub fn dims(&mut self, width: i32, height: i32) {
+    pub fn title(mut self, title: impl ToString) -> Self {
+        self.title = title.to_string();
+        self
+    }
+    pub fn dims(mut self, width: i32, height: i32) -> Self {
         self.width = width;
         self.height = height;
+        self
     }
 
-    pub fn hints(&mut self, mut hints: Vec<WindowHint>) { self.hints.append(&mut hints); }
-    pub fn hint(&mut self, hint: WindowHint) { self.hints.push(hint); }
+    pub fn hints(mut self, mut hints: Vec<WindowHint>) -> Self {
+        self.hints.append(&mut hints);
+        self
+    }
+    pub fn hint(mut self, hint: WindowHint) -> Self {
+        self.hints.push(hint);
+        self
+    }
 
-    pub fn mode(&mut self, mode: WindowMode<'a>) { self.mode = mode; }
+    pub fn mode(mut self, mode: WindowMode<'a>) -> Self {
+        self.mode = mode;
+        self
+    }
 
-    pub fn passes(&mut self, passes: Vec<RenderPass>) { self.passes = passes }
+    pub fn passes(mut self, passes: Vec<RenderPass>) -> Self {
+        self.passes = passes;
+        self
+    }
 
-    pub fn swap_interval(&mut self, swap_interval: SwapInterval) {
+    pub fn swap_interval(mut self, swap_interval: SwapInterval) -> Self {
         self.swap_interval = swap_interval;
+        self
     }
 
     pub unsafe fn build(self) {

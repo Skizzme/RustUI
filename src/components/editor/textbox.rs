@@ -54,11 +54,15 @@ pub struct Textbox {
 }
 
 impl Textbox {
-    pub fn new(font: impl ToString, text: String) -> Self {
+    pub fn new(font: impl ToString, text: &String) -> Self {
         let mut animations = AnimationRegistry::new();
         let scroll = (animations.new_anim(), animations.new_anim());
+        let st = Instant::now();
+        let ed = Editor::new(1024 / 16, text);
+        let d = st.elapsed();
+        println!("created editor in {:?}", d);
         let mut textbox = Textbox {
-            editor: Editor::new(1024 * 16, text),
+            editor: ed,
             render_chunks: vec![],
             changed: true,
             text_size: 16.0,
@@ -464,13 +468,13 @@ impl UIHandler for Textbox {
                 self.scroll.0.borrow_mut().animate_to(self.target_scroll.x * scroll_mult, scroll_speed, easing);
                 self.scroll.1.borrow_mut().animate_to(self.target_scroll.y * scroll_mult, scroll_speed, easing);
             }
-            Event::PostRender => {
-                if self.changed {
-                    self.changed = false;
-                }
-            }
             Event::Scroll(x, y) => {
-                self.target_scroll += (*x, *y);
+                if context().keyboard().is_pressed(&Key::LeftControl) {
+                    self.text_size += y * 0.1;
+                    self.changed = true;
+                } else {
+                    self.target_scroll += (*x, *y);
+                }
             }
             Event::MouseClick(button, action) => {
                 if action == &Action::Release {
@@ -491,6 +495,12 @@ impl UIHandler for Textbox {
         //     println!("{:?}", d);
         // }
         self.changed = tmp_changed || self.changed;
+        match event {
+            Event::PostRender => {
+                self.changed = false;
+            }
+            _ => {}
+        }
         false
     }
 
