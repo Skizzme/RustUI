@@ -55,26 +55,54 @@ use ferrum::components::wrapper::texture::Texture;
 use ferrum::gl_binds::gl11::{ALPHA, BLEND};
 use ferrum::text;
 
+
 fn main() {
     // editor();
-    let args : Vec<String> = std::env::args().collect();
-    if !(args.len() > 1 && args[1] == "console") {
-        unsafe {
-            FreeConsole();
+    // let args : Vec<String> = std::env::args().collect();
+    // if !(args.len() > 1 && args[1] == "console") {
+    //     unsafe {
+    //         FreeConsole();
+    //     }
+    // }
+    //
+    // unsafe {
+    //     ContextBuilder::new()
+    //         .title("Test")
+    //         .dims(1920/2, 1080/2)
+    //         .hint(WindowHint::Resizable(false))
+    //         .swap_interval(SwapInterval::Adaptive)
+    //         .build();
+    //
+    //     context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+    //     context().framework().set_screen(TestScreen2::new());
+    //     context().do_loop()
+    // }
+    calc_prime();
+}
+
+fn calc_prime() {
+    let mut primes = Vec::new();
+    let st = Instant::now();
+    let mut i = 1;
+    let mut res = true;
+    while (i < 1000000) {
+        res = true;
+        let mut j = 2;
+        while j < i {
+            if i % j == 0 {
+                res = false;
+                break;
+            }
+            j += 1;
         }
+        if (res) {
+            primes.push(i);
+        }
+        i += 1;
     }
-
-    unsafe {
-        ContextBuilder::new()
-            .title("Test")
-            .dims(1920/2, 1080/2)
-            .hint(WindowHint::Resizable(false))
-            .swap_interval(SwapInterval::Adaptive)
-            .build();
-
-        context().framework().set_screen(TestScreen::new());
-        context().do_loop()
-    }
+    let mut et = Instant::now();
+    println!("{:?}", primes.len());
+    println!("{:?}", et - st);
 }
 
 pub struct TestScreen {
@@ -100,7 +128,6 @@ impl TestScreen {
         // before
         // context().fonts().set_font_bytes("main", bytes);
         println!("{}", t.len());
-        context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         // context().fonts().load_font("main", true);
 
         let v = vec![Test::new(1), Test::new(2), Test::new(3), Test::new(4),Test::new(1000)];
@@ -391,6 +418,83 @@ impl ScreenTrait for TestScreen {
         // } else {
         //     false
         // }
+    }
+}pub struct TestScreen2 {
+    counter: Arc<Mutex<i32>>,
+    input: Arc<Mutex<String>>,
+}
+
+impl TestScreen2 {
+    pub fn new() -> Self {
+        Self {
+            counter: Arc::new(Mutex::new(0)),
+            input: Arc::new(Mutex::new("test".to_string())),
+        }
+    }
+}
+
+impl ScreenTrait for TestScreen2 {
+    unsafe fn handle(&mut self, event: &Event) {
+
+    }
+
+    unsafe fn init(&mut self) -> Vec<Layer> {
+        let mut layer = Layer::new();
+
+        let counter = self.counter.clone();
+        let counter_text = self.counter.clone();
+
+        // Counter text element
+        layer.add(
+            ElementBuilder::new()
+                .bounds(Vec4::xywh(20.0, 20.0, 200.0, 40.0))
+                .handler(move |el, event| {
+                    if let Event::Render(pass) = event {
+                        if pass == &RenderPass::Main {
+                            let val = *counter_text.lock();
+                            let mut fr = context().fonts().font("main").unwrap();
+                            fr.draw_string(
+                                (20.0, format!("Counter: {}", val), 0xffffffff),
+                                el.bounds().pos(),
+                            );
+                        }
+                    }
+                })
+                .build()
+        );
+
+        // Increment button
+        let counter = self.counter.clone();
+        layer.add(
+            ElementBuilder::new()
+                .bounds(Vec4::xywh(20.0, 70.0, 100.0, 40.0))
+                .handler(move |el, event| {
+                    match event {
+                        Event::Render(pass) if pass == &RenderPass::Main => {
+                            context().renderer().draw_rounded_rect(el.bounds(), 5.0, 0xff2020ff);
+                            let mut fr = context().fonts().font("main").unwrap();
+                            fr.draw_string((20.0, "Increment", 0xffffffff), el.bounds().pos());
+                        }
+                        Event::MouseClick(_, action) => {
+                            if el.hovering() && *action == Action::Press {
+                                *counter.lock() += 1;
+                            }
+                        }
+                        _ => {}
+                    }
+                })
+                .draggable(false)
+                .build()
+        );
+
+        // Input text box (reuses your Textbox abstraction)
+        layer.add(Textbox::new("main", &self.input.lock().clone()));
+
+        vec![layer]
+    }
+
+    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
+        true
     }
 }
 

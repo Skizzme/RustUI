@@ -132,6 +132,10 @@ impl Textbox {
         let fr_height = fr.get_sized_height(self.text_size);
         let mut offset = self.offset();
 
+        if self.editor.chunks.len() == 0 {
+            return Vec2::new(0, 0);
+        }
+
         let screen_line = ((screen_pos.y() - self.scroll.1.borrow().value() + offset.y()) / fr_height) as usize - 1;;
         let (.., start_chunk, end_chunk) = self.editor.line(screen_line);
         let mut closest = (f32::MAX, 0);

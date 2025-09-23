@@ -1,0 +1,16 @@
+[package]
+name = "dev"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+path = "main.rs"
+name = "ferrum-dev"
+
+[dependencies]
+ferrum = {version = "*", path = ".."}
+glfw = "0.59.0"
+winapi = { version = "0.3.9", features = ["wincon", "winuser", "winnt"] }
+gl = "0.14.0"
+num-traits = "0.2.19"
+parking_lot = "0.12.3"

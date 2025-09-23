@@ -736,9 +736,9 @@ impl Font {
     /// Also caches the VAOs in order for faster rendering times,
     /// but is deleted if not used within 10 frames
     ///
-    /// Offset will offset the first line by that amount
+    /// `Offset` will offset the first line by that amount
     ///
-    /// Returns width, height
+    /// Returns [`FontRenderData`]
     pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> FontRenderData {
         let formatted_text = formatted_text.into();
         let pos = pos.into();
