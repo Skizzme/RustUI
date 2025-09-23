@@ -58,51 +58,25 @@ use ferrum::text;
 
 fn main() {
     // editor();
-    // let args : Vec<String> = std::env::args().collect();
-    // if !(args.len() > 1 && args[1] == "console") {
-    //     unsafe {
-    //         FreeConsole();
-    //     }
-    // }
-    //
-    // unsafe {
-    //     ContextBuilder::new()
-    //         .title("Test")
-    //         .dims(1920/2, 1080/2)
-    //         .hint(WindowHint::Resizable(false))
-    //         .swap_interval(SwapInterval::Adaptive)
-    //         .build();
-    //
-    //     context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
-    //     context().framework().set_screen(TestScreen2::new());
-    //     context().do_loop()
-    // }
-    calc_prime();
-}
-
-fn calc_prime() {
-    let mut primes = Vec::new();
-    let st = Instant::now();
-    let mut i = 1;
-    let mut res = true;
-    while (i < 1000000) {
-        res = true;
-        let mut j = 2;
-        while j < i {
-            if i % j == 0 {
-                res = false;
-                break;
-            }
-            j += 1;
+    let args : Vec<String> = std::env::args().collect();
+    if !(args.len() > 1 && args[1] == "console") {
+        unsafe {
+            FreeConsole();
         }
-        if (res) {
-            primes.push(i);
-        }
-        i += 1;
     }
-    let mut et = Instant::now();
-    println!("{:?}", primes.len());
-    println!("{:?}", et - st);
+
+    unsafe {
+        ContextBuilder::new()
+            .title("Test")
+            .dims(1920/2, 1080/2)
+            .hint(WindowHint::Resizable(false))
+            .swap_interval(SwapInterval::Adaptive)
+            .build();
+
+        context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+        context().framework().set_screen(TestScreen2::new());
+        context().do_loop()
+    }
 }
 
 pub struct TestScreen {
