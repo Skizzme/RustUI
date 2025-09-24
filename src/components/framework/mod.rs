@@ -181,8 +181,13 @@ impl Framework {
                 // At 4K this copy takes ~0.2ms on GPU and ~2.0ms on iGPU. Likely to have a very big performance impact on lower power integrated graphics
                 // At 4K, all copies per frame is around 5.4ms on iGPU and 0.6ms on GPU
                 // TODO dirty rects https://trello.com/c/LEwMbrmE
+                Finish();
+                let st = Instant::now();
                 let id = self.screen_pass_fb(pass).texture_id();
                 self.copy_bind_rects(id, parent_fb as u32, parent_tex as u32);
+                Finish();
+                let et = Instant::now();
+                println!("sc {:?}", et - st);
                 // BindFramebuffer(FRAMEBUFFER, parent_fb as u32);
             },
             _ => self.current_screen.handle(&event),
@@ -209,7 +214,12 @@ impl Framework {
                         let layer_fb = layer.fb(pass);
                         layer_fb.unbind();
                     }
+                    Finish();
+                    let st = Instant::now();
                     layer.copy_bind_rects(pass, parent_fb as u32, parent_tex as u32);
+                    Finish();
+                    let et = Instant::now();
+                    println!("l {:?}", et - st);
                     // layer_fb.copy_bind(parent_fb as u32, parent_tex as u32);
                 },
                 _ => {

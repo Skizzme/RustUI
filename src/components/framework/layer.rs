@@ -167,6 +167,7 @@ impl Layer {
 
         Texture::unbind();
 
+        // TODO this needs to be in a way where empty grids are ignored. so in other words not a texture mask, since that still renders all...
 
         vao.bind();
         DrawArraysInstanced(gl::TRIANGLES, 0, 6, (grid.len() * grid.first().unwrap().len()) as GLsizei);
