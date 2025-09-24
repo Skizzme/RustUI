@@ -124,9 +124,9 @@ impl Vec4 {
     /// Sets the left and right to include the x value.
     /// If the value is already "inside" the vec4, nothing changes
     pub fn expand_to_x(&mut self, x: f32) {
-        if self.x > x {
+        if self.left() > x {
             self.set_left(x);
-        } else if (self.right() < x) {
+        } else if self.right() < x {
             self.set_right(x);
         }
     }

@@ -18,7 +18,7 @@ use crate::gl_binds::gl30::BindVertexArray;
 use crate::gl_binds::gl41::{BindFramebuffer, FRAMEBUFFER};
 
 pub struct Layer {
-    framebuffers: HashMap<RenderPass, (u32, Vec<Vec<u8>>, VertexArray, Texture)>,
+    framebuffers: HashMap<RenderPass, (u32, Vec<Vec<u8>>, VertexArray, bool)>,
     elements: Vec<Box<dyn UIHandler>>,
 
     grid_size: Vec2<usize>,
@@ -37,7 +37,7 @@ impl Layer {
         if !self.framebuffers.contains_key(render_pass) {
             let width = self.grid_size.x.max(1);
             let height = self.grid_size.y.max(1);
-            self.framebuffers.insert(render_pass.clone(), (context().fb_manager().create_fb(RGBA).unwrap(), vec![vec![0; width]; height], VertexArray::new(), Texture::create(width as i32, height as i32, &vec![0; width * height], LUMINANCE, NEAREST)));
+            self.framebuffers.insert(render_pass.clone(), (context().fb_manager().create_fb(RGBA).unwrap(), vec![vec![0; width]; height], VertexArray::new(), false));
             self.build_grid_vao(render_pass, self.grid_size.x.max(1), self.grid_size.y.max(1));
         }
         let fb_id = self.framebuffers.get(render_pass).unwrap().0;
@@ -82,7 +82,7 @@ impl Layer {
     }
 
     pub unsafe fn build_grid_vao(&mut self, pass: &RenderPass, grid_len_x: usize, grid_len_y: usize) {
-        let (fb_id, grid, vao, grid_mask) = self.framebuffers.get_mut(pass).unwrap();
+        let (fb_id, grid, vao, rendered) = self.framebuffers.get_mut(pass).unwrap();
         let fb = context().fb_manager().fb(*fb_id);
         let fb_res = fb.size();
         let grid_res_x = fb_res.x as f32 / grid.first().unwrap().len() as f32;
@@ -111,8 +111,8 @@ impl Layer {
         VertexArray::unbind();
     }
 
-    pub unsafe fn copy_bind_rects(&mut self, pass: &RenderPass, target_fb: u32, target_tex: u32) {
-        let (fb_id, grid, vao, grid_mask) = self.framebuffers.get_mut(pass).unwrap();
+    pub unsafe fn copy_bind_rects(&mut self, pass: &RenderPass, target_fb: u32, target_tex: u32, clear: bool) {
+        let (fb_id, grid, vao, rendered) = self.framebuffers.get_mut(pass).unwrap();
         let fb = context().fb_manager().fb(*fb_id);
         let fb_res = fb.size();
         let fb_tex = fb.texture_id();
@@ -120,21 +120,11 @@ impl Layer {
         let grid_res_y = fb_res.y as f32 / grid.len() as f32;
 
         let mut active_indices = Vec::new();
-        // DEBUG
-        // println!("{}", grid.len());
         for y in 0..grid.len() {
             for x in 0..grid.first().unwrap().len() {
-                // if grid[y][x] { //
-                    // let bounds = Vec4::xywh(x as f32 * grid_res_x, y as f32 * grid_res_y, grid_res_x, grid_res_y);
-                    // context().renderer().draw_rect(bounds, 0x20ffffff);
-                // }
-                // grid[y][x] = 1;
-                // println!("{} {}", x, y);
-                // let y = grid.len()-1-y;
                 if grid[y][x] == 1 {
                     active_indices.push((x + y * grid.first().unwrap().len()) as u32);
                 }
-                grid[y][x] = 0;
             }
         }
 
@@ -165,17 +155,26 @@ impl Layer {
         // TODO this needs to be in a way where empty grids are ignored. so in other words not a texture mask, since that still renders all...
 
         vao.bind();
-        // DrawArrays(TRIANGLES, 0, active_indices.len() as GLsizei);
+
         DrawArraysInstanced(gl::TRIANGLES, 0, 6, active_indices.len() as GLsizei);
 
         VertexArray::unbind();
         Shader::unbind();
         Enable(BLEND);
+
+        *rendered = true;
     }
 
-    // pub unsafe fn add(&mut self, el: Element) {
-    //     self.elements.push(Box::new(el));
-    // }
+    pub fn pre_render_pass(&mut self, pass: &RenderPass) {
+        let (_, grid, _, rendered) = self.framebuffers.get_mut(pass).unwrap();
+        if *rendered {
+            for y in 0..grid.len() {
+                for x in 0..grid.first().unwrap().len() {
+                    grid[y][x] = 0;
+                }
+            }
+        }
+    }
 
     pub unsafe fn add<H: UIHandler + 'static>(&mut self, el: H) {
         self.elements.push(Box::new(el));

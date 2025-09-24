@@ -10,7 +10,7 @@ in float ind;
 void main() {
     vec4 pos = vec4(0, 0, 0, 0);
 //    vec2 grid_
-    vec2 grid_xy = vec2(index % 16, floor(index / 16));
+    vec2 grid_xy = vec2(index % grid_dims.x, floor(index / grid_dims.y));
     vec4 grid_pos = vec4(grid_xy * rect_size, grid_xy * uv_rect_size);
     
     if (ind == 0)

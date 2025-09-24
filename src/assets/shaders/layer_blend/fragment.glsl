@@ -20,6 +20,7 @@ void main() {
 
         // re-blend the textures
         gl_FragColor = vec4(mix(bottom_col.rgb, top_col.rgb, top_col.a), sqrt(top_col.a) + bottom_col.a);
+        gl_FragColor += vec4(0.1, 0.1, 0.1, 1);
 //    } else {
 //        gl_FragColor = vec4(float(cellCoord.x) / 16, float(cellCoord.y) / 16, 1, 1);
 //    }

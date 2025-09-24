@@ -74,7 +74,7 @@ fn main() {
             .build();
 
         context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
-        context().framework().set_screen(TestScreen::new());
+        context().framework().set_screen(TestScreen2::new());
         context().do_loop()
     }
 }
@@ -216,7 +216,7 @@ impl ScreenTrait for TestScreen {
 
     unsafe fn init(&mut self) -> Vec<Layer> {
         context().framework().screen_animations().register(self.t_size.clone());
-        let mut layer_0 = Layer::new((16, 16));
+        let mut layer_0 = Layer::new((32, 32));
         let tex_cl1 = self.previous_tex.clone();
         let tex_cl2 = self.previous_tex.clone();
         let t_test_c = self.t_text.clone();
@@ -385,13 +385,13 @@ impl ScreenTrait for TestScreen {
     }
 
     unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
-        false
-        // if rp == &RenderPass::Main {
-        //     let res = self.last_fps != context().fps();
-        //     res
-        // } else {
-        //     false
-        // }
+        // true
+        if rp == &RenderPass::Main {
+            let res = self.last_fps != context().fps();
+            res
+        } else {
+            false
+        }
     }
 }pub struct TestScreen2 {
     counter: Arc<Mutex<i32>>,
@@ -413,7 +413,7 @@ impl ScreenTrait for TestScreen2 {
     }
 
     unsafe fn init(&mut self) -> Vec<Layer> { unsafe {
-        let mut layer = Layer::new((128, 128));
+        let mut layer = Layer::new((12, 12));
 
         let counter = self.counter.clone();
         let counter_text = self.counter.clone();

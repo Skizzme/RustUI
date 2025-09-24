@@ -26,8 +26,8 @@ pub mod changing;
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
     screen_animations: AnimationRegistry,
-    screen_passes: HashMap<RenderPass, u32>,
     element_passes: HashMap<RenderPass, u32>,
+    screen_layer: Layer,
     layers: Vec<Layer>,
     created_at: Instant,
     last_pre_render: Instant,
@@ -35,6 +35,7 @@ pub struct Framework {
     states: ChangingRegistry,
 
     current_layer_pass: (RenderPass, usize),
+
 
     pre_delta: f32,
 }
@@ -44,8 +45,8 @@ impl Framework {
         let mut fr = Framework {
             current_screen: Box::new(DefaultScreen::new()),
             screen_animations: AnimationRegistry::new(),
-            screen_passes: HashMap::new(),
             element_passes: HashMap::new(),
+            screen_layer: Layer::new((32, 32)),
             layers: vec![],
             created_at: Instant::now(),
             last_pre_render: Instant::now(),
@@ -59,7 +60,11 @@ impl Framework {
     }
 
     pub unsafe fn mark_layer_dirty(&mut self, area: impl Into<Vec4>) {
-        self.layers.get_mut(self.current_layer_pass.1).unwrap().mark_dirty(&self.current_layer_pass.0, area);
+        if self.current_layer_pass.1 == 0 {
+            self.screen_layer.mark_dirty(&self.current_layer_pass.0, area);
+        } else {
+            self.layers.get_mut(self.current_layer_pass.1 - 1).unwrap().mark_dirty(&self.current_layer_pass.0, area);
+        }
     }
 
     pub fn set_styles(&mut self, style: UnchangingRegistry) {
@@ -121,41 +126,12 @@ impl Framework {
         &mut self.current_screen
     }
 
-    pub unsafe fn element_pass_fb(&mut self, pass: &RenderPass) -> &mut Framebuffer {
-        if !self.element_passes.contains_key(&pass) {
-            self.element_passes.insert(pass.clone(), context().fb_manager().create_fb(RGBA).unwrap());
-        }
-        context().fb_manager().fb(*self.element_passes.get(&pass).unwrap())
-    }
-
-    pub unsafe fn screen_pass_fb(&mut self, pass: &RenderPass) -> &mut Framebuffer {
-        if !self.screen_passes.contains_key(&pass) {
-            self.screen_passes.insert(pass.clone(), context().fb_manager().create_fb(RGBA).unwrap());
-        }
-        context().fb_manager().fb(*self.screen_passes.get(&pass).unwrap())
-    }
-
-    pub unsafe fn copy_bind_rects(&self, screen_pass_fb_tex: u32, target_fb: u32, target_tex: u32) {
-        Disable(BLEND);
-        BindFramebuffer(FRAMEBUFFER, target_fb);
-
-        context().renderer().blend_shader.bind();
-        context().renderer().blend_shader.u_put_int("u_bottom_tex", vec![2]);
-        context().renderer().blend_shader.u_put_int("u_top_tex", vec![1]);
-
-        ActiveTexture(TEXTURE2);
-        BindTexture(TEXTURE_2D, target_tex);
-
-        ActiveTexture(TEXTURE1);
-        BindTexture(TEXTURE_2D, screen_pass_fb_tex);
-
-        ActiveTexture(TEXTURE0);
-
-        Texture::unbind();
-        context().renderer().draw_screen_rect_flipped();
-        Shader::unbind();
-        Enable(BLEND);
-    }
+    // pub unsafe fn element_pass_fb(&mut self, pass: &RenderPass) -> &mut Framebuffer {
+    //     if !self.element_passes.contains_key(&pass) {
+    //         self.element_passes.insert(pass.clone(), context().fb_manager().create_fb(RGBA).unwrap());
+    //     }
+    //     context().fb_manager().fb(*self.element_passes.get(&pass).unwrap())
+    // }
 
     pub unsafe fn event(&mut self, event: Event) {
         match &event {
@@ -165,37 +141,38 @@ impl Framework {
                 self.current_screen.handle(&event);
             }
             Event::Render(pass) => {
-                let (parent_fb, parent_tex) = self.screen_pass_fb(pass).bind();
+                self.current_layer_pass = (pass.clone(), 0);
+                let (parent_fb, parent_tex) = self.screen_layer.fb(pass).bind();
 
-                if self.current_screen.should_render(pass) || self.created_at_elapsed() || self.screen_animations.has_changed() {
+                let render = self.current_screen.should_render(pass) || self.created_at_elapsed() || self.screen_animations.has_changed();
+                if render {
                     Framebuffer::clear_current();
+                    self.screen_layer.pre_render_pass(pass);
                     // if parent != 0 {
                     //     context().fb_manager().fb(parent as u32).copy(fb.id());
                     // }
 
                     self.current_screen.handle(&event);
 
-                    self.screen_pass_fb(pass).unbind();
+                    self.screen_layer.fb(pass).unbind();
                 }
 
                 // At 4K this copy takes ~0.2ms on GPU and ~2.0ms on iGPU. Likely to have a very big performance impact on lower power integrated graphics
                 // At 4K, all copies per frame is around 5.4ms on iGPU and 0.6ms on GPU
                 // TODO dirty rects https://trello.com/c/LEwMbrmE
-                Finish();
-                let st = Instant::now();
-                let id = self.screen_pass_fb(pass).texture_id();
-                self.copy_bind_rects(id, parent_fb as u32, parent_tex as u32);
-                Finish();
-                let et = Instant::now();
-                println!("sc {:?}", et - st);
-                // BindFramebuffer(FRAMEBUFFER, parent_fb as u32);
+
+                self.screen_layer.copy_bind_rects(pass, parent_fb as u32, parent_tex as u32, render);
+                BindFramebuffer(FRAMEBUFFER, parent_fb as u32);
             },
             _ => self.current_screen.handle(&event),
         }
         let force = self.created_at_elapsed();
+        let mut i = 1;
         for layer in &mut self.layers {
             match &event {
                 Event::Render(pass) => {
+                    self.current_layer_pass = (pass.clone(), i);
+                    let mut rendered = false;
                     let (mut parent_fb, mut parent_tex) = (0, 0);
                     {
                         let layer_fb = layer.fb(pass);
@@ -204,6 +181,8 @@ impl Framework {
                     {
                         // println!("{}", layer.should_render(pass));
                         if layer.should_render(pass) || force {
+                            rendered = true;
+                            layer.pre_render_pass(pass);
                             // println!("did render layer {:?}", pass);
                             Framebuffer::clear_current();
 
@@ -214,12 +193,12 @@ impl Framework {
                         let layer_fb = layer.fb(pass);
                         layer_fb.unbind();
                     }
-                    Finish();
-                    let st = Instant::now();
-                    layer.copy_bind_rects(pass, parent_fb as u32, parent_tex as u32);
-                    Finish();
-                    let et = Instant::now();
-                    println!("l {:?}", et - st);
+                    // Finish();
+                    // let st = Instant::now();
+                    layer.copy_bind_rects(pass, parent_fb as u32, parent_tex as u32, rendered);
+                    // Finish();
+                    // let et = Instant::now();
+                    // println!("l {:?}", et - st);
                     // layer_fb.copy_bind(parent_fb as u32, parent_tex as u32);
                 },
                 _ => {
@@ -237,6 +216,7 @@ impl Framework {
                     }
                 }
             }
+            i += 1;
         }
         match &event {
             Event::PostRender => {
