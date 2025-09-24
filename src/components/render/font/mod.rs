@@ -464,7 +464,7 @@ impl Font {
         index += 4;
         let atlas_bytes: &Vec<u8> = &all_bytes[index..].try_into().unwrap();
 
-        let atlas_tex = Texture::create(width as i32, height as i32, atlas_bytes, ALPHA);
+        let atlas_tex = Texture::create(width as i32, height as i32, atlas_bytes, ALPHA, LINEAR);
         font.atlas_tex = Some(atlas_tex);
         BindTexture(TEXTURE_2D, 0);
 
@@ -567,8 +567,9 @@ impl Font {
                         // let mut wrap_point = 0;
                         for char in string.chars() {
                             if char == '\n' {
+                                let line_offset = self.draw_data.line_width * self.draw_data.current_align_h;
                                 if self.draw_data.current_align_h != 0. {
-                                    line_offsets.push( self.draw_data.line_width * self.draw_data.current_align_h);
+                                    line_offsets.push(line_offset);
                                     line_ranges.push((line_start_index, render_index));
                                     // TODO track line heights
                                 }
@@ -578,7 +579,7 @@ impl Font {
                                 dims.push([p_left,p_top,0.,p_height]);
                                 uvs.push([0.,0.,0.,0.]);
 
-                                bounds.expand_to_x(p_left);
+                                bounds.expand_to_x(p_left - line_offset);
                                 bounds.expand_to_y(p_top);
                                 bounds.expand_to_y(p_top+p_height);
 
@@ -642,11 +643,6 @@ impl Font {
                                 p_width = c_a;
                             }
 
-                            bounds.expand_to_x(p_left);
-                            bounds.expand_to_y(p_top);
-                            bounds.expand_to_x(p_left+p_width);
-                            bounds.expand_to_y(p_top+p_height);
-
                             dims.push([p_left, p_top, p_width, p_height]);
                             uvs.push([uv_left, uv_top, uv_right-uv_left, uv_bottom-uv_top]);
 
@@ -661,16 +657,23 @@ impl Font {
                     }
                 }
             }
-            if self.draw_data.current_align_h != 0. {
-                line_offsets.push( self.draw_data.line_width * self.draw_data.current_align_h);
-                line_ranges.push((line_start_index, render_index));
-            }
 
+            line_offsets.push( self.draw_data.line_width * self.draw_data.current_align_h);
+            line_ranges.push((line_start_index, render_index));
+
+            // translate each line using its line offset, modifying the x-value of each char position
             let mut line_index = 0;
+            let mut e = 0;
             for (start, end) in &line_ranges {
                 for i in *start..*end {
                     let mut dim = dims.get_mut(i).unwrap();
                     dim[0] -= line_offsets[line_index];
+                    // tracking the bounds here, since no further position changes are made.
+                    bounds.expand_to_x(dim[0]);
+                    bounds.expand_to_x(dim[0] + dim[2]);
+                    bounds.expand_to_y(dim[1]);
+                    bounds.expand_to_y(dim[1] + dim[3]);
+                    e += 1;
                 }
                 line_index += 1;
             }
@@ -766,8 +769,11 @@ impl Font {
         BindVertexArray(0);
         context().renderer().stack().end();
 
+        context().framework().mark_layer_dirty(render_data.bounds);
+
         Texture::unbind();
         self.end();
+        // render_data.bounds.debug_draw(0xff90ff90);
         render_data
         // (0f32, 0f32)
     }

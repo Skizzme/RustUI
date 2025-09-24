@@ -111,12 +111,12 @@ impl UIContext {
                 // thread::sleep(Duration::from_secs_f32(1.0/200.0));
             }
 
-            if self.last_render.elapsed().as_secs_f32() > 1.0 {
-                thread::sleep(Duration::from_millis(50));
-            }
+            // if self.last_render.elapsed().as_secs_f32() > 1.0 {
+            //     thread::sleep(Duration::from_millis(50));
+            // }
             // Finish();
-            self.glfw.set_swap_interval(SwapInterval::None);
-            // self.glfw.set_swap_interval(self.swap_interval);
+            // self.glfw.set_swap_interval(SwapInterval::None);
+            self.glfw.set_swap_interval(self.swap_interval);
         }
     }
 
@@ -153,7 +153,7 @@ impl UIContext {
 
         let mut passes = mem::take(&mut self.passes);
         for pass in &passes {
-            let (parent_fb, parent_tex) = self.framework.element_pass_fb(&pass).bind();
+            // let (parent_fb, parent_tex) = self.framework.element_pass_fb(&pass).bind();
             if self.framework.should_render_pass(&pass) {
                 Framebuffer::clear_current();
                 // self.framework.pass_fb(&pass).copy_from_parent();
@@ -180,7 +180,7 @@ impl UIContext {
                 RenderPass::Custom(_) => {}
             }
 
-            self.framework.element_pass_fb(&pass).copy_bind(parent_fb as u32, parent_tex as u32);
+            // self.framework.element_pass_fb(&pass).copy_bind(parent_fb as u32, parent_tex as u32);
         }
         mem::swap(&mut passes, &mut self.passes);
         // for pass in RenderPass::all().iter().rev() {
@@ -205,7 +205,7 @@ impl UIContext {
             self.frames.1 = self.frames.0;
             self.frames.0 = 0;
             self.frames.2 = Instant::now();
-            println!("FPS {}", self.frames.1);
+            println!("FPS: {}", self.frames.1);
         }
         // println!("frame");
     }

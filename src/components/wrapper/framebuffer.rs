@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::ptr::null;
 use std::time::Instant;
 use crate::components::context::context;
+use crate::components::spatial::vec2::Vec2;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::gl30::*;
@@ -83,6 +84,7 @@ impl Framebuffer {
         }
     }
 
+    /// This will return the framebuffers parent id and texture
     pub unsafe fn bind(&mut self) -> (i32, i32) {
         GetIntegerv(FRAMEBUFFER_BINDING, &mut self.parent_framebuffer);
         let mut parent_tex = 0i32;
@@ -134,41 +136,41 @@ impl Framebuffer {
     }
 
     /// Copy this framebuffer to target, leaving the target framebuffer bound
-    pub unsafe fn copy_bind(&self, target_fb: u32, target_tex: u32) {
-        Disable(BLEND);
-        BindFramebuffer(FRAMEBUFFER, target_fb);
-
-        context().renderer().blend_shader.bind();
-        context().renderer().blend_shader.u_put_int("u_bottom_tex", vec![2]);
-        context().renderer().blend_shader.u_put_int("u_top_tex", vec![1]);
-
-        ActiveTexture(TEXTURE2);
-        BindTexture(TEXTURE_2D, target_tex);
-
-        ActiveTexture(TEXTURE1);
-        BindTexture(TEXTURE_2D, self.texture_id);
-
-        ActiveTexture(TEXTURE0);
-
-        Texture::unbind();
-        context().renderer().draw_screen_rect_flipped();
-        Shader::unbind();
-        Enable(BLEND);
-    }
-
-    pub unsafe fn copy_raw(&self, target_fb: u32) {
-        BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
-        BindFramebuffer(DRAW_FRAMEBUFFER, target_fb);
-        BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
-        BindFramebuffer(FRAMEBUFFER, target_fb);
-    }
-
-    pub unsafe fn copy_from_parent(&self) {
-        BindFramebuffer(READ_FRAMEBUFFER, self.parent_framebuffer as u32);
-        BindFramebuffer(DRAW_FRAMEBUFFER, self.framebuffer_id);
-        BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
-        BindFramebuffer(FRAMEBUFFER, self.framebuffer_id);
-    }
+    // pub unsafe fn copy_bind(&self, target_fb: u32, target_tex: u32) {
+    //     Disable(BLEND);
+    //     BindFramebuffer(FRAMEBUFFER, target_fb);
+    //
+    //     context().renderer().blend_shader.bind();
+    //     context().renderer().blend_shader.u_put_int("u_bottom_tex", vec![2]);
+    //     context().renderer().blend_shader.u_put_int("u_top_tex", vec![1]);
+    //
+    //     ActiveTexture(TEXTURE2);
+    //     BindTexture(TEXTURE_2D, target_tex);
+    //
+    //     ActiveTexture(TEXTURE1);
+    //     BindTexture(TEXTURE_2D, self.texture_id);
+    //
+    //     ActiveTexture(TEXTURE0);
+    //
+    //     Texture::unbind();
+    //     context().renderer().draw_screen_rect_flipped();
+    //     Shader::unbind();
+    //     Enable(BLEND);
+    // }
+    //
+    // pub unsafe fn copy_raw(&self, target_fb: u32) {
+    //     BindFramebuffer(READ_FRAMEBUFFER, self.framebuffer_id);
+    //     BindFramebuffer(DRAW_FRAMEBUFFER, target_fb);
+    //     BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
+    //     BindFramebuffer(FRAMEBUFFER, target_fb);
+    // }
+    //
+    // pub unsafe fn copy_from_parent(&self) {
+    //     BindFramebuffer(READ_FRAMEBUFFER, self.parent_framebuffer as u32);
+    //     BindFramebuffer(DRAW_FRAMEBUFFER, self.framebuffer_id);
+    //     BlitFramebuffer(0, 0, self.width, self.height, 0, 0, self.width, self.height, COLOR_BUFFER_BIT, NEAREST);
+    //     BindFramebuffer(FRAMEBUFFER, self.framebuffer_id);
+    // }
 
     pub unsafe fn delete(&self) {
         DeleteFramebuffers(1, &self.framebuffer_id);
@@ -181,5 +183,17 @@ impl Framebuffer {
 
     pub fn id(&self) -> u32 {
         self.framebuffer_id
+    }
+
+    pub fn height(&self) -> i32 {
+        self.height
+    }
+
+    pub fn width(&self) -> i32 {
+        self.width
+    }
+
+    pub fn size(&self) -> Vec2<i32> {
+        (self.width, self.height).into()
     }
 }
