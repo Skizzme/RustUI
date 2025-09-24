@@ -157,10 +157,6 @@ impl Framework {
                     self.screen_layer.fb(pass).unbind();
                 }
 
-                // At 4K this copy takes ~0.2ms on GPU and ~2.0ms on iGPU. Likely to have a very big performance impact on lower power integrated graphics
-                // At 4K, all copies per frame is around 5.4ms on iGPU and 0.6ms on GPU
-                // TODO dirty rects https://trello.com/c/LEwMbrmE
-
                 self.screen_layer.copy_bind_rects(pass, parent_fb as u32, parent_tex as u32, render);
                 BindFramebuffer(FRAMEBUFFER, parent_fb as u32);
             },

@@ -115,8 +115,8 @@ impl UIContext {
             //     thread::sleep(Duration::from_millis(50));
             // }
             // Finish();
-            self.glfw.set_swap_interval(SwapInterval::None);
-            // self.glfw.set_swap_interval(self.swap_interval);
+            // self.glfw.set_swap_interval(SwapInterval::None);
+            self.glfw.set_swap_interval(self.swap_interval);
         }
     }
 

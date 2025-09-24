@@ -184,22 +184,3 @@ impl Layer {
         &mut self.elements
     }
 }
-
-impl Debug for Layer {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut string = String::new();
-
-        let (_, grid, ..) = self.framebuffers.get(&RenderPass::Main).unwrap();
-
-        for y in 0..grid.len() {
-            for x in 0..grid.first().unwrap().len() {
-                let char = if grid[y][x] == 1 { 'X' } else { '-' };
-                string.push(char);
-            }
-            string.push('\n');
-        }
-
-        f.write_str(string.as_str()).expect("TODO: panic message");
-        Ok(())
-    }
-}
