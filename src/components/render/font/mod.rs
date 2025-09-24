@@ -766,6 +766,8 @@ impl Font {
         BindVertexArray(0);
         context().renderer().stack().end();
 
+        context().framework().mark_layer_dirty(render_data.bounds);
+
         Texture::unbind();
         self.end();
         render_data

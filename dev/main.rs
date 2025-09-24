@@ -74,7 +74,7 @@ fn main() {
             .build();
 
         context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
-        context().framework().set_screen(TestScreen2::new());
+        context().framework().set_screen(TestScreen::new());
         context().do_loop()
     }
 }
@@ -88,7 +88,7 @@ pub struct TestScreen {
     t_text: Arc<Mutex<Text>>,
     mask: FramebufferMask,
     t_shader: Shader,
-    items: Arc<Mutex<Vec<Test>>>,
+    items: Arc<Mutex<Vec<Test>>>
 }
 
 impl TestScreen {
@@ -216,7 +216,7 @@ impl ScreenTrait for TestScreen {
 
     unsafe fn init(&mut self) -> Vec<Layer> {
         context().framework().screen_animations().register(self.t_size.clone());
-        let mut layer_0 = Layer::new();
+        let mut layer_0 = Layer::new((16, 16));
         let tex_cl1 = self.previous_tex.clone();
         let tex_cl2 = self.previous_tex.clone();
         let t_test_c = self.t_text.clone();
@@ -399,7 +399,7 @@ impl ScreenTrait for TestScreen {
 }
 
 impl TestScreen2 {
-    pub fn new() -> Self {
+    pub unsafe fn new() -> Self {
         Self {
             counter: Arc::new(Mutex::new(0)),
             input: Arc::new(Mutex::new("test".to_string())),
@@ -412,8 +412,8 @@ impl ScreenTrait for TestScreen2 {
 
     }
 
-    unsafe fn init(&mut self) -> Vec<Layer> {
-        let mut layer = Layer::new();
+    unsafe fn init(&mut self) -> Vec<Layer> { unsafe {
+        let mut layer = Layer::new((128, 128));
 
         let counter = self.counter.clone();
         let counter_text = self.counter.clone();
@@ -446,6 +446,7 @@ impl ScreenTrait for TestScreen2 {
                     match event {
                         Event::Render(pass) if pass == &RenderPass::Main => {
                             context().renderer().draw_rounded_rect(el.bounds(), 5.0, 0xff2020ff);
+                            context().renderer().draw_rect(Vec4::xywh(200, 200, 1, 1), 0xffffffff);
                             let mut fr = context().fonts().font("main").unwrap();
                             fr.draw_string((20.0, "Increment", 0xffffffff), el.bounds().pos());
                         }
@@ -465,7 +466,7 @@ impl ScreenTrait for TestScreen2 {
         layer.add(Textbox::new("main", &self.input.lock().clone()));
 
         vec![layer]
-    }
+    }}
 
     unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
         true

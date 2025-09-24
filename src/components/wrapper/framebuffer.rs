@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::ptr::null;
 use std::time::Instant;
 use crate::components::context::context;
+use crate::components::spatial::vec2::Vec2;
 use crate::components::wrapper::shader::Shader;
 use crate::components::wrapper::texture::Texture;
 use crate::gl_binds::gl30::*;
@@ -83,6 +84,7 @@ impl Framebuffer {
         }
     }
 
+    /// This will return the framebuffers parent id and texture
     pub unsafe fn bind(&mut self) -> (i32, i32) {
         GetIntegerv(FRAMEBUFFER_BINDING, &mut self.parent_framebuffer);
         let mut parent_tex = 0i32;
@@ -181,5 +183,17 @@ impl Framebuffer {
 
     pub fn id(&self) -> u32 {
         self.framebuffer_id
+    }
+
+    pub fn height(&self) -> i32 {
+        self.height
+    }
+
+    pub fn width(&self) -> i32 {
+        self.width
+    }
+
+    pub fn size(&self) -> Vec2<i32> {
+        (self.width, self.height).into()
     }
 }

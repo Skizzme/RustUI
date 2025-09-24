@@ -3,6 +3,7 @@ use std::collections::{HashMap, LinkedList};
 use gl::{BLEND, DEPTH, Disable, Enable, TEXTURE_2D};
 
 use crate::components::context::context;
+use crate::components::framework::layer::Layer;
 use crate::components::spatial::vec2::Vec2;
 use crate::gl_binds::gl11::{Scalef, Translatef};
 use crate::gl_binds::gl11::types::GLenum;

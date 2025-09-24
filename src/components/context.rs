@@ -106,17 +106,17 @@ impl UIContext {
             let rendered = self.frame();
             Finish();
             let et = st.elapsed();
-            println!("Frame Time: {:?}", et);
+            // println!("Frame Time: {:?}", et);
             if !rendered {
                 // thread::sleep(Duration::from_secs_f32(1.0/200.0));
             }
 
-            if self.last_render.elapsed().as_secs_f32() > 1.0 {
-                thread::sleep(Duration::from_millis(50));
-            }
+            // if self.last_render.elapsed().as_secs_f32() > 1.0 {
+            //     thread::sleep(Duration::from_millis(50));
+            // }
             // Finish();
-            // self.glfw.set_swap_interval(SwapInterval::None);
-            self.glfw.set_swap_interval(self.swap_interval);
+            self.glfw.set_swap_interval(SwapInterval::None);
+            // self.glfw.set_swap_interval(self.swap_interval);
         }
     }
 

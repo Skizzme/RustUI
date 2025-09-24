@@ -242,6 +242,8 @@ impl UIHandler for Textbox {
                 self.render_chunks.pop();
             }
 
+
+
             let (mut start_line, mut end_line) = (usize::MAX,0);
             let mut end_pos = Vec2::new(0.,0.);
             for r_chunk in &mut self.render_chunks {

@@ -6,6 +6,7 @@ pub struct Texture {
     pub texture_id: GLuint,
     pub width: i32,
     pub height: i32,
+    pub format: GLenum,
 }
 
 impl Texture {
@@ -34,7 +35,22 @@ impl Texture {
             texture_id: tex_id,
             width,
             height,
+            format,
         }
+    }
+
+    pub unsafe fn set_texture(&mut self, bytes: &Vec<u8>) {
+        self.bind();
+        TexSubImage2D(
+            TEXTURE_2D,
+            0,
+            0, 0,
+            self.width, self.height,
+            self.format,
+            UNSIGNED_BYTE,
+            bytes.as_slice().as_ptr().cast()
+        );
+        Texture::unbind();
     }
 
     pub unsafe fn bind(&self) {

@@ -1,29 +1,46 @@
 use std::collections::HashMap;
-
+use std::fmt::{Debug, Formatter};
+use gl::DrawArraysInstanced;
 use crate::components::context::context;
 use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::RenderPass;
+use crate::components::render::color::ToColor;
+use crate::components::render::stack::State::Texture2D;
+use crate::components::spatial::vec2::Vec2;
+use crate::components::spatial::vec4::Vec4;
+use crate::components::wrapper::buffer::{Buffer, VertexArray};
 use crate::components::wrapper::framebuffer::Framebuffer;
-use crate::gl_binds::gl11::RGBA;
+use crate::components::wrapper::shader::Shader;
+use crate::components::wrapper::texture::Texture;
+use crate::gl_binds::gl11::types::{GLsizei, GLuint};
+use crate::gl_binds::gl20::*;
+use crate::gl_binds::gl30::BindVertexArray;
+use crate::gl_binds::gl41::{BindFramebuffer, FRAMEBUFFER};
 
 pub struct Layer {
-    framebuffers: HashMap<RenderPass, u32>,
+    framebuffers: HashMap<RenderPass, (u32, Vec<Vec<u8>>, VertexArray, Texture)>,
     elements: Vec<Box<dyn UIHandler>>,
+
+    grid_size: Vec2<usize>,
 }
 
 impl Layer {
-    pub fn new() -> Self {
+    pub fn new(grid_size: impl Into<Vec2<usize>>) -> Self {
         Layer {
             framebuffers: HashMap::new(),
             elements: vec![],
+            grid_size: grid_size.into(),
         }
     }
 
-    pub unsafe fn fb(&mut self, render_pass: &RenderPass) -> &mut Framebuffer{
+    pub unsafe fn fb(&mut self, render_pass: &RenderPass) -> &mut Framebuffer {
         if !self.framebuffers.contains_key(render_pass) {
-            self.framebuffers.insert(render_pass.clone(), context().fb_manager().create_fb(RGBA).unwrap());
+            let width = self.grid_size.x.max(1);
+            let height = self.grid_size.y.max(1);
+            self.framebuffers.insert(render_pass.clone(), (context().fb_manager().create_fb(RGBA).unwrap(), vec![vec![0; width]; height], VertexArray::new(), Texture::create(width as i32, height as i32, &vec![0; width * height], LUMINANCE)));
+            self.build_grid_vao(render_pass, self.grid_size.x.max(1), self.grid_size.y.max(1));
         }
-        let fb_id = *self.framebuffers.get(render_pass).unwrap();
+        let fb_id = self.framebuffers.get(render_pass).unwrap().0;
         context().fb_manager().fb(fb_id)
     }
 
@@ -40,6 +57,147 @@ impl Layer {
         false
     }
 
+    pub unsafe fn mark_dirty(&mut self, pass: &RenderPass, area: impl Into<Vec4>) {
+        if !self.framebuffers.contains_key(pass) { return; }
+        let (fb_id, grid, vao, grid_mask) = self.framebuffers.get_mut(pass).unwrap();
+        let fb_id = *fb_id;
+        let area = area.into();
+
+        let fb_res = context().fb_manager().fb(fb_id).size();
+
+        let grid_res_x = fb_res.x as f32 / grid.first().unwrap().len() as f32;
+        let grid_res_y = fb_res.y as f32 / grid.len() as f32;
+        let grid_area = (
+            (area.left() / grid_res_x).floor() as usize,
+            (area.top() / grid_res_y).floor() as usize,
+            (area.right() / grid_res_x).floor() as usize,
+            (area.bottom() / grid_res_y).floor() as usize,
+        );
+
+        for y in grid_area.1..=grid_area.3.min(grid.len()-1) {
+            for x in grid_area.0..=grid_area.2.min(grid.first().unwrap().len()-1) {
+                grid[y][x] = 1;
+            }
+        }
+    }
+
+    pub unsafe fn build_grid_vao(&mut self, pass: &RenderPass, grid_len_x: usize, grid_len_y: usize) {
+        let (fb_id, grid, vao, grid_mask) = self.framebuffers.get_mut(pass).unwrap();
+        let fb = context().fb_manager().fb(*fb_id);
+        let fb_res = fb.size();
+        let grid_res_x = fb_res.x as f32 / grid.first().unwrap().len() as f32;
+        let grid_res_y = fb_res.y as f32 / grid.len() as f32;
+
+        let shader = &mut context().renderer().layer_blend;
+
+        vao.bind();
+
+        let mut positions: Vec<[f32; 4]> = Vec::new();
+        for y in 0..grid_len_y {
+            for x in 0..grid_len_x {
+                positions.push([x as f32 * grid_res_x, y as f32 * grid_res_y, x as f32 / grid.first().unwrap().len() as f32, y as f32 / grid.len() as f32])
+            }
+        }
+
+        let mut p_buf = Buffer::new(ARRAY_BUFFER);
+        p_buf.set_values(&positions);
+        p_buf.attribPointer(shader.get_attrib_location("positions") as u32, 4, FLOAT, FALSE, 1);
+
+        let mut t_buf = Buffer::new(gl::ARRAY_BUFFER);
+        t_buf.set_values(&vec![0u8, 1u8, 2u8, 0u8, 2u8, 3u8]);
+        t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, gl::UNSIGNED_BYTE, gl::FALSE, 0);
+
+        vao.add_buffer(t_buf);
+        vao.add_buffer(p_buf);
+
+        VertexArray::unbind();
+    }
+
+    pub unsafe fn copy_bind_rects(&mut self, pass: &RenderPass, target_fb: u32, target_tex: u32) {
+        let (fb_id, grid, vao, grid_mask) = self.framebuffers.get_mut(pass).unwrap();
+        let fb = context().fb_manager().fb(*fb_id);
+        let fb_res = fb.size();
+        let fb_tex = fb.texture_id();
+        let grid_res_x = fb_res.x as f32 / grid.first().unwrap().len() as f32;
+        let grid_res_y = fb_res.y as f32 / grid.len() as f32;
+
+        let mut mask_values = Vec::new();
+        // DEBUG
+        for y in 0..grid.len() {
+            for x in 0..grid.first().unwrap().len() {
+                // if grid[y][x] { //
+                    // let bounds = Vec4::xywh(x as f32 * grid_res_x, y as f32 * grid_res_y, grid_res_x, grid_res_y);
+                    // context().renderer().draw_rect(bounds, 0x20ffffff);
+                // }
+                grid[y][x] = 1;
+                mask_values.push(grid[y][x]);
+            }
+        }
+
+        let shader = &mut context().renderer().layer_blend;
+
+        Disable(BLEND);
+        BindFramebuffer(FRAMEBUFFER, target_fb);
+
+        shader.bind();
+        shader.u_put_int("grid_mask", vec![3]);
+        shader.u_put_int("u_bottom_tex", vec![2]);
+        shader.u_put_int("u_top_tex", vec![1]);
+        shader.u_put_float("rect_size", vec![grid_res_x, grid_res_y]);
+        shader.u_put_float("uv_rect_size", vec![1.0 / grid.first().unwrap().len() as f32, 1.0 / grid.len() as f32]);
+
+        grid_mask.set_texture(&mask_values);
+        ActiveTexture(TEXTURE3);
+        // BindTexture(TEXTURE_2D, )
+        grid_mask.bind();
+
+        ActiveTexture(TEXTURE2);
+        BindTexture(TEXTURE_2D, target_tex);
+
+        ActiveTexture(TEXTURE1);
+        BindTexture(TEXTURE_2D, fb_tex);
+
+        ActiveTexture(TEXTURE0);
+
+        Texture::unbind();
+        // let mut drawn = 0;
+        // for y in 0..grid.len() {
+        //     for x in 0..grid.first().unwrap().len() {
+        //         if grid[y][x] == 1 { //
+        //             let bounds = Vec4::xywh(x as f32 * grid_res_x, y as f32 * grid_res_y, grid_res_x, grid_res_y);
+        //             let uv_bounds = Vec4::xywh(x as f32 / grid.first().unwrap().len() as f32, y as f32 / grid.len() as f32, 1.0 / grid.first().unwrap().len() as f32, 1.0 / grid.len() as f32);
+        //             context().renderer().stack().push(Texture2D(false));
+        //
+        //             // TODO convert this to use vbos etc so that grid squares can just be drawn instead of sending to gpu every time
+        //             Begin(gl::QUADS);
+        //             (0xffffffff).apply_color();
+        //             TexCoord2d(uv_bounds.left() as f64, -uv_bounds.bottom() as f64);
+        //             Vertex2f(bounds.left(), bounds.bottom());
+        //             TexCoord2d(uv_bounds.right() as f64, -uv_bounds.bottom() as f64);
+        //             Vertex2f(bounds.right(), bounds.bottom());
+        //             TexCoord2d(uv_bounds.right() as f64, -uv_bounds.top() as f64);
+        //             Vertex2f(bounds.right(), bounds.top());
+        //             TexCoord2d(uv_bounds.left() as f64, -uv_bounds.top() as f64);
+        //             Vertex2f(bounds.left(), bounds.top());
+        //             End();
+        //
+        //             context().renderer().stack().pop();
+        //
+        //             drawn += 1;
+        //             grid[y][x] = 0;
+        //         }
+        //     }
+        // }
+        // println!("drawn: {drawn}, possible {}", grid.len() * grid.first().unwrap().len());
+        // context().renderer().draw_screen_rect_flipped();
+
+        vao.bind();
+        DrawArraysInstanced(gl::TRIANGLES, 0, 6, (grid.len() * grid.first().unwrap().len()) as GLsizei);
+        VertexArray::unbind();
+        Shader::unbind();
+        Enable(BLEND);
+    }
+
     // pub unsafe fn add(&mut self, el: Element) {
     //     self.elements.push(Box::new(el));
     // }
@@ -50,5 +208,24 @@ impl Layer {
 
     pub fn elements(&mut self) -> &mut Vec<Box<dyn UIHandler>> {
         &mut self.elements
+    }
+}
+
+impl Debug for Layer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut string = String::new();
+
+        let (_, grid, ..) = self.framebuffers.get(&RenderPass::Main).unwrap();
+
+        for y in 0..grid.len() {
+            for x in 0..grid.first().unwrap().len() {
+                let char = if grid[y][x] == 1 { 'X' } else { '-' };
+                string.push(char);
+            }
+            string.push('\n');
+        }
+
+        f.write_str(string.as_str()).expect("TODO: panic message");
+        Ok(())
     }
 }

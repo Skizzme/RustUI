@@ -26,6 +26,7 @@ pub struct Renderer {
     /// up, down
     pub bloom_shaders: (Shader, Shader),
     pub blur_fb: u32,
+    pub layer_blend: Shader,
     stack: Stack,
 }
 
@@ -52,6 +53,7 @@ impl Renderer {
             ),
             blend_shader: Shader::new(default_vert.clone(), shader_file("shaders/fb_blend.frag")),
             blur_fb: 0,
+            layer_blend: Shader::new(shader_file("shaders/layer_blend/vertex.glsl"), shader_file("shaders/layer_blend/fragment.glsl")),
             stack: Stack::new(),
         }
     }
