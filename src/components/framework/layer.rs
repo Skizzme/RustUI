@@ -92,23 +92,21 @@ impl Layer {
 
         vao.bind();
 
-        let mut positions: Vec<[f32; 4]> = Vec::new();
-        for y in 0..grid_len_y {
-            for x in 0..grid_len_x {
-                positions.push([x as f32 * grid_res_x, y as f32 * grid_res_y, x as f32 / grid.first().unwrap().len() as f32, y as f32 / grid.len() as f32])
-            }
-        }
+        let mut t_indices: Vec<u32> = Vec::with_capacity(grid.len() * grid.first().unwrap().len());
+        // for i in 0..20 {
+        //     t_indices.push(i * 2);
+        // }
 
         let mut p_buf = Buffer::new(ARRAY_BUFFER);
-        p_buf.set_values(&positions);
-        p_buf.attribPointer(shader.get_attrib_location("positions") as u32, 4, FLOAT, FALSE, 1);
+        p_buf.set_values(&t_indices);
+        p_buf.attribIPointer(shader.get_attrib_location("index") as u32, 1, UNSIGNED_INT, 1);
 
         let mut t_buf = Buffer::new(gl::ARRAY_BUFFER);
         t_buf.set_values(&vec![0u8, 1u8, 2u8, 0u8, 2u8, 3u8]);
         t_buf.attribPointer(shader.get_attrib_location("ind") as GLuint, 1, gl::UNSIGNED_BYTE, gl::FALSE, 0);
 
-        vao.add_buffer(t_buf);
         vao.add_buffer(p_buf);
+        vao.add_buffer(t_buf);
 
         VertexArray::unbind();
     }
@@ -121,7 +119,7 @@ impl Layer {
         let grid_res_x = fb_res.x as f32 / grid.first().unwrap().len() as f32;
         let grid_res_y = fb_res.y as f32 / grid.len() as f32;
 
-        let mut mask_values = Vec::new();
+        let mut active_indices = Vec::new();
         // DEBUG
         // println!("{}", grid.len());
         for y in 0..grid.len() {
@@ -132,13 +130,15 @@ impl Layer {
                 // }
                 // grid[y][x] = 1;
                 // println!("{} {}", x, y);
-                let y = grid.len()-1-y;
-                mask_values.push(grid[y][x]);
+                // let y = grid.len()-1-y;
+                if grid[y][x] == 1 {
+                    active_indices.push((x + y * grid.first().unwrap().len()) as u32);
+                }
                 grid[y][x] = 0;
             }
         }
 
-        // println!("{:?}", mask_values);
+        vao.get_buffer(0).set_values(&active_indices);
 
         let shader = &mut context().renderer().layer_blend;
 
@@ -146,16 +146,11 @@ impl Layer {
         BindFramebuffer(FRAMEBUFFER, target_fb);
 
         shader.bind();
-        shader.u_put_int("grid_mask", vec![3]);
         shader.u_put_int("u_bottom_tex", vec![2]);
         shader.u_put_int("u_top_tex", vec![1]);
         shader.u_put_float("rect_size", vec![grid_res_x, grid_res_y]);
         shader.u_put_float("uv_rect_size", vec![1.0 / grid.first().unwrap().len() as f32, 1.0 / grid.len() as f32]);
-
-        ActiveTexture(TEXTURE3);
-        grid_mask.set_texture(&mask_values);
-        // BindTexture(TEXTURE_2D, )
-        grid_mask.bind();
+        shader.u_put_int("grid_dims", vec![grid.first().unwrap().len() as u32, grid.len() as u32]);
 
         ActiveTexture(TEXTURE2);
         BindTexture(TEXTURE_2D, target_tex);
@@ -170,7 +165,8 @@ impl Layer {
         // TODO this needs to be in a way where empty grids are ignored. so in other words not a texture mask, since that still renders all...
 
         vao.bind();
-        DrawArraysInstanced(gl::TRIANGLES, 0, 6, (grid.len() * grid.first().unwrap().len()) as GLsizei);
+        // DrawArrays(TRIANGLES, 0, active_indices.len() as GLsizei);
+        DrawArraysInstanced(gl::TRIANGLES, 0, 6, active_indices.len() as GLsizei);
 
         VertexArray::unbind();
         Shader::unbind();

@@ -108,6 +108,10 @@ impl VertexArray {
     pub unsafe fn add_buffer(&mut self, buffer: Buffer) {
         self.buffers.push(buffer);
     }
+
+    pub unsafe fn get_buffer(&mut self, index: usize) -> &mut Buffer {
+        self.buffers.get_mut(index).unwrap()
+    }
     pub fn gl_ref(&self) -> u32 {
         self.gl_ref
     }
