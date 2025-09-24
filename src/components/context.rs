@@ -101,12 +101,12 @@ impl UIContext {
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            Finish();
-            let st = Instant::now();
+            // Finish();
+            // let st = Instant::now();
             let rendered = self.frame();
-            Finish();
-            let et = st.elapsed();
-            println!("Frame Time: {:?}", et);
+            // Finish();
+            // let et = st.elapsed();
+            // println!("Frame Time: {:?}", et);
             if !rendered {
                 // thread::sleep(Duration::from_secs_f32(1.0/200.0));
             }
@@ -115,8 +115,8 @@ impl UIContext {
                 thread::sleep(Duration::from_millis(50));
             }
             // Finish();
-            // self.glfw.set_swap_interval(SwapInterval::None);
-            self.glfw.set_swap_interval(self.swap_interval);
+            self.glfw.set_swap_interval(SwapInterval::None);
+            // self.glfw.set_swap_interval(self.swap_interval);
         }
     }
 
@@ -205,6 +205,7 @@ impl UIContext {
             self.frames.1 = self.frames.0;
             self.frames.0 = 0;
             self.frames.2 = Instant::now();
+            println!("FPS {}", self.frames.1);
         }
         // println!("frame");
     }
