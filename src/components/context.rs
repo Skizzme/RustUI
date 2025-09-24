@@ -101,11 +101,11 @@ impl UIContext {
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            Finish();
-            let st = Instant::now();
+            // Finish();
+            // let st = Instant::now();
             let rendered = self.frame();
-            Finish();
-            let et = st.elapsed();
+            // Finish();
+            // let et = st.elapsed();
             // println!("Frame Time: {:?}", et);
             if !rendered {
                 // thread::sleep(Duration::from_secs_f32(1.0/200.0));
