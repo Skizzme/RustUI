@@ -17,6 +17,6 @@ void main() {
     else if (ind == 3)
     pos = vec4(positions.x, positions.y, positions.z, positions.w);
 
-    gl_Position = gl_ModelViewProjectionMatrix * vec4(pos.xy, 0.0, 1.0);
+    gl_Position = gl_ModelViewProjectionMatrix * vec4(pos.x, pos.y, 0.0, 1.0);
     gl_TexCoord[0] = vec4(pos.z, -pos.w, 0.0, 0.0);
 }

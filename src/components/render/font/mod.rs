@@ -464,7 +464,7 @@ impl Font {
         index += 4;
         let atlas_bytes: &Vec<u8> = &all_bytes[index..].try_into().unwrap();
 
-        let atlas_tex = Texture::create(width as i32, height as i32, atlas_bytes, ALPHA);
+        let atlas_tex = Texture::create(width as i32, height as i32, atlas_bytes, ALPHA, LINEAR);
         font.atlas_tex = Some(atlas_tex);
         BindTexture(TEXTURE_2D, 0);
 

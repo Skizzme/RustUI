@@ -10,7 +10,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub unsafe fn create(width: i32, height: i32, bytes: &Vec<u8>, format: GLenum) -> Self {
+    pub unsafe fn create(width: i32, height: i32, bytes: &Vec<u8>, format: GLenum, interpolation: GLenum) -> Self {
         let mut tex_id = 0;
         GenTextures(1, &mut tex_id);
         BindTexture(TEXTURE_2D, tex_id);
@@ -29,8 +29,8 @@ impl Texture {
 
         TexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE as GLint);
         TexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE as GLint);
-        TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR as GLint);
-        TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR as GLint);
+        TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, interpolation as i32);
+        TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, interpolation as i32);
         Texture {
             texture_id: tex_id,
             width,

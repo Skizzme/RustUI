@@ -3,18 +3,16 @@
 uniform sampler2D u_top_tex;
 uniform sampler2D u_bottom_tex;
 
-uniform sampler2D grid_mask;
+uniform isampler2D grid_mask;
 
 uniform vec2 rect_size;
 uniform vec2 uv_rect_size;
 
-in vec2 uvDims;
-
 void main() {
     ivec2 cellCoord = ivec2(floor(gl_FragCoord.xy / rect_size));
-    float mask = texelFetch(grid_mask, cellCoord, 0).r;
+    ivec4 mask = texelFetch(grid_mask, cellCoord, 0);
 
-    if (mask == 1) {
+    if (mask.r >= 1.0) {
         vec2 uv = gl_TexCoord[0].xy;
         vec4 bottom_col = texture2D(u_bottom_tex, uv);
         vec4 top_col = texture2D(u_top_tex, uv);
@@ -25,7 +23,7 @@ void main() {
         // re-blend the textures
         gl_FragColor = vec4(mix(bottom_col.rgb, top_col.rgb, top_col.a), sqrt(top_col.a) + bottom_col.a);
     } else {
-        gl_FragColor = vec4(1, 0,1,1);
+//        gl_FragColor = vec4(float(cellCoord.x) / 16, float(cellCoord.y) / 16, 1, 1);
     }
 }
 

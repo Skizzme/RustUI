@@ -37,7 +37,7 @@ impl Layer {
         if !self.framebuffers.contains_key(render_pass) {
             let width = self.grid_size.x.max(1);
             let height = self.grid_size.y.max(1);
-            self.framebuffers.insert(render_pass.clone(), (context().fb_manager().create_fb(RGBA).unwrap(), vec![vec![0; width]; height], VertexArray::new(), Texture::create(width as i32, height as i32, &vec![0; width * height], LUMINANCE)));
+            self.framebuffers.insert(render_pass.clone(), (context().fb_manager().create_fb(RGBA).unwrap(), vec![vec![0; width]; height], VertexArray::new(), Texture::create(width as i32, height as i32, &vec![0; width * height], LUMINANCE, NEAREST)));
             self.build_grid_vao(render_pass, self.grid_size.x.max(1), self.grid_size.y.max(1));
         }
         let fb_id = self.framebuffers.get(render_pass).unwrap().0;
@@ -123,16 +123,22 @@ impl Layer {
 
         let mut mask_values = Vec::new();
         // DEBUG
+        // println!("{}", grid.len());
         for y in 0..grid.len() {
             for x in 0..grid.first().unwrap().len() {
                 // if grid[y][x] { //
                     // let bounds = Vec4::xywh(x as f32 * grid_res_x, y as f32 * grid_res_y, grid_res_x, grid_res_y);
                     // context().renderer().draw_rect(bounds, 0x20ffffff);
                 // }
-                grid[y][x] = 1;
+                // grid[y][x] = 1;
+                // println!("{} {}", x, y);
+                let y = grid.len()-1-y;
                 mask_values.push(grid[y][x]);
+                grid[y][x] = 0;
             }
         }
+
+        // println!("{:?}", mask_values);
 
         let shader = &mut context().renderer().layer_blend;
 
@@ -146,8 +152,8 @@ impl Layer {
         shader.u_put_float("rect_size", vec![grid_res_x, grid_res_y]);
         shader.u_put_float("uv_rect_size", vec![1.0 / grid.first().unwrap().len() as f32, 1.0 / grid.len() as f32]);
 
-        grid_mask.set_texture(&mask_values);
         ActiveTexture(TEXTURE3);
+        grid_mask.set_texture(&mask_values);
         // BindTexture(TEXTURE_2D, )
         grid_mask.bind();
 
@@ -160,39 +166,11 @@ impl Layer {
         ActiveTexture(TEXTURE0);
 
         Texture::unbind();
-        // let mut drawn = 0;
-        // for y in 0..grid.len() {
-        //     for x in 0..grid.first().unwrap().len() {
-        //         if grid[y][x] == 1 { //
-        //             let bounds = Vec4::xywh(x as f32 * grid_res_x, y as f32 * grid_res_y, grid_res_x, grid_res_y);
-        //             let uv_bounds = Vec4::xywh(x as f32 / grid.first().unwrap().len() as f32, y as f32 / grid.len() as f32, 1.0 / grid.first().unwrap().len() as f32, 1.0 / grid.len() as f32);
-        //             context().renderer().stack().push(Texture2D(false));
-        //
-        //             // TODO convert this to use vbos etc so that grid squares can just be drawn instead of sending to gpu every time
-        //             Begin(gl::QUADS);
-        //             (0xffffffff).apply_color();
-        //             TexCoord2d(uv_bounds.left() as f64, -uv_bounds.bottom() as f64);
-        //             Vertex2f(bounds.left(), bounds.bottom());
-        //             TexCoord2d(uv_bounds.right() as f64, -uv_bounds.bottom() as f64);
-        //             Vertex2f(bounds.right(), bounds.bottom());
-        //             TexCoord2d(uv_bounds.right() as f64, -uv_bounds.top() as f64);
-        //             Vertex2f(bounds.right(), bounds.top());
-        //             TexCoord2d(uv_bounds.left() as f64, -uv_bounds.top() as f64);
-        //             Vertex2f(bounds.left(), bounds.top());
-        //             End();
-        //
-        //             context().renderer().stack().pop();
-        //
-        //             drawn += 1;
-        //             grid[y][x] = 0;
-        //         }
-        //     }
-        // }
-        // println!("drawn: {drawn}, possible {}", grid.len() * grid.first().unwrap().len());
-        // context().renderer().draw_screen_rect_flipped();
+
 
         vao.bind();
         DrawArraysInstanced(gl::TRIANGLES, 0, 6, (grid.len() * grid.first().unwrap().len()) as GLsizei);
+
         VertexArray::unbind();
         Shader::unbind();
         Enable(BLEND);
