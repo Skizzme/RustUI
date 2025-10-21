@@ -90,6 +90,7 @@ impl Renderer {
         Shader::unbind();
 
         self.stack.end();
+        context().framework().mark_layer_dirty(&vec4);
     }
 
     /// Draws a circle, using a rounded rect, with the center point at x, y
@@ -113,6 +114,7 @@ impl Renderer {
 
         self.stack.pop();
         self.stack.pop();
+        context().framework().mark_layer_dirty(&vec4);
     }
 
     /// A rectangle where each corner's color can be different
@@ -130,6 +132,7 @@ impl Renderer {
         color.3.apply_color();
         Vertex2f(vec4.left(), vec4.top());
         End();
+        context().framework().mark_layer_dirty(&vec4);
     }
 
     /// Draws only the outline of a rectangle
@@ -148,6 +151,7 @@ impl Renderer {
         End();
 
         self.stack.pop();
+        context().framework().mark_layer_dirty(&vec4);
     }
 
     /// Draws a texture rectangle using normal UV coordinates
@@ -170,6 +174,7 @@ impl Renderer {
         End();
 
         self.stack.pop();
+        context().framework().mark_layer_dirty(&vec4);
     }
 
     /// Draws a texture rectangle using specified UV coordinates
@@ -193,6 +198,7 @@ impl Renderer {
         End();
 
         self.stack.pop();
+        context().framework().mark_layer_dirty(&vec4);
     }
 
     pub unsafe fn draw_screen_rect(&mut self) {

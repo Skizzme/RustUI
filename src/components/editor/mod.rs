@@ -72,7 +72,6 @@ impl Editor {
 
         for (cursor_index, line_width_1, line_width_2) in cursor_line_widths {
             let c = &mut self.cursors[cursor_index];
-            // println!("correct? {:?}", c);
             if c.pos.x > line_width_1 {
                 if move_down {
                     c.pos.y += 1;
@@ -80,7 +79,6 @@ impl Editor {
                 } else {
                     c.pos.x = line_width_1;
                 }
-                // println!("correct pos to {:?}", c.pos)
             }
             if c.select_pos.x > line_width_2 {
                 if move_down {
@@ -89,7 +87,6 @@ impl Editor {
                 } else {
                     c.select_pos.x = line_width_2;
                 }
-                // println!("correct select_pos to {:?}", c.select_pos)
             }
         }
     }
@@ -295,7 +292,7 @@ impl Editor {
         false
     }
 
-    pub fn apply_changes(&mut self) {
+    pub fn apply_changes(&mut self) -> Vec<usize> {
         let mut changed_chunks = vec![];
         for (_, (_, chunk, _)) in &mut self.changes {
             changed_chunks.push(*chunk);
@@ -312,9 +309,9 @@ impl Editor {
 
         changed_chunks.sort();
         if changed_chunks.len() == 0 {
-            return;
+            return changed_chunks;
         }
-
+    
         for i in (0..changed_chunks.len()).rev() {
             let chunk = changed_chunks[i];
             if self.chunks[chunk].str.len() == 0 {
@@ -360,6 +357,8 @@ impl Editor {
                 self.chunk_info.remove(chunk);
             }
         }
+
+        changed_chunks
     }
 
     pub fn compile(&self) -> String {

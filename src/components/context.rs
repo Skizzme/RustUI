@@ -101,22 +101,24 @@ impl UIContext {
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            // Finish();
-            // let st = Instant::now();
             let rendered = self.frame();
-            // Finish();
-            // let et = st.elapsed();
-            // println!("Frame Time: {:?}", et);
-            if !rendered {
-                // thread::sleep(Duration::from_secs_f32(1.0/200.0));
+            let perf_test = false;
+            if !perf_test {
+                if !rendered {
+                    thread::sleep(Duration::from_secs_f32(1.0/200.0));
+                }
+
+                if self.last_render.elapsed().as_secs_f32() > 1.0 {
+                    // TODO consider using glfw.wait_events() in a better way than this.
+                    self.glfw.wait_events();
+                    self.last_render = Instant::now();
+                }
+
+                self.glfw.set_swap_interval(self.swap_interval);
+            } else {
+                self.glfw.set_swap_interval(SwapInterval::None);
             }
 
-            // if self.last_render.elapsed().as_secs_f32() > 1.0 {
-            //     thread::sleep(Duration::from_millis(50));
-            // }
-            // Finish();
-            // self.glfw.set_swap_interval(SwapInterval::None);
-            self.glfw.set_swap_interval(self.swap_interval);
         }
     }
 
@@ -145,7 +147,6 @@ impl UIContext {
 
     pub unsafe fn render(&mut self) {
         self.pre_render();
-        // Finish();
 
         PushMatrix();
         self.renderer.stack().push(State::Scale(self.content_scale.0, self.content_scale.1));
@@ -153,10 +154,8 @@ impl UIContext {
 
         let mut passes = mem::take(&mut self.passes);
         for pass in &passes {
-            // let (parent_fb, parent_tex) = self.framework.element_pass_fb(&pass).bind();
             if self.framework.should_render_pass(&pass) {
                 Framebuffer::clear_current();
-                // self.framework.pass_fb(&pass).copy_from_parent();
                 self.framework.event(Event::Render(pass.clone()));
 
                 match pass {
@@ -174,13 +173,10 @@ impl UIContext {
                     Framebuffer::clear_current();
                     self.fb_manager.fb(self.renderer.blur_fb).bind_texture();
                     self.renderer.draw_screen_rect_flipped();
-                    // self.fb_manager.fb(self.renderer.blur_fb).copy_bind(parent_fb as u32, parent_tex as u32);
                 }
                 RenderPass::Post => {}
                 RenderPass::Custom(_) => {}
             }
-
-            // self.framework.element_pass_fb(&pass).copy_bind(parent_fb as u32, parent_tex as u32);
         }
         mem::swap(&mut passes, &mut self.passes);
         // for pass in RenderPass::all().iter().rev() {

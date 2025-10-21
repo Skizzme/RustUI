@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use glfw::{Action, Key, Modifiers, MouseButton};
 use rand::{Rng, thread_rng};
@@ -15,6 +15,7 @@ use crate::components::render::font::format::{Alignment, FormatItem, Text};
 use crate::components::render::font::format::FormatItem::{AlignH, Size};
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
+use crate::gl_binds::gl11::Finish;
 use crate::text;
 
 pub struct RenderChunk {
@@ -58,7 +59,7 @@ impl Textbox {
         let mut animations = AnimationRegistry::new();
         let scroll = (animations.new_anim(), animations.new_anim());
         let st = Instant::now();
-        let ed = Editor::new(1024 / 16, text);
+        let ed = Editor::new(1024 / 1, text);
         let d = st.elapsed();
         println!("created editor in {:?}", d);
         let mut textbox = Textbox {
@@ -73,7 +74,7 @@ impl Textbox {
             target_scroll: Default::default(),
             line_texts: Default::default(),
 
-            debug: false,
+            debug: true,
         };
         for i in 0..textbox.editor.chunks.len() {
             textbox.render_chunks.push(RenderChunk::new(i));
@@ -106,7 +107,9 @@ impl Textbox {
     fn apply_changes(&mut self) {
         self.changed = true;
         let st = Instant::now();
-        self.editor.apply_changes();
+        for c in self.editor.apply_changes() {
+            self.render_chunks[c].chunk_changed = true;
+        }
         let d = st.elapsed();
         println!("edited in {:?}", d);
     }
@@ -233,6 +236,7 @@ impl UIHandler for Textbox {
         self.offset = offset.clone();
         if event.is_render(RenderPass::Main) {
 
+            Finish();
             let st = Instant::now();
             for i in self.render_chunks.len()..self.editor.chunks.len() {
                 self.render_chunks.push(RenderChunk::new(i));
@@ -244,6 +248,7 @@ impl UIHandler for Textbox {
 
 
 
+            let mut t_render = Duration::from_micros(0);
             let (mut start_line, mut end_line) = (usize::MAX,0);
             let mut end_pos = Vec2::new(0.,0.);
             for r_chunk in &mut self.render_chunks {
@@ -281,7 +286,14 @@ impl UIHandler for Textbox {
                 } else {
                     0xffbbbbbb.to_color()
                 };
-                r_chunk.text = fr.draw_string_offset((self.text_size, &e_chunk.str, color), offset + scroll, end_pos);
+                // if r_chunk.chunk_changed {
+                    Finish();
+                    let st = Instant::now();
+                    r_chunk.text = fr.draw_string_offset((self.text_size, &e_chunk.str, color), offset + scroll, end_pos);
+                    Finish();
+                    t_render += Instant::now() - st;
+                    r_chunk.chunk_changed = false;
+                // }
                 r_chunk.last_scroll = scroll;
                 if self.debug {
                     r_chunk.text.bounds().debug_draw(r_chunk.c * 0x20ffffff.to_color());
@@ -370,7 +382,8 @@ impl UIHandler for Textbox {
                 let a= self.line_texts.get(&line).unwrap();
                 fr.draw_string(a.clone(), offset + (0, line as f32 * fr_height) + (0,scroll.y()));
             }
-            // println!("render: {:?}", st.elapsed());
+            Finish();
+            println!("render: {:?} tex {:?}", st.elapsed(), t_render);
         }
         let tmp_changed = self.changed;
         self.changed = false;

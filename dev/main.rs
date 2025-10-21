@@ -74,7 +74,7 @@ fn main() {
             .build();
 
         context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
-        context().framework().set_screen(TestScreen2::new());
+        context().framework().set_screen(TestScreen::new());
         context().do_loop()
     }
 }

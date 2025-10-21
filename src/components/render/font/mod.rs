@@ -8,7 +8,7 @@ use std::hash::{Hash, Hasher};
 use std::io::Write;
 use std::rc::Rc;
 use std::sync::mpsc::channel;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use freetype::{Library, RenderMode};
 use freetype::face::LoadFlag;
@@ -474,6 +474,7 @@ impl Font {
 
     /// Get (or create if it doesn't exist) the data for the text render batch
     pub unsafe fn get_inst(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> (u32, FontRenderData) {
+        let st = Instant::now();
         let offset = offset.into();
         let pos = pos.into();
         let formatted_text = formatted_text.into();
@@ -678,6 +679,12 @@ impl Font {
                 line_index += 1;
             }
 
+            let et = Instant::now();
+
+            // let cpu_t = et - st;
+
+            // Finish();
+            let st = Instant::now();
             let shader = &mut context().fonts().sdf_shader;
             let mut vao = VertexArray::new();
             vao.bind();
@@ -721,6 +728,10 @@ impl Font {
                 char_positions: Rc::new(dims),
                 line_ranges: Rc::new(line_ranges),
             }));
+
+            // Finish();
+            // let et = Instant::now();
+            // println!("{} gpu {:?} cpu {:?}", hashed, et - st, cpu_t);
         }
         map.get_mut(&hashed).unwrap().1 = 0;
         let res = map.get(&hashed).unwrap();
