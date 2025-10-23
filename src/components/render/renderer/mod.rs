@@ -1,15 +1,25 @@
+pub mod shapes;
+
 use std::path;
 
 use gl::*;
 
 use crate::components::context::context;
-use crate::components::render::color::ToColor;
+use crate::components::render::color::{Color, ToColor};
 use crate::components::render::stack::Stack;
 use crate::components::render::stack::State::{Blend, Texture2D};
+use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::shader::Shader;
 use crate::gl_binds::gl30::{Begin, End, PROJECTION_MATRIX, TexCoord2d, TexCoord2f, Vertex2f};
 use crate::test_ui::asset_manager::file_contents_str;
+
+pub trait Renderable {
+    unsafe fn pre_render(&mut self);
+    unsafe fn render(&self);
+}
+
+
 
 /// The global renderer to render basically everything non-text related
 ///
@@ -17,6 +27,7 @@ use crate::test_ui::asset_manager::file_contents_str;
 #[derive(Debug)]
 pub struct Renderer {
     rounded_rect_shader: Shader,
+    rounded_rect_shader_2: Shader,
     pub texture_shader: Shader,
     pub mask_shader: Shader,
     pub circle_shader: Shader,
@@ -40,6 +51,7 @@ impl Renderer {
         let default_vert = shader_file("shaders/vertex.glsl");
         Renderer {
             rounded_rect_shader: Shader::new(shader_file("shaders/rounded_rect/vertex.glsl"), shader_file("shaders/rounded_rect/fragment.glsl")),
+            rounded_rect_shader_2: Shader::new(shader_file("shaders/rounded_rect/vertex_n.glsl"), shader_file("shaders/rounded_rect/fragment_n.glsl")),
             texture_shader: Shader::new(shader_file("shaders/test_n/vertex.glsl"), shader_file("shaders/test_n/fragment.glsl")),
             mask_shader: Shader::new(shader_file("shaders/mask/vertex.glsl"), shader_file("shaders/mask/fragment.glsl")),
             circle_shader: Shader::new(shader_file("shaders/circle/vertex.glsl"), shader_file("shaders/circle/fragment.glsl")),
@@ -74,48 +86,48 @@ impl Renderer {
     }
 
     /// Draws a nice rounded rectangle using texture shaders
-    pub unsafe fn draw_rounded_rect(&mut self, vec4: impl Into<Vec4>, radius: f32, color: impl ToColor) {
-        let vec4 = vec4.into() + Vec4::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
-        self.stack.begin();
-        self.stack.push(Blend(true));
-        self.stack.push(Texture2D(true));
-
-        self.rounded_rect_shader.bind();
-        self.rounded_rect_shader.u_put_float("u_size", vec![vec4.width(), vec4.height()]);
-        self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
-        self.rounded_rect_shader.u_put_float("u_color", color.to_color().rgba().to_vec());
-
-        self.draw_texture_rect(&vec4, 0xffffffff);
-
-        Shader::unbind();
-
-        self.stack.end();
-        context().framework().mark_layer_dirty(&vec4);
-    }
+    // pub unsafe fn draw_rounded_rect(&mut self, vec4: impl Into<Vec4>, radius: f32, color: impl ToColor) {
+    //     let vec4 = vec4.into() + Vec4::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
+    //     self.stack.begin();
+    //     self.stack.push(Blend(true));
+    //     self.stack.push(Texture2D(true));
+    //
+    //     self.rounded_rect_shader.bind();
+    //     self.rounded_rect_shader.u_put_float("u_size", vec![vec4.width(), vec4.height()]);
+    //     self.rounded_rect_shader.u_put_float("u_radius", vec![radius]);
+    //     self.rounded_rect_shader.u_put_float("u_color", color.to_color().rgba().to_vec());
+    //
+    //     self.draw_texture_rect(&vec4, 0xffffffff);
+    //
+    //     Shader::unbind();
+    //
+    //     self.stack.end();
+    //     context().framework().mark_layer_dirty(&vec4);
+    // }
 
     /// Draws a circle, using a rounded rect, with the center point at x, y
-    pub unsafe fn draw_circle(&mut self, x: f32, y: f32, radius: f32, color: impl ToColor) {
-        self.draw_rounded_rect(Vec4::ltrb(x - radius, y - radius, x + radius, y + radius), radius, color);
-    }
+    // pub unsafe fn draw_circle(&mut self, x: f32, y: f32, radius: f32, color: impl ToColor) {
+    //     self.draw_rounded_rect(Vec4::ltrb(x - radius, y - radius, x + radius, y + radius), radius, color);
+    // }
 
     /// The most boring rectangle
-    pub unsafe fn draw_rect(&mut self, vec4: impl Into<Vec4>, color: impl ToColor) {
-        let vec4 = vec4.into();
-        self.stack.push(Texture2D(false));
-        self.stack.push(Blend(true));
-
-        color.apply_color();
-        Begin(QUADS);
-        Vertex2f(vec4.left(), vec4.bottom());
-        Vertex2f(vec4.right(), vec4.bottom());
-        Vertex2f(vec4.right(), vec4.top());
-        Vertex2f(vec4.left(), vec4.top());
-        End();
-
-        self.stack.pop();
-        self.stack.pop();
-        context().framework().mark_layer_dirty(&vec4);
-    }
+    // pub unsafe fn draw_rect(&mut self, vec4: impl Into<Vec4>, color: impl ToColor) {
+    //     let vec4 = vec4.into();
+    //     self.stack.push(Texture2D(false));
+    //     self.stack.push(Blend(true));
+    //
+    //     color.apply_color();
+    //     Begin(QUADS);
+    //     Vertex2f(vec4.left(), vec4.bottom());
+    //     Vertex2f(vec4.right(), vec4.bottom());
+    //     Vertex2f(vec4.right(), vec4.top());
+    //     Vertex2f(vec4.left(), vec4.top());
+    //     End();
+    //
+    //     self.stack.pop();
+    //     self.stack.pop();
+    //     context().framework().mark_layer_dirty(&vec4);
+    // }
 
     /// A rectangle where each corner's color can be different
     ///

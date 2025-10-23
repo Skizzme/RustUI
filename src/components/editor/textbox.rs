@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::mem;
 use std::time::{Duration, Instant};
 
 use glfw::{Action, Key, Modifiers, MouseButton};
@@ -9,10 +10,12 @@ use crate::components::editor::{Change, Cursor, Editor, get_shifted};
 use crate::components::framework::animation::{AnimationRef, AnimationRegistry, Easing};
 use crate::components::framework::element::ui_traits::UIHandler;
 use crate::components::framework::event::{Event, RenderPass};
-use crate::components::render::color::{Color, ToColor};
+use crate::components::render::color::{solid, Color, ToColor};
 use crate::components::render::font::FontRenderData;
 use crate::components::render::font::format::{Alignment, FormatItem, Text};
 use crate::components::render::font::format::FormatItem::{AlignH, Size};
+use crate::components::render::renderer::Renderable;
+use crate::components::render::renderer::shapes::Rect;
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 use crate::gl_binds::gl11::Finish;
@@ -52,6 +55,8 @@ pub struct Textbox {
 
     line_texts: HashMap<usize, Text>,
     debug: bool,
+
+    cursor_rects: Vec<Rect>,
 }
 
 impl Textbox {
@@ -75,6 +80,7 @@ impl Textbox {
             line_texts: Default::default(),
 
             debug: true,
+            cursor_rects: Vec::new(),
         };
         for i in 0..textbox.editor.chunks.len() {
             textbox.render_chunks.push(RenderChunk::new(i));
@@ -194,10 +200,10 @@ impl Textbox {
         self.correct_cursor(false);
     }
 
-    unsafe fn draw_cursor_pos(&self, pos: &Vec2<usize>, scroll: &Vec2<f32>, fr_height: f32) -> (usize, usize, bool){
+    unsafe fn cursor_bounds(&self, pos: &Vec2<usize>, scroll: &Vec2<f32>, fr_height: f32) -> (Vec4, usize, usize, bool){
         let (mut end_index, end_chunk) = self.editor.pos_index(*pos);
         if end_chunk == self.editor.chunks.len() {
-            return (0, 0, false);
+            return (Vec4::xywh(0,0,0,0), 0, 0, false);
         }
 
         let r_chunk = &self.render_chunks[end_chunk];
@@ -219,9 +225,10 @@ impl Textbox {
         let mut cursor_draw = Vec4::xywh(char_pos[0] - cursor_width/2. + 1., pos.y as f32 * fr_height, cursor_width, fr_height);
         cursor_draw.set_y(cursor_draw.y() + self.offset.y - 2.);
         cursor_draw.offset(*scroll);
-        context().renderer().draw_rect(cursor_draw, 0xffffffff);
+        // context().renderer().draw_rect(cursor_draw, 0xffffffff);
+        // self.cursor_rect.set_bounds(&cursor_draw);
 
-        (end_index, end_chunk, true)
+        (cursor_draw, end_index, end_chunk, true)
     }
 }
 
@@ -234,10 +241,31 @@ impl UIHandler for Textbox {
         let scroll = Vec2::new(self.scroll.0.borrow().value(), self.scroll.1.borrow().value());
         let mut offset = self.offset();
         self.offset = offset.clone();
+        match event {
+            Event::PreRender => {
+                let mut cursors = mem::take(&mut self.cursor_rects);
+
+                if cursors.len() != self.editor.cursors.len() {
+                    for i in 0..self.editor.cursors.len() {
+                        cursors.push(Rect::new(Vec4::xywh(0,0,0,0), solid(0xff909090)));
+                    }
+                }
+
+                let mut i = 0;
+                for cursor in &self.editor.cursors {
+                    let (bounds, ..) = self.cursor_bounds(&cursor.pos, &scroll, fr_height);
+                    cursors.get_mut(i).unwrap().set_bounds(&bounds);
+                    i += 1;
+                }
+
+                mem::swap(&mut cursors, &mut self.cursor_rects);
+            },
+            _ => {}
+        }
         if event.is_render(RenderPass::Main) {
 
-            Finish();
-            let st = Instant::now();
+            // Finish();
+            // let st = Instant::now();
             for i in self.render_chunks.len()..self.editor.chunks.len() {
                 self.render_chunks.push(RenderChunk::new(i));
             }
@@ -248,7 +276,7 @@ impl UIHandler for Textbox {
 
 
 
-            let mut t_render = Duration::from_micros(0);
+            // let mut t_render = Duration::from_micros(0);
             let (mut start_line, mut end_line) = (usize::MAX,0);
             let mut end_pos = Vec2::new(0.,0.);
             for r_chunk in &mut self.render_chunks {
@@ -287,11 +315,11 @@ impl UIHandler for Textbox {
                     0xffbbbbbb.to_color()
                 };
                 // if r_chunk.chunk_changed {
-                    Finish();
-                    let st = Instant::now();
+                //     Finish();
+                //     let st = Instant::now();
                     r_chunk.text = fr.draw_string_offset((self.text_size, &e_chunk.str, color), offset + scroll, end_pos);
-                    Finish();
-                    t_render += Instant::now() - st;
+                    // Finish();
+                    // t_render += Instant::now() - st;
                     r_chunk.chunk_changed = false;
                 // }
                 r_chunk.last_scroll = scroll;
@@ -308,11 +336,14 @@ impl UIHandler for Textbox {
                 }
             }
 
+            let mut i = 0;
             for cursor in &self.editor.cursors {
-                let (mut start_index, mut start_chunk, drawn) = self.draw_cursor_pos(&cursor.pos, &scroll, fr_height);
-                if !drawn {
-                    continue;
-                }
+                let (_, mut start_index, mut start_chunk, drawn) = self.cursor_bounds(&cursor.pos, &scroll, fr_height);
+                // if !drawn {
+                //     continue;
+                // }
+                // self.cursor_rect.render();
+                self.cursor_rects.get(i).unwrap().render();
 
 //                self.draw_cursor_pos(&cursor.select_pos, &scroll, fr_height)
                 let (mut end_index, mut end_chunk) = self.editor.pos_index(cursor.select_pos);
@@ -354,7 +385,7 @@ impl UIHandler for Textbox {
                         if new_line > 0 {
                             if cursor.start_pos().y != cursor.end_pos().y {
                                 if line >= cursor.start_pos().y {
-                                    context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y - 2., end_pos - start_pos, fr_height), 0x80909090);
+                                    // context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y - 2., end_pos - start_pos, fr_height), 0x80909090);
                                     start_pos = 0.0;
                                 } else {
                                     start_pos = end_pos;
@@ -364,7 +395,8 @@ impl UIHandler for Textbox {
                         }
                     }
                 }
-                context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y - 2., end_pos - start_pos, fr_height), 0x80909090);
+                // context().renderer().draw_rect(Vec4::xywh(start_pos, fr_height * line as f32 + offset.y + scroll.y - 2., end_pos - start_pos, fr_height), 0x80909090);
+                i += 1;
             }
 
             offset.offset((-10., 0.));
@@ -382,8 +414,8 @@ impl UIHandler for Textbox {
                 let a= self.line_texts.get(&line).unwrap();
                 fr.draw_string(a.clone(), offset + (0, line as f32 * fr_height) + (0,scroll.y()));
             }
-            Finish();
-            println!("render: {:?} tex {:?}", st.elapsed(), t_render);
+            // Finish();
+            // println!("render: {:?} tex {:?}", st.elapsed(), t_render);
         }
         let tmp_changed = self.changed;
         self.changed = false;

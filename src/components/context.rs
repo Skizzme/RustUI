@@ -102,7 +102,7 @@ impl UIContext {
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
             let rendered = self.frame();
-            let perf_test = false;
+            let perf_test = true;
             if !perf_test {
                 if !rendered {
                     thread::sleep(Duration::from_secs_f32(1.0/200.0));

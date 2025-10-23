@@ -1,5 +1,5 @@
 use std::hash::{Hash, Hasher};
-use std::ops::Mul;
+use std::ops::{Mul, Not};
 
 use crate::gl_binds::gl30::Color4f;
 
@@ -171,4 +171,25 @@ impl ToColor for (u8,u8,u8,u8) {
     fn to_color(&self) -> Color {
         Color::from_u8(self.0, self.1, self.2, self.3)
     }
+}
+
+impl Into<(Color, Color, Color, Color)> for Color {
+    fn into(self) -> (Color, Color, Color, Color) {
+        (self.to_color(), self.to_color(), self.to_color(), self.to_color())
+    }
+}
+
+pub trait To4Colors {
+    fn to_colors(&self) -> (Color, Color, Color, Color);
+}
+
+impl<A: ToColor, B: ToColor, C: ToColor, D: ToColor> To4Colors for (A, B, C, D) {
+    fn to_colors(&self) -> (Color, Color, Color, Color) {
+        (self.0.to_color(), self.1.to_color(), self.2.to_color(), self.3.to_color())
+    }
+}
+
+pub fn solid(c: impl ToColor) -> (Color, Color, Color, Color) {
+    let c = c.to_color();
+    (c.clone(), c.clone(), c.clone(), c)
 }

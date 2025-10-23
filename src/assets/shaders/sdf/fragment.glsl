@@ -5,7 +5,6 @@ uniform float u_res;
 uniform vec2 u_atlas_dims;
 
 flat in uvec4 textColors;
-in vec2 uvDims;
 
 vec4 unpackColor(uint packedColor) {
     float a = ((packedColor >> 24) & 0xFFu) / 255.0;

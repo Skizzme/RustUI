@@ -178,6 +178,14 @@ impl Vec4 {
         self.x += amount.x;
         self.y += amount.y;
     }
+
+    pub fn as_xywh(&self) -> Vec<f32> {
+        vec![self.x, self.y, self.width, self.height]
+    }
+
+    pub fn as_ltrb(&self) -> Vec<f32> {
+        vec![self.left(), self.top(), self.right(), self.bottom()]
+    }
 }
 
 impl Into<Vec4> for &Vec4 {

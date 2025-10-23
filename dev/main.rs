@@ -42,17 +42,18 @@ use ferrum::components::framework::element::ui_traits::{UIHandler, UIIdentifier}
 use ferrum::components::framework::event::{Event, RenderPass};
 use ferrum::components::framework::layer::Layer;
 use ferrum::components::framework::screen::ScreenTrait;
-use ferrum::components::render::color::ToColor;
+use ferrum::components::render::color::{solid, To4Colors, ToColor};
 use ferrum::components::render::font::format::{Alignment, DefaultFormatter, FormatItem, Text};
 use ferrum::components::render::font::format::Alignment::{Left, Center, Right, Custom};
 use ferrum::components::render::font::format::FormatItem::{AlignH, AlignV, Color, LineSpacing, Size};
 use ferrum::components::render::mask::FramebufferMask;
-use ferrum::components::render::renderer::shader_file;
+use ferrum::components::render::renderer::{shader_file, Renderable};
+use ferrum::components::render::renderer::shapes::Rect;
 use ferrum::components::spatial::vec2::Vec2;
 use ferrum::components::spatial::vec4::Vec4;
 use ferrum::components::wrapper::shader::Shader;
 use ferrum::components::wrapper::texture::Texture;
-use ferrum::gl_binds::gl11::{ALPHA, BLEND};
+use ferrum::gl_binds::gl11::{Finish, ALPHA, BLEND};
 use ferrum::text;
 
 
@@ -88,7 +89,8 @@ pub struct TestScreen {
     t_text: Arc<Mutex<Text>>,
     mask: FramebufferMask,
     t_shader: Shader,
-    items: Arc<Mutex<Vec<Test>>>
+    items: Arc<Mutex<Vec<Test>>>,
+    test_shape: Rect,
 }
 
 impl TestScreen {
@@ -116,6 +118,7 @@ impl TestScreen {
             mask: FramebufferMask::new(),
             t_shader: Shader::new(shader_file("shaders/vertex.glsl"), shader_file("shaders/test.frag")),
             items: test_vec,
+            test_shape: Rect::new(Vec4::xywh(100., 200., 200., 200.), solid(0xff00ff00)),
         }
     }
 }
@@ -167,8 +170,6 @@ impl ScreenTrait for TestScreen {
                 }
             }
 
-            context().renderer().draw_rect(Vec4::xywh(20, 20, 10, 10), 0xffffffff);
-
             let mut fr = context().fonts().font("main").unwrap();
 
             // fr.draw_string((20., "there should be a tab right\there", 0xffffffff), (10., 10.,));
@@ -176,7 +177,7 @@ impl ScreenTrait for TestScreen {
             let text: Text = text!(
                 AlignH(Center),
                 (20., "aligned middle? with some\nextra lines\nto spare", 0xffffffff),
-                (36., "along with some\nLARGER ", 0xffffffff),
+                (36., "along with some\nLARGER ", 0xff00ffff),
                 (18., "text...\n", 0xffffffff),
                 Size(16.),
                 AlignH(Left), "left\n",
@@ -205,6 +206,14 @@ impl ScreenTrait for TestScreen {
             // let pos = 0; //
             // fr.draw_string(formated, (pos, 300.0));
             self.last_fps = context().fps();
+            // Finish();
+            // let st = Instant::now();
+            self.test_shape.render();
+
+            // context().renderer().draw_rounded_rect(Vec4::xywh(100., 200., 20., 20.), 0., 0xff206090);
+            // Finish();
+            // let et = Instant::now();
+            // println!("{:?}", et - st);
         }
         Event::PostRender => {
             self.previous_pos = *context().window().mouse().pos();
@@ -269,8 +278,8 @@ impl ScreenTrait for TestScreen {
                     if pass == &RenderPass::Bloom {
                         let mut padded = el.bounds().clone();
                         padded.padded(10.0);
-                        context().renderer().draw_rect(*el.bounds(), 0xffffffff);
-                        context().renderer().draw_rect(padded, 0xff10ff10);
+                        // context().renderer().draw_rect(*el.bounds(), 0xffffffff);
+                        // context().renderer().draw_rect(padded, 0xff10ff10);
                         // el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
                     }
                 },
@@ -337,17 +346,20 @@ impl ScreenTrait for TestScreen {
             }
         );
 
-        let mut hover_anim: AnimationRef = Animation::zero().into();
-        let mut drop_anim: AnimationRef = Animation::zero().into();
-        layer_0.add(
+        let hover_anim: AnimationRef = Animation::zero().into();
+        let drop_anim: AnimationRef = Animation::zero().into();
+        let background_rect = Rc::new(RefCell::new(Rect::new(Vec4::xywh(0,0,0,0), solid(0xffffffff))));
+
+        let element =
             ElementBuilder::new()
                 .register_animations(vec![hover_anim.clone(), drop_anim.clone()])
                 .handler(move |el, e|{
                     let hover_anim = hover_anim.clone();
                     let drop_anim = drop_anim.clone();
+
                     if e.is_render(RenderPass::Main) {
-                        let c_mult = hover_anim.borrow().value();
-                        context().renderer().draw_rounded_rect(el.bounds(), 5., (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.));
+                        background_rect.borrow().render();
+                        // context().renderer().draw_rounded_rect(el.bounds(), 5., (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.));
                     }
                     match e {
                         Event::PreRender => {
@@ -355,8 +367,13 @@ impl ScreenTrait for TestScreen {
                             hover_anim.borrow_mut().animate_to( if el.hovering() { 1.5 } else { 1.0 }, 5., Easing::Sin);
                             drop_anim.borrow_mut().animate(4.0, Easing::Progressive(1.0));
                             el.bounds().set_height(90.+90.*drop_anim.borrow().value());
+                            let c_mult = hover_anim.borrow().value();
+                            let mut bg_rect = background_rect.borrow_mut();
+                            bg_rect.set_colors(((0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 0.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 0.)));
+                            bg_rect.set_radius(drop_anim.borrow().value() * 15.);
+                            bg_rect.set_bounds(el.bounds());
                         },
-                        Event::MouseClick(button, action) => if *action == Action::Press {
+                        Event::MouseClick(button, action) => if *action == Action::Release {
                             if el.hovering() {
                                 if drop_anim.borrow().target() == 1.0 {
                                     drop_anim.borrow_mut().set_target(0.0);
@@ -370,8 +387,9 @@ impl ScreenTrait for TestScreen {
                 })
                 .bounds(Vec4::xywh(10, 10, 140, 90))
                 .draggable(true)
-                .build()
-        );
+                .build();
+
+        layer_0.add(element);
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
         layer_0.add(Textbox::new("main", &self.text)); // "".to_stringpplplplp() self.text.clone()
@@ -445,8 +463,8 @@ impl ScreenTrait for TestScreen2 {
                 .handler(move |el, event| {
                     match event {
                         Event::Render(pass) if pass == &RenderPass::Main => {
-                            context().renderer().draw_rounded_rect(el.bounds(), 5.0, 0xff2020ff);
-                            context().renderer().draw_rect(Vec4::xywh(200, 200, 1, 1), 0xffffffff);
+                            // context().renderer().draw_rounded_rect(el.bounds(), 5.0, 0xff2020ff);
+                            // context().renderer().draw_rect(Vec4::xywh(200, 200, 1, 1), 0xffffffff);
                             let mut fr = context().fonts().font("main").unwrap();
                             fr.draw_string((20.0, "Increment", 0xffffffff), el.bounds().pos());
                         }

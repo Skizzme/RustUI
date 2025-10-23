@@ -46,6 +46,13 @@ impl Buffer {
         self.unbind();
     }
 
+    pub unsafe fn attribPointerStride(&self, attrib: GLuint, size: GLint, type_: GLenum, normalized: GLboolean, stride: GLint) {
+        self.bind();
+        EnableVertexAttribArray(attrib);
+        VertexAttribPointer(attrib, size, type_, normalized, stride, ptr::null());
+        self.unbind();
+    }
+
     pub unsafe fn attribIPointer(&self, attrib: GLuint, size: GLint, type_: GLenum, divisor: GLuint) {
         self.bind();
         EnableVertexAttribArray(attrib);
@@ -54,8 +61,12 @@ impl Buffer {
         self.unbind();
     }
 
-    pub unsafe fn delete(self) {
+    pub unsafe fn delete(&mut self) {
+        if self.gl_ref == 0 {
+            return;
+        }
         DeleteBuffers(1, &self.gl_ref);
+        self.gl_ref = 0;
     }
 
     pub unsafe fn bind(&self) {
@@ -71,6 +82,14 @@ impl Buffer {
     }
     pub fn gl_type(&self) -> GLenum {
         self.gl_type
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        unsafe {
+            self.delete()
+        }
     }
 }
 
@@ -90,11 +109,15 @@ impl VertexArray {
         }
     }
 
-    pub unsafe fn delete(self) {
-        for b in self.buffers {
+    pub unsafe fn delete(&mut self) {
+        if self.gl_ref == 0 {
+            return;
+        }
+        for b in &mut self.buffers {
             b.delete();
         }
         DeleteVertexArrays(1, &self.gl_ref);
+        self.gl_ref = 0;
     }
 
     pub unsafe fn bind(&self) {
@@ -117,5 +140,11 @@ impl VertexArray {
     }
     pub fn buffers(&self) -> &Vec<Buffer> {
         &self.buffers
+    }
+}
+
+impl Drop for VertexArray {
+    fn drop(&mut self) {
+        unsafe { self.delete() }
     }
 }

@@ -48,7 +48,7 @@ impl FontManager {
         }
 
         self.to_remove.iter().for_each(|key| unsafe {
-            let (vao, _, _) = self.cached_inst.remove(&key).unwrap();
+            let (mut vao, _, _) = self.cached_inst.remove(&key).unwrap();
             vao.delete();
         });
 
