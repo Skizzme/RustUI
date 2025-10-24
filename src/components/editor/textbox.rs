@@ -18,7 +18,8 @@ use crate::components::render::renderer::Renderable;
 use crate::components::render::renderer::shapes::Rect;
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
-use crate::gl_binds::gl11::Finish;
+use crate::gl_binds::gl11::{Enable, Finish};
+use crate::gl_binds::gl30::FRAMEBUFFER_SRGB;
 use crate::text;
 
 pub struct RenderChunk {
@@ -273,7 +274,6 @@ impl UIHandler for Textbox {
             while self.render_chunks.len() > self.editor.chunks.len() {
                 self.render_chunks.pop();
             }
-
 
 
             // let mut t_render = Duration::from_micros(0);

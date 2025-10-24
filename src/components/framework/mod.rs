@@ -36,7 +36,6 @@ pub struct Framework {
 
     current_layer_pass: (RenderPass, usize),
 
-
     pre_delta: f32,
 }
 
@@ -132,6 +131,10 @@ impl Framework {
     //     }
     //     context().fb_manager().fb(*self.element_passes.get(&pass).unwrap())
     // }
+
+    pub unsafe fn current_framebuffer(&mut self) -> &mut Framebuffer {
+        self.layers.get_mut(self.current_layer_pass.1).unwrap().fb(&self.current_layer_pass.0)
+    }
 
     pub unsafe fn event(&mut self, event: Event) {
         match &event {

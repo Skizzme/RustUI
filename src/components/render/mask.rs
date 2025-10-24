@@ -71,7 +71,8 @@ impl FramebufferMask {
         renderer.mask_shader.u_put_int("u_bottom_tex", vec![3]);
 
         ActiveTexture(TEXTURE3);
-        context().framebuffer().bind_texture();
+        context().framework().current_framebuffer().bind_texture();
+        // context().framebuffer().bind_texture();
 
         ActiveTexture(TEXTURE2);
         self.mask_fb().bind_texture();

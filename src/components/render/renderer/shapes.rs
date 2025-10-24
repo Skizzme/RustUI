@@ -1,7 +1,9 @@
 use std::ptr;
 use gl::{DrawArraysInstanced, ARRAY_BUFFER, DEBUG_OUTPUT, FALSE, FLOAT, QUADS};
 use num_traits::NumCast;
+use rand::random;
 use crate::components::context::context;
+use crate::components::framework::changing::Changing;
 use crate::components::render::color::{Color, To4Colors, ToColor};
 use crate::components::render::renderer::Renderable;
 use crate::components::render::stack::State::{Blend, Texture2D};
@@ -15,7 +17,7 @@ use crate::gl_binds::gl30::{Begin, BindVertexArray, End, Vertex2f, FRAMEBUFFER_S
 use crate::gl_binds::gl41::DrawElementsInstanced;
 
 pub struct Rect {
-    vec4: Vec4,
+    bounds: Changing<Vec4>,
     color: (Color, Color, Color, Color),
     radius: f32,
     vao: VertexArray,
@@ -55,7 +57,7 @@ impl Rect {
         let vec4 = vec4.into();
 
         Self {
-            vec4: vec4.clone(),
+            bounds: Changing::new(vec4.clone()),
             color: colors.to_colors(),
             radius: 0.,
             vao: Self::create_vao(&vec4)
@@ -63,9 +65,7 @@ impl Rect {
     }
 
     pub unsafe fn set_bounds(&mut self, vec4: &Vec4) {
-        self.vao.delete();
-        self.vao = Self::create_vao(vec4);
-        self.vec4 = vec4.clone();
+        self.bounds.set(vec4.clone());
     }
 
     pub fn set_radius(&mut self, v: impl NumCast) {
@@ -78,19 +78,20 @@ impl Rect {
 
     pub(super) unsafe fn draw_rect(&self) {
         let renderer = context().renderer();
-        let vec4 = self.vec4 + Vec4::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
+        let bounds = self.bounds.current();// + Vec4::ltrb(-0.5, -0.5, 0.5, 0.5); // correct for blending created by the shader
         renderer.stack.begin();
         renderer.stack.push(Blend(true));
         renderer.stack.push(Texture2D(true));
 
         let shader = &renderer.rounded_rect_shader_2;
         shader.bind();
-        shader.u_put_float("u_size", vec![vec4.width(), vec4.height()]);
+        shader.u_put_float("u_size", vec![bounds.width(), bounds.height()]);
         shader.u_put_float("u_radius", vec![self.radius]);
         shader.u_put_float("u_color_lt", self.color.0.rgba().to_vec());
         shader.u_put_float("u_color_rt", self.color.1.rgba().to_vec());
         shader.u_put_float("u_color_lb", self.color.2.rgba().to_vec());
         shader.u_put_float("u_color_rb", self.color.3.rgba().to_vec());
+        shader.u_put_float("u_random", vec![random()]);
 
         self.vao.bind();
 
@@ -102,12 +103,12 @@ impl Rect {
         Shader::unbind();
 
         renderer.stack.end();
-        context().framework().mark_layer_dirty(&vec4);
+        context().framework().mark_layer_dirty(bounds);
         // vec4.debug_draw(0xffff10ff);
     }
 
-    pub fn vec4(&self) -> Vec4 {
-        self.vec4
+    pub fn bounds(&mut self) -> &mut Changing<Vec4> {
+        &mut self.bounds
     }
 
     pub fn color(&self) -> (Color, Color, Color, Color) {
@@ -121,10 +122,14 @@ impl Rect {
 
 impl Renderable for Rect {
     unsafe fn pre_render(&mut self) {
-
+        if self.bounds.changed() {
+            self.vao.delete();
+            self.vao = Self::create_vao(self.bounds.current());
+            self.bounds.update();
+        }
     }
 
     unsafe fn render(&self) {
-        self.draw_rect()
+        self.draw_rect();
     }
 }

@@ -348,7 +348,9 @@ impl ScreenTrait for TestScreen {
 
         let hover_anim: AnimationRef = Animation::zero().into();
         let drop_anim: AnimationRef = Animation::zero().into();
-        let background_rect = Rc::new(RefCell::new(Rect::new(Vec4::xywh(0,0,0,0), solid(0xffffffff))));
+        let mut bg_rect = Rect::new(Vec4::xywh(0, 0, 0, 0), solid(0xffffffff));
+        let mut mask = FramebufferMask::new();
+        let mut m_rect = Rect::new(Vec4::xywh(5,5,30,30), solid(0xffffffff));
 
         let element =
             ElementBuilder::new()
@@ -358,7 +360,14 @@ impl ScreenTrait for TestScreen {
                     let drop_anim = drop_anim.clone();
 
                     if e.is_render(RenderPass::Main) {
-                        background_rect.borrow().render();
+                        mask.begin_mask();
+                        m_rect.render();
+                        mask.end_mask();
+                        mask.begin_draw();
+                        bg_rect.render();
+                        mask.end_draw();
+
+                        mask.render();
                         // context().renderer().draw_rounded_rect(el.bounds(), 5., (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.));
                     }
                     match e {
@@ -368,10 +377,13 @@ impl ScreenTrait for TestScreen {
                             drop_anim.borrow_mut().animate(4.0, Easing::Progressive(1.0));
                             el.bounds().set_height(90.+90.*drop_anim.borrow().value());
                             let c_mult = hover_anim.borrow().value();
-                            let mut bg_rect = background_rect.borrow_mut();
-                            bg_rect.set_colors(((0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 0.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 0.)));
-                            bg_rect.set_radius(drop_anim.borrow().value() * 15.);
+                            bg_rect.set_colors(((0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 0.1), (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 0.1)));
+                            bg_rect.set_radius((hover_anim.borrow().value() - 1.) * 2. * 15.);
                             bg_rect.set_bounds(el.bounds());
+                            m_rect.bounds().current_mut().set_pos(bg_rect.bounds().current().pos() / 2. + (30., 30.));
+
+                            bg_rect.pre_render();
+                            m_rect.pre_render();
                         },
                         Event::MouseClick(button, action) => if *action == Action::Release {
                             if el.hovering() {
@@ -385,6 +397,7 @@ impl ScreenTrait for TestScreen {
                         _ => {}
                     }
                 })
+                .should_render(|_, _| { true })
                 .bounds(Vec4::xywh(10, 10, 140, 90))
                 .draggable(true)
                 .build();
@@ -392,13 +405,14 @@ impl ScreenTrait for TestScreen {
         layer_0.add(element);
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
-        layer_0.add(Textbox::new("main", &self.text)); // "".to_stringpplplplp() self.text.clone()
+        let mut layer_1 = Layer::new((32,32));
+        layer_1.add(Textbox::new("main", &self.text)); // "".to_stringpplplplp() self.text.clone()
         // layer
         self.text = "".to_string();
 
         // layer_0.elements().first().unwrap().
 
-        vec![layer_0]
+        vec![layer_0, layer_1]
         // vec![]
     }
 

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 /// A struct for easy tracking of whether a value has changed since the last check / update.
 ///
-/// Eliminates the need for something like `value`, `last_value`
+/// Eliminates the need for something like (`value`, `last_value`)
 #[derive(Debug)]
 pub struct Changing<T> {
     current: T,
@@ -27,7 +27,9 @@ impl<T: Clone + PartialEq + Debug> Changing<T> {
     }
 
     pub fn update(&mut self) {
-        self.last = self.current.clone();
+        if self.changed() {
+            self.last = self.current.clone();
+        }
     }
 
     pub fn current(&self) -> &T {

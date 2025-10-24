@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use std::hash::Hash;
-use std::ops::{Add, AddAssign, DivAssign, MulAssign, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, MulAssign, Sub};
 
 use num_traits::{Num, NumCast, ToPrimitive};
 
@@ -144,5 +144,13 @@ impl MulAssign<(f32, f32)> for Vec2<f32> {
 impl DivAssign<(f32, f32)> for Vec2<f32> {
     fn div_assign(&mut self, rhs: (f32, f32)) {
         *self = Vec2 { x: self.x / rhs.0, y: self.y / rhs.1 }
+    }
+}
+
+impl<T: NumCast + Div<Output = T> + Clone + Num + AddAssign> Div<T> for Vec2<T> {
+    type Output = Vec2<T>;
+
+    fn div(self, rhs: T) -> Self::Output {
+        Vec2::new(self.x.div(rhs.clone()), self.y.div(rhs))
     }
 }

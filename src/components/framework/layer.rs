@@ -122,9 +122,9 @@ impl Layer {
         let mut active_indices = Vec::new();
         for y in 0..grid.len() {
             for x in 0..grid.first().unwrap().len() {
-                if grid[y][x] == 1 {
+                // if grid[y][x] == 1 {
                     active_indices.push((x + y * grid.first().unwrap().len()) as u32);
-                }
+                // }
             }
         }
 
