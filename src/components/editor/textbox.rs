@@ -80,7 +80,7 @@ impl Textbox {
             target_scroll: Default::default(),
             line_texts: Default::default(),
 
-            debug: true,
+            debug: false,
             cursor_rects: Vec::new(),
         };
         for i in 0..textbox.editor.chunks.len() {
@@ -525,6 +525,7 @@ impl UIHandler for Textbox {
                     self.changed = true;
                 } else {
                     self.target_scroll += (*x, *y);
+                    self.target_scroll.x = self.target_scroll.x.min(0.);
                 }
             }
             Event::MouseClick(button, action) => {

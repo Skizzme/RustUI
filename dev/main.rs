@@ -397,7 +397,6 @@ impl ScreenTrait for TestScreen {
                         _ => {}
                     }
                 })
-                .should_render(|_, _| { true })
                 .bounds(Vec4::xywh(10, 10, 140, 90))
                 .draggable(true)
                 .build();

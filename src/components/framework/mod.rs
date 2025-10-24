@@ -133,7 +133,7 @@ impl Framework {
     // }
 
     pub unsafe fn current_framebuffer(&mut self) -> &mut Framebuffer {
-        self.layers.get_mut(self.current_layer_pass.1).unwrap().fb(&self.current_layer_pass.0)
+        self.layers.get_mut(self.current_layer_pass.1 - 1).unwrap().fb(&self.current_layer_pass.0)
     }
 
     pub unsafe fn event(&mut self, event: Event) {
