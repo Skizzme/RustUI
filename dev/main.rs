@@ -62,7 +62,7 @@ fn main() {
     let args : Vec<String> = std::env::args().collect();
     if !(args.len() > 1 && args[1] == "console") {
         unsafe {
-            FreeConsole();
+            FreeConsole(); 
         }
     }
 
@@ -74,7 +74,7 @@ fn main() {
             .swap_interval(SwapInterval::Adaptive)
             .build();
 
-        context().fonts().set_font_bytes("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
+        context().fonts().set_font_source("main", include_bytes!("../src/assets/fonts/JetBrainsMono-Medium.ttf").to_vec());
         context().framework().set_screen(TestScreen::new());
         context().do_loop()
     }
@@ -352,7 +352,7 @@ impl ScreenTrait for TestScreen {
         let mut mask = FramebufferMask::new();
         let mut m_rect = Rect::new(Vec4::xywh(5,5,30,30), solid(0xffffffff));
 
-        let element =
+        let mut element =
             ElementBuilder::new()
                 .register_animations(vec![hover_anim.clone(), drop_anim.clone()])
                 .handler(move |el, e|{
@@ -360,14 +360,14 @@ impl ScreenTrait for TestScreen {
                     let drop_anim = drop_anim.clone();
 
                     if e.is_render(RenderPass::Main) {
-                        mask.begin_mask();
-                        m_rect.render();
-                        mask.end_mask();
-                        mask.begin_draw();
+                        // mask.begin_mask();
+                        // m_rect.render();
+                        // mask.end_mask();
+                        // mask.begin_draw();
                         bg_rect.render();
-                        mask.end_draw();
+                        // mask.end_draw();
 
-                        mask.render();
+                        // mask.render();
                         // context().renderer().draw_rounded_rect(el.bounds(), 5., (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.));
                     }
                     match e {
@@ -405,7 +405,8 @@ impl ScreenTrait for TestScreen {
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
         let mut layer_1 = Layer::new((32,32));
-        layer_1.add(Textbox::new("main", &self.text)); // "".to_stringpplplplp() self.text.clone()
+        layer_1.add(Textbox::new("main", &self.text.to_string())); // "".to_stringpplplplp() self.text.clone()
+
         // layer
         self.text = "".to_string();
 
@@ -424,7 +425,9 @@ impl ScreenTrait for TestScreen {
             false
         }
     }
-}pub struct TestScreen2 {
+}
+
+pub struct TestScreen2 {
     counter: Arc<Mutex<i32>>,
     input: Arc<Mutex<String>>,
 }
@@ -521,4 +524,4 @@ impl UIIdentifier for Test {
     fn ui_id(&self) -> u64 {
         self.v as u64
     }
-}
+} 

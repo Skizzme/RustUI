@@ -42,6 +42,10 @@ impl RenderChunk {
     }
 }
 
+pub struct TextboxBuilder {
+    
+}
+
 pub struct Textbox {
     editor: Editor,
     render_chunks: Vec<RenderChunk>,
@@ -230,6 +234,14 @@ impl Textbox {
         // self.cursor_rect.set_bounds(&cursor_draw);
 
         (cursor_draw, end_index, end_chunk, true)
+    }
+    
+    pub fn get_text(&self) -> String {
+        let mut string = String::new();
+        for c in &self.editor.chunks {
+            string += c.str.as_str();
+        }
+        string
     }
 }
 
@@ -563,5 +575,17 @@ impl UIHandler for Textbox {
 
     fn animations(&mut self) -> Option<&mut AnimationRegistry> {
         Some(&mut self.anim_registry)
+    }
+
+    fn bounds(&self) -> &Vec4 {
+        todo!()
+    }
+
+    fn min_bounds(&self) -> &Vec4 {
+        todo!()
+    }
+
+    fn max_bounds(&self) -> &Vec4 {
+        todo!()
     }
 }

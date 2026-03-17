@@ -69,7 +69,7 @@ impl FontManager {
     ///
     /// Should only be used on setup, and the memory will be freed once the font is loaded
     ///
-    pub fn set_font_bytes(&mut self, name: impl ToString, font_bytes: Vec<u8>) -> &mut FontManager {
+    pub fn set_font_source(&mut self, name: impl ToString, font_bytes: Vec<u8>) -> &mut FontManager {
         self.font_byte_library.insert(name.to_string(), font_bytes);
         self
     }
@@ -77,7 +77,7 @@ impl FontManager {
 
     /// Loads a font using the same name specified when specifying font bytes using [`set_font_bytes()`]
     ///
-    /// [`set_font_bytes()`]: FontManager::set_font_bytes
+    /// [`set_font_bytes()`]: FontManager::set_font_source
     pub unsafe fn load_font(&mut self, name: impl ToString, from_cache: bool) -> Option<String> {
         let name = name.to_string();
         if !self.fonts.contains_key(&name) {

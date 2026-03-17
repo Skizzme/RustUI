@@ -487,7 +487,10 @@ impl Font {
         hasher.write(&pos.x().to_be_bytes());
         hasher.write(&pos.y().to_be_bytes());
 
+        // let st = Instant::now();
         formatted_text.hash(&mut hasher);
+        // let et = Instant::now();
+        // println!("{:?}", et -st);
 
         let hashed = hasher.finish();
 
@@ -755,9 +758,15 @@ impl Font {
     /// Returns [`FontRenderData`]
     pub unsafe fn draw_string_offset(&mut self, formatted_text: impl Into<Text>, pos: impl Into<Vec2<f32>>, offset: impl Into<Vec2<f32>>) -> FontRenderData {
         let formatted_text = formatted_text.into();
-        let pos = pos.into();
-
         let len = formatted_text.visible_length();
+        let pos = pos.into();
+        let offset = offset.into();
+
+        let inst = self.get_inst(formatted_text, pos, offset);
+        self.draw_inst(inst, len)
+    }
+
+    pub unsafe fn draw_inst(&mut self, inst: (u32, FontRenderData), len: usize) -> FontRenderData {
 
         context().renderer().stack().begin();
         context().renderer().stack().push(Blend(true));
@@ -770,7 +779,7 @@ impl Font {
         ActiveTexture(TEXTURE0);
         atlas.bind();
 
-        let (vao, render_data) = self.get_inst(formatted_text, pos, offset);
+        let (vao, render_data) = inst;
         BindVertexArray(vao);
         // Finish();
         // let st = Instant::now();
@@ -787,6 +796,7 @@ impl Font {
         // render_data.bounds.debug_draw(0xff90ff90);
         render_data
         // (0f32, 0f32)
+
     }
 
     unsafe fn bind_shader(&self) {

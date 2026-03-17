@@ -40,7 +40,7 @@ void main() {
 //            outlineDistance = distance;
 //        } else {
 //            outlineDistance = 0.5 - (distance - 0.5);
-//        }
+//        }D
 //        outlineDistance = sqrt(outlineDistance) * 1.0 + outlineColor.a / 10;
 //
 //        float outlineAlpha = smoothstep(0.70710 - smoothing, 0.70710 + smoothing, outlineDistance);

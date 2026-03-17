@@ -12,6 +12,7 @@ use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::element::ui_traits::{random_id, UIHandler, UIIdentifier};
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::state::ChangingRegistry;
+use crate::components::spatial::vec4::Vec4;
 
 /// An easy way to handle the UI representation of any sort of collections.
 ///
@@ -127,7 +128,6 @@ impl<IterFn, State, Item, New> CompElement<IterFn, State, Item, New>
           Item: UIIdentifier,
 {
     pub fn new(iter_fn: IterFn, item_construct: New) -> Self {
-
         CompElement {
             id: random_id(),
             elements: HashMap::new(),
@@ -233,5 +233,17 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
 
     fn animations(&mut self) -> Option<&mut AnimationRegistry> {
         None // TODO
+    }
+
+    fn bounds(&self) -> &Vec4 {
+        todo!()
+    }
+
+    fn min_bounds(&self) -> &Vec4 {
+        todo!()
+    }
+
+    fn max_bounds(&self) -> &Vec4 {
+        todo!()
     }
 }

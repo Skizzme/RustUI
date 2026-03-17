@@ -277,6 +277,18 @@ impl UIHandler for Element {
     fn animations(&mut self) -> Option<&mut AnimationRegistry> {
         Some(&mut self.animations)
     }
+
+    fn bounds(&self) -> &Vec4 {
+        &self.bounds.current()
+    }
+
+    fn min_bounds(&self) -> &Vec4 {
+        Vec4::zero()
+    }
+
+    fn max_bounds(&self) -> &Vec4 {
+        Vec4::max_size()
+    }
 }
 
 impl UIIdentifier for Element {

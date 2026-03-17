@@ -5,6 +5,19 @@ use crate::components::render::color::ToColor;
 use crate::components::render::font::format::Alignment;
 use crate::components::spatial::vec2::Vec2;
 
+static MAX_VEC: Vec4 = Vec4 {
+    x: 0.0,
+    y: 0.0,
+    width: f32::MAX,
+    height: f32::MAX,
+};
+static ZERO: Vec4 = Vec4 {
+    x: 0.0,
+    y: 0.0,
+    width: 0.0,
+    height: 0.0,
+};
+
 /// Stores x, y, width, height as f32 values
 ///
 /// Methods also allow it to be used as a
@@ -18,6 +31,13 @@ pub struct Vec4 {
 }
 
 impl Vec4 {
+    pub fn max_size() -> &'static Self {
+        &MAX_VEC
+    }
+    pub fn zero() -> &'static Self {
+        &ZERO
+    }
+
     pub unsafe fn debug_draw(&self, color: impl ToColor) {
         context().renderer().draw_rect_outline(self, 1.0, color);
     }
