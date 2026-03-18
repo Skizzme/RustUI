@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 use std::ops::{Mul, Not};
-
+use num_traits::NumCast;
 use crate::gl_binds::gl30::Color4f;
 
 /// A struct to convert a color to all necessary forms
@@ -106,16 +106,29 @@ impl Color {
 
     pub fn mult_rgb(self, mult: f32) -> Color {
         Color {
-            r: self.r * mult,
-            g: self.g * mult,
-            b: self.b * mult,
+            r: (self.r * mult).min(0.).max(1.),
+            g: (self.g * mult).min(0.).max(1.),
+            b: (self.b * mult).min(0.).max(1.),
             a: self.a,
         }
+    }
+
+    pub fn darker(&self) -> Color {
+        self.mult_rgb(0.9)
+    }
+    pub fn lighter(&self) -> Color {
+        self.mult_rgb(1.1)
+    }
+
+    pub fn hsv_values(&self) -> (f32, f32, f32) {
+        todo!()
     }
 
     pub unsafe fn apply(&self) {
         Color4f(self.r, self.g, self.b, self.a);
     }
+
+
 }
 
 impl Default for Color {

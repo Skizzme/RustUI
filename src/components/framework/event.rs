@@ -21,6 +21,18 @@ impl Event {
             _ => false
         }
     }
+    pub fn is_prerender(&self) -> bool {
+        match self {
+            Event::PreRender => true,
+            _ => false,
+        }
+    }
+    pub fn is_mouse_click(&self) -> bool {
+        match self {
+            Event::MouseClick(_, _) => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Hash, PartialEq, Clone)]

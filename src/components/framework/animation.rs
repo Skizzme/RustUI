@@ -96,6 +96,15 @@ impl Easing {
     }
 }
 
+#[macro_export]
+macro_rules! register_anims {
+    [$( $expr:expr ),* $(,)?] => {
+        $(
+            context().framework().screen_animations().register($expr.clone())
+        )*
+    }
+}
+
 /// An easy-to-use object to animate objects over time
 #[derive(Debug, Clone, Copy)]
 pub struct Animation {
@@ -121,6 +130,9 @@ impl Animation {
 
     pub fn zero() -> Self {
         Animation::new(0.0, 0.0)
+    }
+    pub fn zero_ref() -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Animation::new(0.0, 0.0)))
     }
 
     pub unsafe fn animate_to(&mut self, target: f32, speed: f32, animation_type: Easing) -> f32 {
@@ -178,6 +190,7 @@ impl Into<AnimationRef> for Animation {
     }
 }
 
+#[derive(Clone)]
 pub struct AnimationRegistry {
     animations: HashMap<u32, AnimationRef>,
 }

@@ -192,7 +192,7 @@ impl UIHandler for Element {
                 Event::PostRender => {
                     match c.animations() {
                         None => {}
-                        Some(reg) => { reg.post(); }
+                        Some(mut reg) => { reg.post(); }
                     }
                 }
                 _ => {}
@@ -274,20 +274,20 @@ impl UIHandler for Element {
         false
     }
 
-    fn animations(&mut self) -> Option<&mut AnimationRegistry> {
-        Some(&mut self.animations)
+    fn animations(&mut self) -> Option<AnimationRegistry> {
+        Some(self.animations.clone())
     }
 
-    fn bounds(&self) -> &Vec4 {
-        &self.bounds.current()
+    fn bounds(&self) -> Vec4 {
+        self.bounds.current().clone()
     }
 
-    fn min_bounds(&self) -> &Vec4 {
-        Vec4::zero()
+    fn min_bounds(&self) -> Vec4 {
+        Vec4::zero().clone()
     }
 
-    fn max_bounds(&self) -> &Vec4 {
-        Vec4::max_size()
+    fn max_bounds(&self) -> Vec4 {
+        Vec4::max_size().clone()
     }
 }
 
@@ -295,6 +295,14 @@ impl UIIdentifier for Element {
     fn ui_id(&self) -> u64 {
         self.id
     }
+}
+
+#[macro_export]
+macro_rules! element {
+    (|$element:ident, $event:ident| => $body:block) => {
+        ElementBuilder::new()
+            .handler(|$element, $event| $body)
+    };
 }
 
 pub struct ElementBuilder {

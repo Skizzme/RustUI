@@ -7,11 +7,34 @@ use crate::gl_binds::gl11::RGBA;
 use crate::gl_binds::gl20::{ActiveTexture, TEXTURE0, TEXTURE1, TEXTURE2, TEXTURE3};
 use crate::gl_binds::gl30::{BLEND, Disable, Enable};
 
+
+/// A cleaner way to use [`FramebufferMask`]
+/// Simply calls the `begin` and `end` functions for each section, then renders
+#[macro_export]
+macro_rules! fb_mask {
+    (
+        mask_obj: $mask_obj:expr,
+        mask: $mask:block,
+        draw: $draw:block
+    ) => {
+        let mask_obj: &mut FramebufferMask = $mask_obj;
+
+        mask_obj.begin_mask();
+        $mask
+        mask_obj.end_mask();
+
+        mask_obj.begin_draw();
+        $draw
+        mask_obj.end_draw();
+
+        // maybe consider making this return a funciton so that mask_obj.render can be called at a later time?
+        mask_obj.render();
+    }
+}
+
 /// Creates a mask based off of brightness in the mask framebuffer, applied onto the draw framebuffer
 ///
 /// If the mask is fully white, then the draw framebuffer will show. If it's black it wont
-///
-/// Make sure ALL drawing within the mask and apply layer DO NOT HAVE BLEND ENABLED
 pub struct FramebufferMask {
     mask_fb: u32,
     draw_fb: u32,

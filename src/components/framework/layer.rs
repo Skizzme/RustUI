@@ -18,6 +18,7 @@ use crate::gl_binds::gl30::BindVertexArray;
 use crate::gl_binds::gl41::{BindFramebuffer, FRAMEBUFFER};
 
 pub struct Layer {
+    // Values: Framebuffer ID, Grid State, Draw vertices, Rendered State
     framebuffers: HashMap<RenderPass, (u32, Vec<Vec<u8>>, VertexArray, bool)>,
     elements: Vec<Box<dyn UIHandler>>,
 
@@ -59,7 +60,7 @@ impl Layer {
 
     pub unsafe fn mark_dirty(&mut self, pass: &RenderPass, area: impl Into<Vec4>) {
         if !self.framebuffers.contains_key(pass) { return; }
-        let (fb_id, grid, vao, grid_mask) = self.framebuffers.get_mut(pass).unwrap();
+        let (fb_id, grid, _, _) = self.framebuffers.get_mut(pass).unwrap();
         let fb_id = *fb_id;
         let area = area.into();
 
@@ -82,7 +83,7 @@ impl Layer {
     }
 
     pub unsafe fn build_grid_vao(&mut self, pass: &RenderPass, grid_len_x: usize, grid_len_y: usize) {
-        let (fb_id, grid, vao, rendered) = self.framebuffers.get_mut(pass).unwrap();
+        let (fb_id, grid, vao, _) = self.framebuffers.get_mut(pass).unwrap();
         let fb = context().fb_manager().fb(*fb_id);
         let fb_res = fb.size();
         let grid_res_x = fb_res.x as f32 / grid.first().unwrap().len() as f32;

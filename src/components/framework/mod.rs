@@ -207,7 +207,7 @@ impl Framework {
                             Event::PostRender => {
                                 match e.animations() {
                                     None => {}
-                                    Some(reg) => { reg.post(); }
+                                    Some(mut reg) => { reg.post(); }
                                 }
                             },
                             _ => {}

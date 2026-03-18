@@ -22,14 +22,14 @@ use crate::components::spatial::vec4::Vec4;
 ///
 /// ### [`Item`]
 /// [`Item`] is the thing that is being represented, and only needs to implement [`UIIdentifier`]. The value returned by [`ui_id()`]
-/// is locally used by in a specific [`CompElement`], so none are shared. This way there could be many different representations of the same [`Item`] across
+/// is locally used by an individual [`CompElement`], so none are shared. This way there could be many different representations of the same [`Item`] across
 /// multiple [`CompElement`].
 ///
 /// In the example of representing a collection of users with [`UIIdentifier`] implemented, [`ui_id()`]
 /// could simply return the ID of the user.
 ///
 /// ### [`State`]
-/// [`State`] can be anything, but should be used in the process of creating a [`UIHandler`] which is returned from [`New`].
+/// [`State`] can be anything, but is used in the process of creating a [`UIHandler`] to share a state across all elements, which is returned from [`New`].
 /// Something like a position, index, etc.
 ///
 /// ### [`New`]
@@ -91,9 +91,9 @@ use crate::components::spatial::vec4::Vec4;
 ///         }
 ///     },
 ///     // New
-///     move |exists, state, item| {
+///     move |exists, state, user| {
 ///         let state_c = *state;
-///         let username = item.name.to_string();
+///         let username = user.name.to_string();
 ///         if !exists {
 ///             Some(
 ///                 (Box::new(ElementBuilder::new()
@@ -231,19 +231,19 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
         false
     }
 
-    fn animations(&mut self) -> Option<&mut AnimationRegistry> {
+    fn animations(&mut self) -> Option<AnimationRegistry> {
         None // TODO
     }
 
-    fn bounds(&self) -> &Vec4 {
+    fn bounds(&self) -> Vec4 {
         todo!()
     }
 
-    fn min_bounds(&self) -> &Vec4 {
+    fn min_bounds(&self) -> Vec4 {
         todo!()
     }
 
-    fn max_bounds(&self) -> &Vec4 {
+    fn max_bounds(&self) -> Vec4 {
         todo!()
     }
 }

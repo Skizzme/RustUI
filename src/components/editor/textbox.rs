@@ -573,19 +573,19 @@ impl UIHandler for Textbox {
         // true
     }
 
-    fn animations(&mut self) -> Option<&mut AnimationRegistry> {
-        Some(&mut self.anim_registry)
+    fn animations(&mut self) -> Option<AnimationRegistry> {
+        Some(self.anim_registry.clone())
     }
 
-    fn bounds(&self) -> &Vec4 {
+    fn bounds(&self) -> Vec4 {
         todo!()
     }
 
-    fn min_bounds(&self) -> &Vec4 {
+    fn min_bounds(&self) -> Vec4 {
         todo!()
     }
 
-    fn max_bounds(&self) -> &Vec4 {
+    fn max_bounds(&self) -> Vec4 {
         todo!()
     }
 }
