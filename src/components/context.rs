@@ -7,9 +7,12 @@ use glfw::Action::Press;
 
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::Framework;
+use crate::components::framework::layout::LayoutEvent;
+use crate::components::framework::ui_traits::TickResult;
 use crate::components::render::font::manager::FontManager;
 use crate::components::render::renderer::Renderer;
 use crate::components::render::stack::State;
+use crate::components::spatial::vec2::Vec2;
 use crate::components::window::Window;
 use crate::components::wrapper::framebuffer::{Framebuffer, FramebufferManager};
 use crate::components::wrapper::keyboard::Keyboard;
@@ -101,10 +104,10 @@ impl UIContext {
 
     pub unsafe fn do_loop(&mut self) {
         while !self.close_requested {
-            let rendered = self.frame();
+            let result = self.frame();
             let perf_test = false;
             if !perf_test {
-                if !rendered {
+                if !result.is_valid() {
                     thread::sleep(Duration::from_secs_f32(1.0/200.0));
                 }
 
@@ -122,27 +125,41 @@ impl UIContext {
         }
     }
 
-    pub unsafe fn frame(&mut self) -> bool {
+    pub unsafe fn frame(&mut self) -> TickResult {
 
         self.handle_events();
         self.window.mouse.frame();
 
         self.framework.event(Event::PreRender);
 
-        let should_render = self.should_render();
+        let tick_result = self.tick();
 
-        if should_render {
-            self.render();
-            self.last_render = Instant::now();
+        match tick_result {
+            TickResult::Valid => {}
+            TickResult::Redraw => {
+                self.render();
+                self.last_render = Instant::now();
+            }
+            TickResult::RedrawLayout => {
+                self.framework.event(Event::Layout(LayoutEvent::FitWidth));
+                self.framework.event(Event::Layout(LayoutEvent::GrowWidth(0.)));
+                self.framework.event(Event::Layout(LayoutEvent::OptimizeSize(Vec2::zero())));
+                self.framework.event(Event::Layout(LayoutEvent::FitHeight));
+                self.framework.event(Event::Layout(LayoutEvent::GrowHeight(0.)));
+                self.framework.event(Event::Layout(LayoutEvent::Position(Vec2::zero())));
+
+                self.render();
+                self.last_render = Instant::now();
+            }
         }
 
         self.framework.event(Event::PostRender);
 ;
-        should_render
+        tick_result
     }
 
-    pub unsafe fn should_render(&mut self) -> bool {
-        self.framework.should_render_all()
+    pub unsafe fn tick(&mut self) -> TickResult {
+        self.framework.tick_render_all()
     }
 
     pub unsafe fn render(&mut self) {
@@ -154,7 +171,7 @@ impl UIContext {
 
         let mut passes = mem::take(&mut self.passes);
         for pass in &passes {
-            if self.framework.should_render_pass(&pass) {
+            if !self.framework.tick_render_pass(&pass).is_valid() {
                 Framebuffer::clear_current();
                 self.framework.event(Event::Render(pass.clone()));
 

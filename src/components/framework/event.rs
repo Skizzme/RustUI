@@ -1,5 +1,13 @@
 use glfw::{Action, Key, Modifiers, MouseButton, WindowEvent};
 use crate::components::framework::layer::Layer;
+use crate::components::framework::layout::LayoutEvent;
+
+pub enum EventResult {
+    Error(String),
+    LayoutError,
+    Ok,
+    Used,
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Event {
@@ -12,6 +20,7 @@ pub enum Event {
     Keyboard(Key, Action, Modifiers),
     Resize(f32, f32),
     GlfwRaw(WindowEvent),
+    Layout(LayoutEvent),
 }
 
 impl Event {

@@ -1,6 +1,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 use num_traits::{Num, NumCast};
 use crate::components::context::context;
+use crate::components::framework::layout::LayoutDirection;
 use crate::components::render::color::ToColor;
 use crate::components::render::font::format::Alignment;
 use crate::components::spatial::vec2::Vec2;
@@ -24,10 +25,10 @@ static ZERO: Vec4 = Vec4 {
 /// left, top, right, bottom object.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Vec4 {
-    x: f32,
-    y: f32,
-    width: f32,
-    height: f32,
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 impl Vec4 {
@@ -105,6 +106,26 @@ impl Vec4 {
     pub fn center_x(&self) -> f32 { self.x + self.width / 2.0 }
     pub fn center_y(&self) -> f32 { self.y + self.height / 2.0 }
 
+    pub fn direction_size(&self, direction: &LayoutDirection) -> f32 {
+        match direction {
+            LayoutDirection::Horizontal => self.width,
+            LayoutDirection::Vertical => self.height,
+        }
+    }
+
+    pub fn expand_direction(&mut self, direction: &LayoutDirection, v: f32) {
+        match direction {
+            LayoutDirection::Horizontal => self.width += v,
+            LayoutDirection::Vertical => self.height += v,
+        }
+    }
+    pub fn set_direction_size(&mut self, direction: &LayoutDirection, v: f32) {
+        match direction {
+            LayoutDirection::Horizontal => self.width = v,
+            LayoutDirection::Vertical => self.height = v,
+        }
+    }
+
     pub fn set_pos(&mut self, pos: impl Into<Vec2<f32>>) {
         let pos = pos.into();
         self.x = pos.x;
@@ -123,6 +144,11 @@ impl Vec4 {
     pub fn set_y(&mut self, y: f32) { self.y = y; }
     pub fn set_width(&mut self, width: f32) { self.width = width; }
     pub fn set_height(&mut self, height: f32) { self.height = height; }
+    pub fn set_wh(&mut self, wh: impl Into<(f32, f32)>) {
+        let wh = wh.into();
+        self.width = wh.0;
+        self.height = wh.1;
+    }
     pub fn set_right(&mut self, right: f32) { self.width = right-self.x; }
     pub fn set_bottom(&mut self, bottom: f32) { self.height = bottom-self.y; }
     pub fn set_left(&mut self, left: f32) {

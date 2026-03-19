@@ -18,6 +18,7 @@
 
 extern crate alloc;
 
+use ferrum::components::framework::layout::{LayoutContext, LayoutDirection, LayoutEvent};
 use std::cell::RefCell;
 use std::f64::consts::PI;
 use std::fs;
@@ -38,7 +39,7 @@ use ferrum::components::editor::textbox::Textbox;
 use ferrum::components::framework::animation::{Animation, AnimationRef, Easing};
 use ferrum::components::framework::element::ElementBuilder;
 use ferrum::components::framework::element::comp_element::CompElement;
-use ferrum::components::framework::element::ui_traits::{UIHandler, UIHandlerRef, UIIdentifier};
+use ferrum::components::framework::ui_traits::{TickResult, UIHandler, UIHandlerRef, UIIdentifier};
 use ferrum::components::framework::event::{Event, RenderPass};
 use ferrum::components::framework::layer::Layer;
 use ferrum::components::framework::screen::ScreenTrait;
@@ -54,8 +55,9 @@ use ferrum::components::spatial::vec4::Vec4;
 use ferrum::components::wrapper::shader::Shader;
 use ferrum::components::wrapper::texture::Texture;
 use ferrum::gl_binds::gl11::{Finish, ALPHA, BLEND};
-use ferrum::{element, fb_mask, register_anims, text};
-
+use ferrum::{container, element, fb_mask, register_anims, text};
+use ferrum::components::framework::element::container::Container;
+use ferrum::components::framework::layout::Sizing;
 
 fn main() {
     // editor();
@@ -157,7 +159,6 @@ impl ScreenTrait for TestScreen {
             if pass != &RenderPass::Main {
                 return;
             }
-            // context().renderer().draw_rect(context().window().bounds(), 0xff181818);
 
             match &context().fonts().font("main").unwrap().atlas_tex {
                 None => {}
@@ -173,8 +174,6 @@ impl ScreenTrait for TestScreen {
             }
 
             let mut fr = context().fonts().font("main").unwrap();
-
-            // fr.draw_string((20., "there should be a tab right\there", 0xffffffff), (10., 10.,));
 
             let text: Text = text!(
                 AlignH(Center),
@@ -194,36 +193,19 @@ impl ScreenTrait for TestScreen {
                 AlignH(Center), "and it should work"
             );
             let fr_d = context().fonts().font("main").unwrap().draw_string(text, (500., 100.));
-            // gl::Finish();
-            // let et = st.elapsed();
-            // println!("drawed {:?}", et);
-            // context().renderer().draw_rect(Vec4::xywh(500., 100., 2., fr_d.height()), 0xffffffff);
-            //
-            // let (_, bounds) = context().fonts().font("main").unwrap().draw_string((32., "32 size", 0xffffffff), (200., 200.));
-            // context().renderer().draw_rect(bounds, (1., 0.25, 0., 1.));
-            //
-            // context().renderer().draw_rect(Vec4::ltrb(10.0, 10.0, 200.0, 200.0), 0x90ff0000);
+
             fr.draw_string(text!(AlignH(Right), (20.0, format!("{:?}", context().fps()), 0xffffffff)), context().window().bounds().wh().offset_new((-4., -20.)));
-            // let formated: Text = (self.t_size.borrow().value(), "context().fonts().set_font_bytes(\"main\", include_bytes!(\"assets/fonts/JetBrainsMono-Medium.ttf\").to_vec());", 0xffffffff).into();
-            // let pos = 0; //
-            // fr.draw_string(formated, (pos, 300.0));
+
             self.last_fps = context().fps();
-            // Finish();
-            // let st = Instant::now();
             self.test_shape.render();
 
-            match &self.txt {
-                None => {}
-                Some(v) => {
-                    let text  = v.borrow().get_text();
-                    println!("{}", text);
-                }
-            }
-
-            // context().renderer().draw_rounded_rect(Vec4::xywh(100., 200., 20., 20.), 0., 0xff206090);
-            // Finish();
-            // let et = Instant::now();
-            // println!("{:?}", et - st);
+            // match &self.txt {
+            //     None => {}
+            //     Some(v) => {
+            //         let text  = v.borrow().get_text();
+            //         println!("{}", text);
+            //     }
+            // }
         }
         Event::PostRender => {
             self.previous_pos = *context().window().mouse().pos();
@@ -239,196 +221,157 @@ impl ScreenTrait for TestScreen {
         ];
 
         let mut layer_0 = Layer::new((32, 32));
+        let mut layer_1 = Layer::new((32,32));
         let tex_cl1 = self.previous_tex.clone();
         let tex_cl2 = self.previous_tex.clone();
         let t_test_c = self.t_text.clone();
 
-
-        let el_1 = ElementBuilder::new()
-            .bounds(Vec4::xywh(5.0, 100.0, 100.0, 100.0))
-            .draggable(true)
-            .handler(move |el, event| { match event {
-                Event::MousePos(x, y) => {
-                    *t_test_c.lock() = text!(
-                        (36.0, "before", 0xffffff90),
-                        (context().window().mouse().pos().x() / 400.0 * 40.0, format!("&ff2030ff{} {}", x, y), 0xffffffff),
-                        (36.0, "after ", 0xff90ffff),
-                        (20.0, format!("{}", UNIX_EPOCH.elapsed().unwrap().as_secs_f64()), 0)
-                    ).with_formatter(&mut DefaultFormatter::new());
-                }
-                Event::Render(pass) => {
-                    if pass != &RenderPass::Main {
-                        return;
-                    }
-                    // let mouse = context().window().mouse();
-                    // let st = Instant::now();
-                    // let (end_pos, vec4) = context().fonts().font("main").unwrap().draw_string(t_test_c.lock().clone(), el.bounds());
-                    // el.bounds().set_width(vec4.width());
-                    // el.bounds().set_height(vec4.height());
-                    // let hovering = el.hovering();
-                    // el.bounds().debug_draw(if hovering { 0xff10ff10 } else { 0xffffffff });
-
-                    *tex_cl1.lock() = format!("{:?}", context().window().mouse().pos()).to_string();
-                }
-                _ => {}
-            }})
-            .should_render(move |_, rp| {
-                // println!("el p check {:?}", rp);
-                if rp == &RenderPass::Main {
-                    let mouse = context().window().mouse();
-                    let res = tex_cl2.lock().clone() != format!("{:?}", mouse.pos()).to_string();
-                    res
-                } else {
-                    false
-                }
-            });
-
-        let el_1_c = ElementBuilder::new()
-            .bounds(Vec4::xywh(0.0, 0.0, 40.0, 40.0))
-            .draggable(false)
-            .handler(|el, event| { match event {
-                Event::Render(pass) => {
-                    // context().renderer().draw_rect(*el.vec4(), 0xff90ff20);z
-                    // let hovering = el.hovering();
-                    if pass == &RenderPass::Bloom {
-                        let mut padded = el.bounds().clone();
-                        padded.padded(10.0);
-                        // context().renderer().draw_rect(*el.bounds(), 0xffffffff);
-                        // context().renderer().draw_rect(padded, 0xff10ff10);
-                        // el.vec4().draw_vec4(if hovering { 0xff10ff10 } else { 0xffffffff });
-                    }
-                },
-                Event::MouseClick(_, action) => {
-                    if el.hovering() && *action == Action::Press {
-                        let v = !context().p_window().uses_raw_mouse_motion();
-                        println!("change {}", v);
-                        context().p_window().set_raw_mouse_motion(v);
-                        // let v = !context().p_window().is_decorated();
-                        // context().p_window().set_decorated(v);
-                    }
-                }
-                    _ => {}
-            }})
-            .should_render(|_, _| {
-                // println!("c el check");
-                false
-            });
-
-        // let el_1 = el_1.child(el_1_c.build());
-
-        let test_vec_1 = self.items.clone();
-        let test_vec_2 = self.items.clone();
-
-        let pos_state = Rc::new(RefCell::new(Vec2::zero()));
-        let pos_state_1 = pos_state.clone();
-        let el_test = CompElement::new(
-            move |mut inner| {
-                let mut lock = test_vec_2.lock();
-                let mut i = 0;
-                let mut state = Vec2::new(0.0, 0.0);
-                pos_state.replace(Vec2::zero());
-                for item in lock.iter_mut() {
-                    inner(&mut state, item);
-                    i += 1;
-                    // state.set_x((i % 10 * 20) as f32);
-                    // state.set_y(((i / 10) * 20) as f32);
-                }
+        let container = container! {
+            layout: {
+                size_behavior: (Sizing::Fixed(1000.), Sizing::Fixed(1000.)),
+                // direction: LayoutDirection::Vertical,
+                debug_color: Color::from_f32(1., 0., 0., 1.),
+                // padding: Vec4::ltrb(5., 5., 5., 5.),
+                spacing: (10., 200.).into(),
+                pref_size: (1000., 1000.).into(),
+                margin: Vec4::ltrb(10., 10., 10., 10.),
             },
-            move |exists, state, item| {
-                let num = item.v;
-                let state_c = pos_state_1.clone();
-                if !exists {
-                    let mut el = ElementBuilder::new()
-                        .handler(move |el, e| {
+            container! {
+                layout: {
+                    min_size: (200., 200.).into(),
+                    margin: Vec4::ltrb(10., 10., 10., 10.),
+                    debug_color: Color::from_f32(0., 1., 0., 1.),
+                    spacing: (10., 0.).into(),
+                    direction: LayoutDirection::Horizontal,
+                },
+                {
+                    let mut rect = Rect::new(Vec4::xywh(10, 10, 10, 10), solid(0xffffffff));
+                    element!(
+                        layout: {
+                            size_behavior: (Sizing::Grow, Sizing::Grow),
+                        },
+                        move |el, e| unsafe {
+                            if e.is_prerender() {
+                                rect.pre_render();
+                            }
                             if e.is_render(RenderPass::Main) {
-                                let mut fr = context().fonts().font("main").unwrap();
-                                let render_data = fr.draw_string((16.0, format!("{}", num), 0xffffffff), state_c.borrow().clone());
-
-                                let bounds = render_data.bounds();
-                                bounds.debug_draw(0xff9020ff);
-                                // println!("POS1 {:?}", state_c.borrow());
-                                state_c.borrow_mut().offset((el.bounds().width(), el.bounds().height()));
-                                // println!("POS2 {:?}", state_c.borrow());
-                                el.set_bounds(bounds);
-                                // println!("set bounds {:?}", bounds);
-                            }
-                        })
-                        .build();
-                    el.handle(&Event::Render(RenderPass::Main));
-                    let id = el.ui_id();
-                    Some((Box::new(el) as Box<dyn UIHandler>, id))
-                } else { None }
-            }
-        );
-
-        let hover_anim: AnimationRef = Animation::zero_ref();
-        let drop_anim: AnimationRef = Animation::zero_ref();
-        let mut bg_rect = Rect::new(Vec4::xywh(0, 0, 0, 0), solid(0xffffffff));
-        let mut mask = FramebufferMask::new();
-        let mut m_rect = Rect::new(Vec4::xywh(5,5,30,30), solid(0xffffffff));
-
-        let mut element =
-            ElementBuilder::new()
-                .register_animations(vec![hover_anim.clone(), drop_anim.clone()])
-                .handler(move |el, e|{
-                    let hover_anim = hover_anim.clone();
-                    let drop_anim = drop_anim.clone();
-
-                    if e.is_render(RenderPass::Main) {
-
-                        fb_mask!(
-                            mask_obj: &mut mask,
-                            mask: {
-                                m_rect.render();
-                            },
-                            draw: {
-                                bg_rect.render();
-                            }
-                        );
-                        // mask.begin_mask();
-                        // mask.end_mask();
-                        // mask.begin_draw();
-                        // bg_rect.render();
-                        // mask.end_draw();
-                        //
-                        // mask.render();
-                        // context().renderer().draw_rounded_rect(el.bounds(), 5., (0.1 * c_mult, 0.1 * c_mult, 0.1 * c_mult, 1.));
-                    }
-                    if e.is_prerender() {
-                        hover_anim.borrow_mut().animate_to( if el.hovering() { 1.5 } else { 1.0 }, 5., Easing::Sin);
-                        drop_anim.borrow_mut().animate(4.0, Easing::Progressive(1.0));
-                        el.bounds().set_height(90.+90.*drop_anim.borrow().value());
-                        let c_mult = hover_anim.borrow().value();
-                        let color = (0.1, 0.1, 0.1, 1.).to_color().mult_rgb(1.);
-                        bg_rect.set_colors(solid(color));
-                        bg_rect.set_radius((hover_anim.borrow().value() - 1.) * 2. * 15.);
-                        bg_rect.set_bounds(el.bounds());
-                        m_rect.bounds().current_mut().set_pos(bg_rect.bounds().current().pos() / 2. + (30., 30.));
-
-                        bg_rect.pre_render();
-                        m_rect.pre_render();
-                    }
-                    match e {
-                        Event::MouseClick(button, action) => if *action == Action::Release {
-                            if el.hovering() {
-                                if drop_anim.borrow().target() == 1.0 {
-                                    drop_anim.borrow_mut().set_target(0.0);
-                                } else {
-                                    drop_anim.borrow_mut().set_target(1.0);
-                                }
+                                rect.set_bounds(el.bounds());
+                                rect.render()
                             }
                         }
-                        _ => {}
-                    }
-                })
-                .bounds(Vec4::xywh(10, 10, 140, 90))
-                .draggable(true)
-                .build();
+                    ).tick(|el, e| TickResult::RedrawLayout)
+                    .build()
+                },
+                {
+                    let mut rect = Rect::new(Vec4::xywh(10, 10, 10, 10), solid(0xffffffff));
+                    element!(
+                        layout: {
+                            size_behavior: (Sizing::Grow, Sizing::Grow),
+                        },
+                        move |el, e| unsafe {
+                            if e.is_prerender() {
+                                rect.pre_render();
+                            }
+                            if e.is_render(RenderPass::Main) {
+                                rect.set_bounds(el.bounds());
+                                rect.render()
+                            }
+                        }
+                    ).tick(|el, e| TickResult::RedrawLayout)
+                    .build()
+                },
+                {
+                    let mut rect = Rect::new(Vec4::xywh(10, 10, 10, 10), solid(0xffffffff));
+                    element!(
+                        layout: {
+                            size_behavior: (Sizing::Grow, Sizing::Grow),
+                        },
+                        move |el, e| unsafe {
+                            if e.is_prerender() {
+                                rect.pre_render();
+                            }
+                            if e.is_render(RenderPass::Main) {
+                                rect.set_bounds(el.bounds());
+                                rect.render()
+                            }
+                        }
+                    ).tick(|el, e| TickResult::RedrawLayout)
+                    .build()
+                },
+            },
+            container! {
+                layout: {
+                    min_size: (200., 200.).into(),
+                    margin: Vec4::ltrb(10., 10., 10., 10.),
+                    debug_color: Color::from_f32(0., 0., 1., 1.),
+                    spacing: (0., 0.).into(),
+                    direction: LayoutDirection::Horizontal,
+                },
+                {
+                    let mut rect = Rect::new(Vec4::xywh(10, 10, 10, 10), solid(0xffffffff));
+                    element!(
+                        layout: {
+                            size_behavior: (Sizing::Grow, Sizing::Grow),
+                        },
+                        move |el, e| unsafe {
+                            if e.is_prerender() {
+                                rect.pre_render();
+                            }
+                            if e.is_render(RenderPass::Main) {
+                                rect.set_bounds(el.bounds());
+                                rect.render()
+                            }
+                        }
+                    ).tick(|el, e| TickResult::RedrawLayout)
+                    .build()
+                },
+                {
+                    let mut rect = Rect::new(Vec4::xywh(10, 10, 10, 10), solid(0xffffffff));
+                    element!(
+                        layout: {
+                            size_behavior: (Sizing::Grow, Sizing::Grow),
+                        },
+                        move |el, e| unsafe {
+                            if e.is_prerender() {
+                                rect.pre_render();
+                            }
+                            if e.is_render(RenderPass::Main) {
+                                rect.set_bounds(el.bounds());
+                                rect.render()
+                            }
+                        }
+                    ).tick(|el, e| TickResult::RedrawLayout)
+                    .build()
+                },
+                {
+                    let mut rect = Rect::new(Vec4::xywh(10, 10, 10, 10), solid(0xffffffff));
+                    element!(
+                        layout: {
+                            size_behavior: (Sizing::Grow, Sizing::Grow),
+                        },
+                        move |el, e| unsafe {
+                            if e.is_prerender() {
+                                rect.pre_render();
+                            }
+                            if e.is_render(RenderPass::Main) {
+                                rect.set_bounds(el.bounds());
+                                rect.render()
+                            }
+                        }
+                    ).tick(|el, e| TickResult::Redraw)
+                    .build()
+                },
+            },
+        };
 
-        layer_0.add(element);
+        // let mut container = Container::new();
+        //
+        // let element = ;
+        //
+        // container.add(element);
+        layer_1.add(container);
         // layer_0.add(el_test);
         // layer_0.add(el_1.build());
-        let mut layer_1 = Layer::new((32,32));
         let (ui, txt) = UIHandlerRef::new(Textbox::new("main", &"Ï".to_string()));
         layer_1.add(ui); // "".to_string() self.text.clone()
         self.txt = Some(txt);
@@ -442,13 +385,13 @@ impl ScreenTrait for TestScreen {
         // vec![]
     }
 
-    unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
+    unsafe fn tick(&mut self, rp: &RenderPass) -> TickResult {
         // true
         if rp == &RenderPass::Main {
             let res = self.last_fps != context().fps();
-            res
+            TickResult::RedrawLayout
         } else {
-            false
+            TickResult::Valid
         }
     }
 }
@@ -528,8 +471,8 @@ impl ScreenTrait for TestScreen2 {
         vec![layer]
     }}
 
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
-        true
+    unsafe fn tick(&mut self, render_pass: &RenderPass) -> TickResult {
+        TickResult::RedrawLayout
     }
 }
 

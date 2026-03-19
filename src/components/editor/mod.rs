@@ -8,7 +8,7 @@ use rand::Rng;
 
 use crate::components::editor::chunk::{Chunk, ChunkInfo};
 use crate::components::editor::cursor::Cursor;
-use crate::components::framework::element::ui_traits::UIHandler;
+use crate::components::framework::ui_traits::UIHandler;
 use crate::components::render::color::ToColor;
 use crate::components::spatial::vec2::Vec2;
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use gl::DrawArraysInstanced;
 use crate::components::context::context;
-use crate::components::framework::element::ui_traits::UIHandler;
+use crate::components::framework::ui_traits::{TickResult, UIHandler};
 use crate::components::framework::event::RenderPass;
 use crate::components::render::color::ToColor;
 use crate::components::render::stack::State::Texture2D;
@@ -45,17 +45,22 @@ impl Layer {
         context().fb_manager().fb(fb_id)
     }
 
-    pub unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
+    pub unsafe fn tick(&mut self, render_pass: &RenderPass) -> TickResult {
         for e in &mut self.elements {
             let has_animated = match e.animations() {
                 None => false,
                 Some(reg) => reg.has_changed(),
             };
-            if has_animated || e.should_render(render_pass) {
-                return true;
+            if has_animated {
+                return TickResult::RedrawLayout;
+            } else {
+                let v = e.tick(render_pass);
+                if !v.is_valid() {
+                    return v;
+                }
             }
         }
-        false
+        TickResult::Valid
     }
 
     pub unsafe fn mark_dirty(&mut self, pass: &RenderPass, area: impl Into<Vec4>) {

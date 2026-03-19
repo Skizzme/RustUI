@@ -1,10 +1,11 @@
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::layer::Layer;
+use crate::components::framework::ui_traits::TickResult;
 
 pub trait ScreenTrait {
     unsafe fn handle(&mut self, event: &Event);
     unsafe fn init(&mut self) -> Vec<Layer>; // TODO change this to maybe use some sort of screen properties?
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool;
+    unsafe fn tick(&mut self, render_pass: &RenderPass) -> TickResult;
 }
 
 pub struct DefaultScreen;
@@ -29,7 +30,7 @@ impl ScreenTrait for DefaultScreen {
         vec![]
     }
 
-    unsafe fn should_render(&mut self, _: &RenderPass) -> bool {
-        true
+    unsafe fn tick(&mut self, _: &RenderPass) -> TickResult {
+        TickResult::Redraw
     }
 }

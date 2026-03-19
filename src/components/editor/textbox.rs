@@ -8,8 +8,9 @@ use rand::{Rng, thread_rng};
 use crate::components::context::context;
 use crate::components::editor::{Change, Cursor, Editor, get_shifted};
 use crate::components::framework::animation::{AnimationRef, AnimationRegistry, Easing};
-use crate::components::framework::element::ui_traits::UIHandler;
-use crate::components::framework::event::{Event, RenderPass};
+use crate::components::framework::ui_traits::{TickResult, UIHandler};
+use crate::components::framework::event::{Event, EventResult, RenderPass};
+use crate::components::framework::layout::LayoutContext;
 use crate::components::render::color::{solid, Color, ToColor};
 use crate::components::render::font::FontRenderData;
 use crate::components::render::font::format::{Alignment, FormatItem, Text};
@@ -246,7 +247,7 @@ impl Textbox {
 }
 
 impl UIHandler for Textbox {
-    unsafe fn handle(&mut self, event: &Event) -> bool {
+    unsafe fn handle(&mut self, event: &Event) -> EventResult {
         let fr = context().fonts().font("main").unwrap();
         let fr_height = fr.get_sized_height(self.text_size);
         let shift_pressed = context().keyboard().shift();
@@ -435,7 +436,7 @@ impl UIHandler for Textbox {
         match event {
             Event::Keyboard(key, action, mods) => {
                 if action == &Action::Release {
-                    return false;
+                    return EventResult::Ok;
                 }
 
                 match key.get_name() {
@@ -542,7 +543,7 @@ impl UIHandler for Textbox {
             }
             Event::MouseClick(button, action) => {
                 if action == &Action::Release {
-                    return false;
+                    return EventResult::Ok;
                 }
 
                 self.cursor_to_mouse(context().keyboard().is_pressed(&Key::LeftShift) || context().keyboard().is_pressed(&Key::RightShift));
@@ -565,11 +566,15 @@ impl UIHandler for Textbox {
             }
             _ => {}
         }
-        false
+        EventResult::Ok
     }
 
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
-        self.changed
+    unsafe fn tick(&mut self, render_pass: &RenderPass) -> TickResult {
+        if self.changed {
+            TickResult::RedrawLayout
+        } else {
+            TickResult::Valid
+        }
         // true
     }
 
@@ -581,11 +586,7 @@ impl UIHandler for Textbox {
         todo!()
     }
 
-    fn min_bounds(&self) -> Vec4 {
-        todo!()
-    }
-
-    fn max_bounds(&self) -> Vec4 {
+    fn layout_context(&self) -> LayoutContext {
         todo!()
     }
 }

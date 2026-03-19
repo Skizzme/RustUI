@@ -3,7 +3,7 @@ use std::hash::Hash;
 use std::ops::{Add, AddAssign, Div, DivAssign, MulAssign, Sub};
 
 use num_traits::{Num, NumCast, ToPrimitive};
-
+use crate::components::framework::layout::LayoutDirection;
 use crate::components::spatial::vec4::Vec4;
 
 /// Stores x and y values as f32 values
@@ -63,6 +63,19 @@ where T: Num + Clone + AddAssign
         s
     }
 
+    pub fn direction(&self, direction: &LayoutDirection) -> &T {
+        match direction {
+            LayoutDirection::Horizontal => &self.x,
+            LayoutDirection::Vertical => &self.y,
+        }
+    }
+
+    pub fn add_direction(&mut self, direction: &LayoutDirection, v: T) {
+        match direction {
+            LayoutDirection::Horizontal => self.x += v,
+            LayoutDirection::Vertical => self.y += v,
+        }
+    }
     /// Returns if this [`Vec2`] is inside the bounds of the [`Vec4`]
     pub fn intersects(&self, vec4: &Vec4) -> bool
     where T: PartialOrd<f32>

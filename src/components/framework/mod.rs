@@ -1,19 +1,14 @@
 use std::collections::HashMap;
 use std::time::Instant;
-use gl::Finish;
-use crate::components::context::context;
 use crate::components::framework::animation::AnimationRegistry;
 use crate::components::framework::event::{Event, RenderPass};
 use crate::components::framework::layer::Layer;
 use crate::components::framework::screen::{DefaultScreen, ScreenTrait};
 use crate::components::framework::state::{ChangingRegistry, UnchangingRegistry};
-use crate::components::spatial::vec2::Vec2;
+use crate::components::framework::ui_traits::TickResult;
 use crate::components::spatial::vec4::Vec4;
 use crate::components::wrapper::framebuffer::Framebuffer;
-use crate::components::wrapper::shader::Shader;
-use crate::components::wrapper::texture::Texture;
-use crate::gl_binds::gl11::RGBA;
-use crate::gl_binds::gl30::{ActiveTexture, BindFramebuffer, BindTexture, Disable, Enable, BLEND, FRAMEBUFFER, TEXTURE0, TEXTURE1, TEXTURE2, TEXTURE_2D};
+use crate::gl_binds::gl30::{BindFramebuffer, FRAMEBUFFER};
 
 pub mod screen;
 pub mod event;
@@ -22,6 +17,8 @@ pub mod layer;
 pub mod animation;
 pub mod state;
 pub mod changing;
+pub mod ui_traits;
+pub mod layout;
 
 pub struct Framework {
     pub(super) current_screen: Box<dyn ScreenTrait>,
@@ -83,36 +80,43 @@ impl Framework {
         self.event(Event::Resize(width as f32, height as f32));
     }
 
-    pub unsafe fn should_render(&mut self, layer: u32, render_pass: &RenderPass) -> bool {
-        self.layers.get_mut(layer as usize).unwrap().should_render(render_pass)
+    pub unsafe fn tick(&mut self, layer: u32, render_pass: &RenderPass) -> TickResult {
+        self.layers.get_mut(layer as usize).unwrap().tick(render_pass)
     }
 
-    pub unsafe fn should_render_pass(&mut self, render_pass: &RenderPass) -> bool {
-        if self.created_at_elapsed() || self.current_screen.should_render(render_pass) || self.screen_animations.has_changed() {
-            return true
-        }
-        for i in 0..self.layers.len() {
-            if self.should_render(i as u32, render_pass) {
-                return true
+    pub unsafe fn tick_render_pass(&mut self, render_pass: &RenderPass) -> TickResult {
+        if self.created_at_elapsed() || self.screen_animations.has_changed() {
+            return TickResult::RedrawLayout
+        } else {
+            let v = self.current_screen.tick(render_pass);
+            if !v.is_valid() {
+                return v;
             }
         }
-        false
+        for i in 0..self.layers.len() {
+            let res = self.tick(i as u32, render_pass);
+            if !res.is_valid() {
+                return res;
+            }
+        }
+        TickResult::Valid
     }
 
     fn created_at_elapsed(&self) -> bool {
         self.created_at.elapsed().as_secs_f64() < 1.0 // TODO why is this necessary?
     }
 
-    pub unsafe fn should_render_all(&mut self) -> bool {
+    pub unsafe fn tick_render_all(&mut self) -> TickResult {
         if self.created_at_elapsed() || self.screen_animations.has_changed() {
-            return true
+            return TickResult::RedrawLayout
         }
         for rp in RenderPass::all() {
-            if self.should_render_pass(&rp) {
-                return true;
+            let v = self.tick_render_pass(&rp);
+            if !v.is_valid() {
+                return v;
             }
         }
-        false
+        TickResult::Valid
     }
 
     fn reset(&mut self) {
@@ -147,7 +151,8 @@ impl Framework {
                 self.current_layer_pass = (pass.clone(), 0);
                 let (parent_fb, parent_tex) = self.screen_layer.fb(pass).bind();
 
-                let render = self.current_screen.should_render(pass) || self.created_at_elapsed() || self.screen_animations.has_changed();
+                let v = self.current_screen.tick(pass);
+                let render = !v.is_valid() || self.created_at_elapsed() || self.screen_animations.has_changed();
                 if render {
                     Framebuffer::clear_current();
                     self.screen_layer.pre_render_pass(pass);
@@ -179,7 +184,8 @@ impl Framework {
                     }
                     {
                         // println!("{}", layer.should_render(pass));
-                        if layer.should_render(pass) || force {
+                        let res = layer.tick(pass);
+                        if !res.is_valid() || force {
                             rendered = true;
                             layer.pre_render_pass(pass);
                             // println!("did render layer {:?}", pass);

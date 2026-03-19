@@ -9,8 +9,9 @@ use std::time::Instant;
 use parking_lot::Mutex;
 
 use crate::components::framework::animation::AnimationRegistry;
-use crate::components::framework::element::ui_traits::{random_id, UIHandler, UIIdentifier};
-use crate::components::framework::event::{Event, RenderPass};
+use crate::components::framework::ui_traits::{random_id, TickResult, UIHandler, UIIdentifier};
+use crate::components::framework::event::{Event, EventResult, RenderPass};
+use crate::components::framework::layout::LayoutContext;
 use crate::components::framework::state::ChangingRegistry;
 use crate::components::spatial::vec4::Vec4;
 
@@ -51,7 +52,7 @@ use crate::components::spatial::vec4::Vec4;
 /// use std::sync::{Arc, Mutex};
 /// use ferrum::components::framework::element::comp_element::CompElement;
 /// use ferrum::components::framework::element::ElementBuilder;
-/// use ferrum::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
+/// use ferrum::components::framework::ui_traits::{UIHandler, UIIdentifier};
 /// use ferrum::components::spatial::vec2::Vec2;
 ///
 /// struct User {
@@ -193,7 +194,7 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
           New: FnMut(bool, &mut State, &mut Item) -> Option<(Box<dyn UIHandler>, u64)> + 'static,
           Item: UIIdentifier,
 {
-    unsafe fn handle(&mut self, event: &Event) -> bool {
+    unsafe fn handle(&mut self, event: &Event) -> EventResult {
         match event {
             Event::PreRender => {
                 self.update_elements();
@@ -201,10 +202,13 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
             _ => {}
         }
 
-        let mut handled = false;
+        let mut result = EventResult::Ok;
         let st = Instant::now();
         for (id, el) in &mut self.elements {
-            handled = el.handle(event);
+            match el.handle(event) {
+                EventResult::Ok => {},
+                r => result = r,
+            }
         }
         let et = st.elapsed();
         // println!("iter took {:?}", et);
@@ -216,19 +220,20 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
             _ => {}
         }
 
-        handled
+        result
     }
 
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
+    unsafe fn tick(&mut self, render_pass: &RenderPass) -> TickResult {
         if self.changed {
-            return true;
+            return TickResult::RedrawLayout;
         }
         for el in self.elements.values_mut() {
-            if el.should_render(render_pass) {
-                return true;
+            let result = el.tick(render_pass);
+            if !result.is_valid() {
+                return result;
             }
         }
-        false
+        TickResult::Valid
     }
 
     fn animations(&mut self) -> Option<AnimationRegistry> {
@@ -239,11 +244,7 @@ impl<IterFn, State, Item, New> UIHandler for CompElement<IterFn, State, Item, Ne
         todo!()
     }
 
-    fn min_bounds(&self) -> Vec4 {
-        todo!()
-    }
-
-    fn max_bounds(&self) -> Vec4 {
+    fn layout_context(&self) -> LayoutContext {
         todo!()
     }
 }

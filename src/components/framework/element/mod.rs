@@ -3,26 +3,30 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use glfw::{Action, MouseButton};
+use image::codecs::png::CompressionType::Default;
 use parking_lot::Mutex;
 
 use crate::components::context::context;
 use crate::components::framework::animation::{AnimationRef, AnimationRegistry};
 use crate::components::framework::changing::Changing;
-use crate::components::framework::element::ui_traits::{UIHandler, UIIdentifier};
-use crate::components::framework::event::{Event, RenderPass};
+use crate::components::framework::ui_traits::{TickResult, UIHandler, UIIdentifier};
+use crate::components::framework::event::{Event, EventResult, RenderPass};
+use crate::components::framework::layout::{LayoutContext, LayoutEvent};
+use crate::components::framework::ui_traits;
 use crate::components::render::color::ToColor;
 use crate::components::render::stack::State;
 use crate::components::spatial::vec2::Vec2;
 use crate::components::spatial::vec4::Vec4;
 
-pub mod ui_traits;
 pub mod comp_element;
+pub mod container;
 
 pub struct Element {
     id: u64,
     bounds: Changing<Vec4>,
     hovering: bool,
-    children: Vec<Box<dyn UIHandler>>,
+
+    layout_context: LayoutContext,
 
     pub active: bool,
     last_active: bool,
@@ -36,12 +40,12 @@ pub struct Element {
 
     handler: Arc<Mutex<Box<dyn FnMut(&mut Self, &Event)>>>,
     render_handler: Option<Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass)>>>>,
-    should_render_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> bool>>>,
+    tick_fn: Arc<Mutex<Box<dyn FnMut(&mut Self, &RenderPass) -> TickResult>>>,
     active_fn: Option<Box<dyn FnMut() -> bool>>,
 }
 
 impl Element {
-    pub fn new<B, H>(vec4: B, draggable: bool, handler: H, children: Vec<Box<dyn UIHandler>>) -> Element
+    pub fn new<B, H>(vec4: B, draggable: bool, layout_context: LayoutContext, handler: H,) -> Element
         where B: Into<Vec4>,
               H: FnMut(&mut Self, &Event) + 'static,
     {
@@ -51,9 +55,9 @@ impl Element {
             bounds: Changing::new(b.clone()),
             handler: Arc::new(Mutex::new(Box::new(handler))),
             render_handler: None,
-            should_render_fn: Arc::new(Mutex::new(Box::new(|_, _| false))),
+            tick_fn: Arc::new(Mutex::new(Box::new(|_, _| TickResult::Valid))),
             hovering: false,
-            children,
+            layout_context,
             active: true,
             last_active: true,
             draggable,
@@ -132,7 +136,7 @@ impl Element {
 }
 
 impl UIHandler for Element {
-    unsafe fn handle(&mut self, event: &Event) -> bool {
+    unsafe fn handle(&mut self, event: &Event) -> EventResult {
         let mut handled = false;
         let mouse = context().window().mouse();
         match event {
@@ -146,11 +150,51 @@ impl UIHandler for Element {
             Event::PostRender => {
                 self.last_active = self.active;
             }
+            Event::Layout(stage) => {
+                self.dispatch_event(event);
+                return match stage {
+                    LayoutEvent::FitWidth => {
+                        self.bounds.current_mut().width = self.layout_context.min_size.x;
+                        EventResult::Ok
+                    }
+                    LayoutEvent::GrowWidth(v) => {
+                        self.bounds.current_mut().width += *v;
+                        if let Some(max) = self.layout_context.max_size {
+                            if self.bounds.current_mut().width() > max.x {
+                                self.bounds.current_mut().width = max.x;
+                                return EventResult::LayoutError;
+                            }
+                        }
+                        EventResult::Ok
+                    }
+                    LayoutEvent::OptimizeSize(v) => {
+                        EventResult::LayoutError
+                    }
+                    LayoutEvent::FitHeight => {
+                        self.bounds.current_mut().height = self.layout_context.min_size.y;
+                        EventResult::Ok
+                    }
+                    LayoutEvent::GrowHeight(v) => {
+                        self.bounds.current_mut().height += *v;
+                        if let Some(max) = self.layout_context.max_size {
+                            if self.bounds.current_mut().height() > max.y {
+                                self.bounds.current_mut().height = max.y;
+                                return EventResult::LayoutError;
+                            }
+                        }
+                        EventResult::Ok
+                    }
+                    LayoutEvent::Position(pos) => {
+                        self.bounds.current_mut().set_pos(*pos);
+                        EventResult::Ok
+                    }
+                }
+            }
             _ => {}
         }
 
         if !self.active {
-            return false;
+            return EventResult::Ok;
         }
 
         match event {
@@ -184,26 +228,6 @@ impl UIHandler for Element {
             }
         }
 
-        // Translate child positions, which also offsets mouse correctly
-        context().renderer().stack().push(State::Translate(self.bounds().x(), self.bounds().y()));
-        // println!("transled to {:?}", self.bounds);
-        for c in &mut self.children {
-            match event {
-                Event::PostRender => {
-                    match c.animations() {
-                        None => {}
-                        Some(mut reg) => { reg.post(); }
-                    }
-                }
-                _ => {}
-            }
-            // TODO maybe this should only return once all children are handled?
-            if c.handle(event) {
-                context().renderer().stack().pop();
-                return true;
-            }
-        }
-        context().renderer().stack().pop();
         // println!("popped {:?}", popped);
 
         // After letting child elements take priority, check if interaction on this object occurred
@@ -240,38 +264,37 @@ impl UIHandler for Element {
             }
             _ => false,
         };
-        handled
+        if handled {
+            EventResult::Used
+        } else {
+            EventResult::Ok
+        }
     }
 
 
-    unsafe fn should_render(&mut self, rp: &RenderPass) -> bool {
+    unsafe fn tick(&mut self, rp: &RenderPass) -> TickResult {
         let changed_active = self.last_active != self.active;
         if !self.active && !changed_active {
-            return false;
+            return TickResult::RedrawLayout;
         }
         if !self.has_rendered || self.scroll.changed() || self.bounds.changed() || changed_active {
-            return true;
+            return TickResult::RedrawLayout;
         }
 
-        let fn_ref = self.should_render_fn.clone();
+        let fn_ref = self.tick_fn.clone();
         // println!("check call");
-        if (fn_ref.lock())(self, rp) {
-            return true;
+        let v = (fn_ref.lock())(self, rp);
+        if !v.is_valid() {
+            return v;
         }
 
         for a in self.animations().unwrap().all() {
             if a.borrow().has_changed() {
-                return true;
+                return TickResult::RedrawLayout;
             }
         }
 
-        for c in &mut self.children {
-            if c.should_render(rp) {
-                return true
-            }
-        }
-
-        false
+        TickResult::Valid
     }
 
     fn animations(&mut self) -> Option<AnimationRegistry> {
@@ -282,12 +305,8 @@ impl UIHandler for Element {
         self.bounds.current().clone()
     }
 
-    fn min_bounds(&self) -> Vec4 {
-        Vec4::zero().clone()
-    }
-
-    fn max_bounds(&self) -> Vec4 {
-        Vec4::max_size().clone()
+    fn layout_context(&self) -> LayoutContext {
+        self.layout_context.clone()
     }
 }
 
@@ -299,9 +318,25 @@ impl UIIdentifier for Element {
 
 #[macro_export]
 macro_rules! element {
-    (|$element:ident, $event:ident| => $body:block) => {
+    (
+        layout: { $($layout:tt)* },
+        $closure:expr $(,)?
+    ) => { // |$element:ident, $event:ident| $body:block
         ElementBuilder::new()
-            .handler(|$element, $event| $body)
+            .layout_context(
+                LayoutContext {
+                    $($layout)*
+                    ..Default::default()
+                }
+            )
+            .handler($closure)
+    };
+
+    (
+        $closure:expr $(,)?
+    ) => { // |$element:ident, $event:ident| $body:block
+        ElementBuilder::new()
+            .handler($closure)
     };
 }
 
@@ -312,8 +347,13 @@ pub struct ElementBuilder {
 impl ElementBuilder {
     pub fn new() -> Self {
         ElementBuilder {
-            element: Element::new(Vec4::ltrb(0.0, 0.0, 0.0, 0.0), false, |_, _| {}, vec![])
+            element: Element::new(Vec4::ltrb(0.0, 0.0, 0.0, 0.0), false, LayoutContext::new(), |_, _| {})
         }
+    }
+
+    pub fn layout_context(mut self, layout_context: LayoutContext) -> Self {
+        self.element.layout_context = layout_context;
+        self
     }
 
     pub fn handler<H: FnMut(&mut Element, &Event) + 'static>(mut self, handler: H) -> Self {
@@ -324,14 +364,11 @@ impl ElementBuilder {
         self.element.render_handler = Some(Arc::new(Mutex::new(Box::new(render_handler))));
         self
     }
-    pub fn should_render<H: FnMut(&mut Element, &RenderPass) -> bool + 'static>(mut self, should_render: H) -> Self {
-        self.element.should_render_fn = Arc::new(Mutex::new(Box::new(should_render)));
+    pub fn tick<H: FnMut(&mut Element, &RenderPass) -> TickResult + 'static>(mut self, should_render: H) -> Self {
+        self.element.tick_fn = Arc::new(Mutex::new(Box::new(should_render)));
         self
     }
-    pub fn child<C: UIHandler + 'static>(mut self, child: C) -> Self {
-        self.element.children.push(Box::new(child));
-        self
-    }
+
     pub fn bounds(mut self, vec4: impl Into<Vec4>) -> Self {
         self.element.bounds.set(vec4.into());
         self

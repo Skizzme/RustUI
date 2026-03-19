@@ -3,16 +3,34 @@ use std::rc::Rc;
 use rand::{RngCore, thread_rng};
 
 use crate::components::framework::animation::AnimationRegistry;
-use crate::components::framework::event::{Event, RenderPass};
+use crate::components::framework::event::{Event, EventResult, RenderPass};
+use crate::components::framework::layout::LayoutContext;
 use crate::components::spatial::vec4::Vec4;
 
+pub enum TickResult {
+    /// Nothing needs redrawing
+    Valid,
+    /// Only redraws the current layout
+    Redraw,
+    /// Redraws and re-calculates the layout
+    RedrawLayout,
+}
+
+impl TickResult {
+    pub fn is_valid(&self) -> bool {
+        match self {
+            TickResult::Valid => true,
+            _ => false,
+        }
+    }
+}
+
 pub trait UIHandler {
-    unsafe fn handle(&mut self, event: &Event) -> bool;
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool;
+    unsafe fn handle(&mut self, event: &Event) -> EventResult;
+    unsafe fn tick(&mut self, render_pass: &RenderPass) -> TickResult;
     fn animations(&mut self) -> Option<AnimationRegistry>;
     fn bounds(&self) -> Vec4;
-    fn min_bounds(&self) -> Vec4;
-    fn max_bounds(&self) -> Vec4;
+    fn layout_context(&self) -> LayoutContext;
 }
 
 pub trait UIIdentifier {
@@ -37,12 +55,12 @@ impl UIHandlerRef {
 }
 
 impl UIHandler for UIHandlerRef {
-    unsafe fn handle(&mut self, event: &Event) -> bool {
+    unsafe fn handle(&mut self, event: &Event) -> EventResult {
         self.handler.borrow_mut().handle(event)
     }
 
-    unsafe fn should_render(&mut self, render_pass: &RenderPass) -> bool {
-        self.handler.borrow_mut().should_render(render_pass)
+    unsafe fn tick(&mut self, render_pass: &RenderPass) -> TickResult {
+        self.handler.borrow_mut().tick(render_pass)
     }
 
     fn animations(&mut self) -> Option<AnimationRegistry> {
@@ -53,12 +71,8 @@ impl UIHandler for UIHandlerRef {
         self.handler.borrow().bounds()
     }
 
-    fn min_bounds(&self) -> Vec4 {
-        self.handler.borrow().min_bounds()
-    }
-
-    fn max_bounds(&self) -> Vec4 {
-        self.handler.borrow().max_bounds()
+    fn layout_context(&self) -> LayoutContext {
+        self.handler.borrow().layout_context().clone()
     }
 }
 
